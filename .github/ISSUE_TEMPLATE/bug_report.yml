@@ -1,0 +1,55 @@
+name: 🐞 Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! English or German is fine. **Security problems** please report privately – see SECURITY.md.
+  - type: textarea
+    id: was
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a new project …
+        2. Click …
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: Vibewright version
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS – Apple Silicon
+        - macOS – Intel
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: ablage
+    attributes:
+      label: Where are your projects stored?
+      options:
+        - Obsidian
+        - Local folder (Markdown + HTML)
+        - Not set up yet
+  - type: textarea
+    id: bilder
+    attributes:
+      label: Screenshots or error messages
+      description: Drag images in here. Please hide personal data (email, names, paths).

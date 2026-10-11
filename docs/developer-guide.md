@@ -160,4 +160,4 @@ Vibewright is MIT-licensed. When you add or update a dependency, run `npm run no
 
 ## Contributing
 
-Issues and pull requests are welcome. Please run `npm test` before opening a PR and describe visible UI changes with a screenshot.
+See [CONTRIBUTING.md](../CONTRIBUTING.md). Security problems: [SECURITY.md](../SECURITY.md).

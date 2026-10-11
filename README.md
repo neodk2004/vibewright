@@ -63,6 +63,7 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 - 📗 [Anleitung (Deutsch)](docs/anleitung.md)
 - 🛠️ [Developer guide](docs/developer-guide.md) – architecture, Claude calls, tests, building
 - 📜 [Third-party notices](THIRD_PARTY_NOTICES.md) – all libraries and tools with versions and licenses
+- 🤝 [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security policy](SECURITY.md)
 
 ## Requirements
 
