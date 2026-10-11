@@ -34,16 +34,34 @@ jobs:
       # Without them: ad-hoc signed (build/adhoc-signieren.js) – runs, but Gatekeeper warns once.
       - name: Build .dmg and .zip
         env:
-          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          # Missing secrets arrive as empty strings – electron-builder would treat them as a certificate path
-          [ -n "$CSC_LINK" ] || unset CSC_LINK CSC_KEY_PASSWORD
+          set -euo pipefail
+          # Missing secrets arrive as empty strings → treat them as "not set"
           [ -n "$APPLE_ID" ] || unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
-          if [ -n "${CSC_LINK:-}" ]; then echo "Signing: Developer ID"; else echo "Signing: ad-hoc"; fi
+          if [ -n "$CERT_P12_BASE64" ]; then
+            # Own keychain with Apple's `security` tool – electron-builder's temporary keychain fails on current runners
+            KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+            KC_PASS=$(openssl rand -hex 24)
+            echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+            security create-keychain -p "$KC_PASS" "$KEYCHAIN"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN"
+            security unlock-keychain -p "$KC_PASS" "$KEYCHAIN"
+            security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -f pkcs12 -T /usr/bin/codesign -T /usr/bin/security
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KEYCHAIN" > /dev/null
+            security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+            rm -f "$RUNNER_TEMP/cert.p12"
+            security find-identity -v -p codesigning "$KEYCHAIN" | grep -c "Developer ID Application" > /dev/null
+            export CSC_KEYCHAIN="$KEYCHAIN"
+            export CSC_NAME="$(security find-identity -v -p codesigning "$KEYCHAIN" | sed -n 's/.*"Developer ID Application: \(.*\)"/\1/p' | head -1)"
+            echo "Signing: Developer ID"
+          else
+            echo "Signing: ad-hoc"
+          fi
           if [ -n "${APPLE_ID:-}" ]; then echo "Notarization: yes"; else echo "Notarization: no"; fi
           npm run exe:mac
 
