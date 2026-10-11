@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+<title>Vibewright</title>
+<style>
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;cursor:default}
+  .karte{position:absolute;inset:10px;border-radius:18px;background:#121315;border:1px solid #26282d;
+    box-shadow:0 18px 50px -12px #000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding-bottom:46px;
+    font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;color:#e6e6e8;transition:opacity .35s,transform .35s}
+  body.weg .karte{opacity:0;transform:scale(.97)}
+  svg{width:92px;height:92px;overflow:visible}
+  /* Logo: die Welle zeichnet sich, der Balken wächst, der Orb ploppt auf */
+  .welle,.balken{stroke-dasharray:1;stroke-dashoffset:1}
+  .welle{animation:zeichnen .9s .15s cubic-bezier(.5,0,.3,1) forwards}
+  .balken{animation:zeichnen .5s .95s cubic-bezier(.2,.8,.2,1) forwards}
+  .orb,.glow{transform-box:fill-box;transform-origin:center;transform:scale(0)}
+  .orb{animation:auf .45s 1.35s cubic-bezier(.2,1.6,.4,1) forwards}
+  .glow{animation:auf .45s 1.35s forwards,puls 1.6s 1.8s ease-in-out infinite}
+  @keyframes zeichnen{to{stroke-dashoffset:0}}
+  @keyframes auf{to{transform:scale(1)}}
+  @keyframes puls{50%{transform:scale(1.35);opacity:.5}}
+  h1{margin:0;font-size:26px;font-weight:650;letter-spacing:.01em;animation:text .5s .5s both}
+  p{margin:-8px 0 0;font-size:13px;color:#8d9199;animation:text .5s .65s both}
+  @keyframes text{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .bar{width:180px;height:3px;border-radius:2px;background:#26282d;overflow:hidden;margin-top:6px;animation:text .4s .8s both}
+  .bar i{display:block;width:40%;height:100%;border-radius:2px;background:linear-gradient(90deg,#9d8cff,#5fd0e0);animation:lauf 1.2s ease-in-out infinite}
+  @keyframes lauf{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+  .fuss{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:11px;line-height:1.6;color:#5b5f66;animation:text .4s 1s both}
+  .fuss span{color:#8d9199}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important}}
+</style>
+</head>
+<body>
+  <div class="karte">
+    <svg viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a796ff"/><stop offset="1" stop-color="#4b33c9"/></linearGradient>
+    <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd0e0"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#5fd0e0" stop-opacity=".9"/><stop offset="1" stop-color="#5fd0e0" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#hg)"/>
+  
+  <path class="welle" pathLength="1" d="M72.0 66.0 L72.5 67.5 L72.8 69.0 L72.9 70.6 L73.0 72.2 L73.0 73.9 L73.0 75.6 L73.0 77.3 L73.0 79.0 L73.0 80.6 L73.1 82.3 L73.3 83.8 L73.7 85.4 L74.1 86.9 L74.7 88.3 L75.5 89.6 L76.4 90.9 L77.5 92.1 L78.8 93.2 L80.2 94.2 L81.7 95.2 L83.3 96.2 L85.1 97.1 L86.9 97.9 L88.8 98.8 L90.7 99.6 L92.5 100.5 L94.4 101.3 L96.1 102.2 L97.7 103.2 L99.3 104.2 L100.6 105.3 L101.8 106.4 L102.8 107.7 L103.5 109.0 L104.1 110.4 L104.5 111.9 L104.6 113.5 L104.5 115.2 L104.3 117.0 L103.9 118.9 L103.3 120.8 L102.6 122.8 L101.8 124.9 L100.9 126.9 L100.0 129.0 L99.1 131.1 L98.2 133.1 L97.4 135.2 L96.7 137.2 L96.1 139.1 L95.7 141.0 L95.5 142.8 L95.4 144.5 L95.5 146.1 L95.9 147.6 L96.5 149.0 L97.2 150.3 L98.2 151.6 L99.4 152.7 L100.7 153.8 L102.3 154.8 L103.9 155.8 L105.6 156.7 L107.5 157.5 L109.3 158.4 L111.2 159.2 L113.1 160.1 L114.9 160.9 L116.7 161.8 L118.3 162.8 L119.8 163.8 L121.2 164.8 L122.5 165.9 L123.6 167.1 L124.5 168.4 L125.3 169.7 L125.9 171.1 L126.3 172.6 L126.7 174.2 L126.9 175.7 L127.0 177.4 L127.0 179.0 L127.0 180.7 L127.0 182.4 L127.0 184.1 L127.0 185.8 L127.1 187.4 L127.2 189.0 L127.5 190.5 L128.0 192.0" fill="none" stroke="url(#wg)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <path class="balken" pathLength="1" d="M128 192 L184 66" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+  
+  <circle class="glow" cx="184" cy="66" r="32" fill="url(#glow)"/>
+  <circle class="orb" cx="184" cy="66" r="14" fill="#5fd0e0" stroke="#fff" stroke-width="4"/>
+</svg>
+    <h1>Vibewright</h1>
+    <p>You vibe. It builds.</p>
+    <div class="bar"><i></i></div>
+    <div class="fuss">© 2026 neodk2004 · MIT License<br><span>github.com/neodk2004</span></div>
+  </div>
+</body>
+</html>

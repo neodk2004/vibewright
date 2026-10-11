@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<title>Vibewright</title>
+<link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="side">
+  <div class="brand"><img class="logo" src="assets/icon.svg" alt=""><span>Vibewright<small>You vibe. It builds.</small></span></div>
+  <button id="neu" class="side-new">Neues Projekt</button>
+  <div class="label">Projekte</div>
+  <nav id="liste"></nav>
+  <div id="meta" class="side-foot"></div>
+</aside>
+<section id="main">
+  <header id="kopf"></header>
+  <div id="inhalt"></div>
+  <footer id="aktionen"></footer>
+</section>
+<div id="overlay" hidden></div>
+<script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+<script src="i18n.js"></script>
+<script src="renderer.js"></script>
+</body>
+</html>

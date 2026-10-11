@@ -1,0 +1,7 @@
+# Abhängigkeiten und Builds
+node_modules/
+app/dist/
+*.log
+
+# Screenshots enthalten lokale Pfade und E-Mail-Adresse – nicht veröffentlichen
+/screenshots/

@@ -1,2 +1,151 @@
-# vibewright
- Vibewright – You vibe. It builds. Windows-App, die aus einer einzeiligen Idee eine fertige Laufkarte macht (Interview → Bedarfsanalyse → Plan → Werkzeug-Check) und sie mit Claude Code direkt in der App umsetzt. Ablage in Obsidian oder als Markdown, Deutsch &amp; Englisch.
+<p align="center">
+  <img src="docs/icon.png" width="96" alt="Vibewright logo">
+</p>
+
+<h1 align="center">Vibewright</h1>
+<p align="center"><b>You vibe. It builds.</b><br>
+Turn a one-line idea into a complete project roadmap – and build it with Claude Code, right inside the app.</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-6a55e8" alt="Windows">
+  <img src="https://img.shields.io/badge/license-MIT-5fd0e0" alt="MIT License">
+  <img src="https://img.shields.io/badge/powered%20by-Claude%20Code-9d8cff" alt="Claude Code">
+  <img src="https://img.shields.io/badge/language-English%20%7C%20Deutsch-555" alt="English | Deutsch">
+</p>
+
+<p align="center"><img src="docs/screenshots/cockpit.png" alt="Vibewright cockpit" width="860"></p>
+
+---
+
+## What is Vibewright?
+
+You have an idea. Maybe a bird house camera, a podcast, a home server. Getting from *"I'd like to…"* to *"it works"* usually means juggling chats, notes, half-finished plans and forgotten next steps.
+
+Vibewright is a Windows desktop app that does the project management for you. You type one sentence; Vibewright interviews you, writes a needs analysis, cuts the goal into phases, checks which tools you and Claude need – and then lets you build it step by step with **Claude Code running inside the app**. You stay the decision maker: you click, approve and tick off. Claude does the heavy lifting in the background.
+
+```
+Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool check ──► Build
+          (clicks)      🚦 approve        🚦 approve  🚦 approve     Claude Code in the app
+```
+
+## Features
+
+- **Guided interview** – one multiple-choice question per screen (keys 1–4), with your own answer as an option. Two short rounds, follow-up questions only where answers leave gaps.
+- **Needs analysis** – goal, scope, must-have / could-have / non-goals, risks you didn't think of, and a feasibility traffic light.
+- **Plan as a roadmap** – 3–6 phases with goals, "done when" criteria and concrete steps in plain language (no unexplained commands).
+- **Tool check** – inspects your PC and your Claude setup (plugins, skills, MCP servers, Windows edition) and recommends only what a phase really needs, from official sources. Nothing gets installed without your OK.
+- **Cockpit** – the current phase with its checklist, progress, next step and all phases at a glance.
+- **Claude Code inside the app** – an embedded terminal runs Claude Code with a generated `CLAUDE.md` that knows your project, phase and next step. Claude ticks off finished steps; the checklist updates live.
+- **"I just had another idea"** – type a thought any time; Claude sorts it into the right phase (or creates a new one). While Claude is working, the idea waits until the current step is done.
+- **Your notes, your format** – everything is written as Markdown into your **Obsidian** vault (with Dataview tables and Kanban if you use them) or locally as `.md` + an `.html` dashboard.
+- **Git safety net (optional)** – the code folder becomes a Git project and Claude commits after every finished step, so you can always go back.
+- **English & German** – UI, Claude's texts and the generated files. The language is fixed per project.
+- **Easy on your limits** – planning calls run Claude Code headless without tools and with a short system prompt (~1,000 input tokens per call instead of ~15,000–20,000).
+
+## Screenshots
+
+| Interview | Needs analysis |
+|---|---|
+| ![Interview](docs/screenshots/interview.png) | ![Needs analysis](docs/screenshots/needs-analysis.png) |
+| **Plan** | **Tool check** |
+| ![Plan](docs/screenshots/plan.png) | ![Tool check](docs/screenshots/tool-check.png) |
+| **Claude Code inside the app** | **Settings** |
+| ![Claude session](docs/screenshots/session.png) | ![Settings](docs/screenshots/settings.png) |
+| **While Claude thinks** | **Light mode** |
+| ![Loading](docs/screenshots/loading.png) | ![Light mode](docs/screenshots/cockpit-light.png) |
+
+## Documentation
+
+- 📘 [User guide](docs/user-guide.md) – everything from the first start to a finished project
+- 📗 [Anleitung (Deutsch)](docs/anleitung.md)
+- 🛠️ [Developer guide](docs/developer-guide.md) – architecture, Claude calls, tests, building
+- 📜 [Third-party notices](THIRD_PARTY_NOTICES.md) – all libraries and tools with versions and licenses
+
+## Requirements
+
+| | |
+|---|---|
+| **Windows 10 or 11** | 64-bit |
+| **Claude Code** | installed and signed in – [official setup guide](https://docs.claude.com/en/docs/claude-code/setup). Native installer and npm installation are both supported. |
+| **Claude subscription** | Pro or Max recommended. Signing in with an API key works too, but then every call is billed separately. |
+| Obsidian *(optional)* | [obsidian.md](https://obsidian.md) – with the community plugins *Dataview* and *Kanban* for live tables and a project board. Without Obsidian, Vibewright saves `.md` files plus an `.html` dashboard. |
+| Git *(optional)* | [git-scm.com](https://git-scm.com/download/win) – for the automatic commit-per-step safety net. |
+
+## Installation
+
+1. Download **`Vibewright Setup x.y.z.exe`** from the [Releases](../../releases) page.
+2. Run it and choose an installation folder.
+   > The installer is not code-signed yet, so Windows SmartScreen may warn you. Click **More info → Run anyway**.
+3. Start Vibewright. On first launch it checks Claude Code, lets you sign in and asks where your projects should live.
+
+### Run from source
+
+```bash
+git clone https://github.com/neodk2004/vibewright.git
+cd vibewright/app
+npm install
+npm start            # starts the app
+npm test             # end-to-end test with real Claude calls (uses a bit of your limit)
+npm run exe          # builds the Windows installer into app/dist/
+```
+
+## How it works
+
+```
+┌──────────── Vibewright (Electron) ────────────┐
+│  UI ──► core.js (state machine, files)        │
+│           │                                   │
+│           ├─► claude -p --json-schema …        │  planning: headless, no tools,
+│           │     (structured JSON answers)     │  own short system prompt
+│           │                                   │
+│           └─► node-pty ──► claude (interactive)│  building: embedded terminal
+│                    ▲            │             │  (xterm.js)
+│                    └─ CLAUDE.md ┘             │
+└──────────────┬───────────────────────────────┘
+               ▼
+   Your vault / folder: Dashboard · Tasks · Plan · Needs analysis · Tool check
+```
+
+- Claude only returns **structured JSON**; Vibewright writes all files itself – Claude never needs write access for planning.
+- Progress lives in the **task files**. Whether you tick a box in Vibewright, in Obsidian, or Claude ticks it while building – the app reads it back and updates progress, next step and dashboard.
+- Each project keeps its state in `projekthelper-state.json`, so you can pause for weeks and pick up exactly where you left off.
+
+## Privacy
+
+- Vibewright itself sends **no telemetry** and stores its settings only on your PC (`%APPDATA%`).
+- What you plan with Claude (your idea, answers, plan, a list of installed Claude plugins/skills and your Windows version for the tool check) is sent to Anthropic through Claude Code – exactly like any other Claude Code usage.
+- If you push a project to GitHub, the Git commits contain the name and email from your Git config. Use GitHub's `noreply` address if you don't want your email to be public.
+
+## Project structure
+
+```
+app/
+  main.js        Electron main process: windows, settings, embedded terminal (node-pty)
+  core.js        Planning flow, Claude calls, file generation, progress
+  renderer.js    User interface
+  i18n.js        English UI layer
+  style.css      Design, animations, compact mode for small screens
+  splash.html    Splash screen
+  assets/        Runtime icons
+  build/         Icon source (icon.svg) and build resources
+  test/          End-to-end and installation tests
+docs/            README images
+```
+
+## Deutsch
+
+Vibewright macht aus einer einzeiligen Idee eine fertige Laufkarte: Interview → Bedarfsanalyse → Plan → Werkzeug-Check → Umsetzung. Umgesetzt wird mit Claude Code direkt in der App, du entscheidest nur noch an den Freigaben. Die Ablage erfolgt in Obsidian oder lokal als Markdown. Die Oberfläche lässt sich in der Seitenleiste oder in den Einstellungen per Flagge zwischen Deutsch und Englisch umschalten. Voraussetzungen und Installation: siehe oben.
+
+## Built with
+
+Vibewright stands on the shoulders of a few open-source projects – [Electron](https://www.electronjs.org), [xterm.js](https://xtermjs.org) and [node-pty](https://github.com/microsoft/node-pty) (via [@lydell/node-pty](https://github.com/lydell/node-pty)) – all MIT-licensed. Full details, versions and license texts: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Vibewright was developed with the help of **Claude Code**. All code was reviewed and tested and is published by the author under the MIT license.
+
+## Disclaimer
+
+Vibewright is an independent open-source project and is **not affiliated with, endorsed by or sponsored by Anthropic**. *Claude* and *Claude Code* are trademarks of Anthropic, PBC. Vibewright simply uses the Claude Code CLI that you install and sign in to yourself.
+
+## License
+
+[MIT](LICENSE) © 2026 [neodk2004](https://github.com/neodk2004)

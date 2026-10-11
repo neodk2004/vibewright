@@ -1,0 +1,64 @@
+{
+  "name": "vibewright",
+  "version": "0.1.0",
+  "description": "Vibewright – You vibe. It builds. Aus einer Idee wird eine Laufkarte, umgesetzt mit Claude Code.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/claude-finden.js && node test/e2e.js",
+    "exe": "electron-builder --win nsis",
+    "notices": "node build/hinweise-bauen.js"
+  },
+  "devDependencies": {
+    "electron": "33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "@lydell/node-pty": "^1.1.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0"
+  },
+  "productName": "Vibewright",
+  "build": {
+    "appId": "de.vibewright.app",
+    "productName": "Vibewright",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!test/**",
+      "!build/icon-bauen.js",
+      "!dist/**",
+      "!build/hinweise-bauen.js"
+    ],
+    "asarUnpack": [
+      "node_modules/@lydell/**"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Vibewright",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "license": "build/license.txt"
+    },
+    "npmRebuild": false,
+    "extraFiles": [
+      "THIRD_PARTY_NOTICES.md",
+      {
+        "from": "LICENSE",
+        "to": "LICENSE.vibewright.txt"
+      }
+    ]
+  },
+  "license": "MIT",
+  "author": "neodk2004",
+  "homepage": "https://github.com/neodk2004"
+}
