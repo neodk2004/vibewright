@@ -1,4 +1,5 @@
-# Builds the macOS app (Apple Silicon) on a GitHub-hosted Mac and smoke-tests it.
+# Builds the macOS app for Apple Silicon (arm64) and Intel (x64) on a GitHub-hosted Mac and smoke-tests it.
+# Intel is cross-built on the Apple Silicon runner and tested via Rosetta 2.
 # Result: .dmg + .zip and screenshots as a workflow artifact.
 name: Build macOS
 
@@ -12,8 +13,16 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-latest # Apple Silicon (arm64)
-    timeout-minutes: 30
+    name: Build macOS (${{ matrix.arch }})
+    runs-on: macos-latest # Apple Silicon runner, builds both architectures
+    timeout-minutes: 240 # Apple's first notarizations for a new developer account can take a long time
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    env:
+      # electron-builder output folder: mac-arm64 for Apple Silicon, mac for Intel
+      APPDIR: ${{ matrix.arch == 'arm64' && 'dist/mac-arm64' || 'dist/mac' }}
     defaults:
       run:
         working-directory: app
@@ -27,8 +36,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Intel only – add the x64 binaries of node-pty and Rosetta 2
+        if: matrix.arch == 'x64'
+        run: |
+          npm install --no-save --os=darwin --cpu=x64 @lydell/node-pty-darwin-x64@1.1.0
+          ls node_modules/@lydell/node-pty-darwin-x64
+          /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
+
       - name: Test – node-pty works inside Electron
+        if: matrix.arch == 'arm64'
         run: perl -e 'alarm 60; exec @ARGV' npx electron test/pty-check.js
+
+      - name: Show Apple's notarization queue for this account
+        if: matrix.arch == 'arm64'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          [ -n "$APPLE_ID" ] || { echo "No Apple secrets – skipped"; exit 0; }
+          xcrun notarytool history --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" | head -20 || true
 
       # With the Apple secrets: signed with Developer ID + notarized by Apple.
       # Without them: ad-hoc signed (build/adhoc-signieren.js) – runs, but Gatekeeper warns once.
@@ -64,11 +91,13 @@ jobs:
           fi
           if [ -n "${APPLE_ID:-}" ]; then echo "Notarization: yes"; else echo "Notarization: no"; fi
           # DEBUG: electron-builder zeigt sonst bei codesign-Fehlern nicht den eigentlichen Grund
-          DEBUG=electron-builder npm run exe:mac
+          DEBUG=electron-builder npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
 
       - name: Check signature and notarization
         run: |
-          APP="dist/mac-arm64/Vibewright.app"
+          APP="$APPDIR/Vibewright.app"
+          echo "Architecture: $(lipo -archs "$APP/Contents/MacOS/Vibewright")"
+          find "$APPDIR" -name "*.node" -path "*node-pty*" -exec sh -c 'echo "node-pty: $(basename "$1") → $(lipo -archs "$1")"' _ {} \;
           codesign --verify --deep --strict --verbose=2 "$APP"
           codesign -dv "$APP" 2>&1 | grep -E "Authority|Signature|TeamIdentifier|flags" || true
           if spctl -a -vv "$APP"; then echo "✅ Gatekeeper accepts the app (signed + notarized)"; else echo "ℹ️ Not notarized – expected without the Apple secrets"; fi
@@ -76,22 +105,21 @@ jobs:
       - name: Smoke test – start the built app and take screenshots
         run: |
           set -euo pipefail
-          APP="dist/mac-arm64/Vibewright.app/Contents/MacOS/Vibewright"
-          ls -la dist dist/mac-arm64
-          codesign -dv "dist/mac-arm64/Vibewright.app" 2>&1 | head -5 || true
+          APP="$APPDIR/Vibewright.app/Contents/MacOS/Vibewright"   # Intel build runs via Rosetta 2
+          ls -la dist "$APPDIR"
           mkdir -p shots /tmp/kph/ablage
           echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"de"}' > /tmp/kph/einstellungen.json
           # Claude Code is not installed on the runner → the welcome/setup page must appear
           KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-de.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
           echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"en"}' > /tmp/kph/einstellungen.json
           KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-en.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
-          perl -e 'alarm 60; exec @ARGV' npx electron test/splash-check.js "$PWD/shots/splash.png"
+          if [ "${{ matrix.arch }}" = arm64 ]; then perl -e 'alarm 60; exec @ARGV' npx electron test/splash-check.js "$PWD/shots/splash.png"; fi
           ls -la shots
-          test -s shots/start-de.png && test -s shots/start-en.png && test -s shots/splash.png
+          test -s shots/start-de.png && test -s shots/start-en.png
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vibewright-mac-arm64
+          name: vibewright-mac-${{ matrix.arch }}
           path: |
             app/dist/*.dmg
             app/dist/*.zip
