@@ -65,14 +65,16 @@
       ],
       "category": "public.app-category.productivity",
       "icon": "build/icon.png",
-      "identity": "-",
-      "hardenedRuntime": false,
+      "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "artifactName": "Vibewright-${version}-mac-${arch}.${ext}"
+      "artifactName": "Vibewright-${version}-mac-${arch}.${ext}",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "dmg": {
       "title": "Vibewright ${version}"
-    }
+    },
+    "afterPack": "build/adhoc-signieren.js"
   },
   "license": "MIT",
   "author": "neodk2004",

@@ -30,8 +30,23 @@ jobs:
       - name: Test – node-pty works inside Electron
         run: perl -e 'alarm 60; exec @ARGV' npx electron test/pty-check.js
 
-      - name: Build .dmg and .zip (ad-hoc signed, not notarized)
+      # With the Apple secrets: signed with Developer ID + notarized by Apple.
+      # Without them: ad-hoc signed (build/adhoc-signieren.js) – runs, but Gatekeeper warns once.
+      - name: Build .dmg and .zip
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run exe:mac
+
+      - name: Check signature and notarization
+        run: |
+          APP="dist/mac-arm64/Vibewright.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | grep -E "Authority|Signature|TeamIdentifier|flags" || true
+          if spctl -a -vv "$APP"; then echo "✅ Gatekeeper accepts the app (signed + notarized)"; else echo "ℹ️ Not notarized – expected without the Apple secrets"; fi
 
       - name: Smoke test – start the built app and take screenshots
         run: |

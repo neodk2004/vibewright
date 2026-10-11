@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Ausnahmen der „Hardened Runtime“, die Electron und node-pty für die Notarisierung brauchen -->
+<plist version="1.0">
+<dict>
+  <!-- V8 (JavaScript-Engine) erzeugt Maschinencode zur Laufzeit -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <!-- node-pty ist ein natives Modul, das Electron nachlädt -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>
