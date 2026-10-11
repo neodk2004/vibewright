@@ -39,8 +39,13 @@ jobs:
       - name: Intel only – add the x64 binaries of node-pty and Rosetta 2
         if: matrix.arch == 'x64'
         run: |
-          npm install --no-save --os=darwin --cpu=x64 @lydell/node-pty-darwin-x64@1.1.0
+          # npm refuses x64 packages on an arm64 runner (EBADPLATFORM) → download and unpack the package directly
+          mkdir -p node_modules/@lydell/node-pty-darwin-x64
+          TGZ=$(npm pack @lydell/node-pty-darwin-x64@1.1.0 --silent)
+          tar -xzf "$TGZ" -C node_modules/@lydell/node-pty-darwin-x64 --strip-components=1
+          rm "$TGZ"
           ls node_modules/@lydell/node-pty-darwin-x64
+          for f in node_modules/@lydell/node-pty-darwin-x64/*.node; do echo "$f → $(lipo -archs "$f")"; done
           /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
 
       - name: Test – node-pty works inside Electron
