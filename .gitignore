@@ -5,3 +5,6 @@ app/dist/
 
 # Screenshots enthalten lokale Pfade und E-Mail-Adresse – nicht veröffentlichen
 /screenshots/
+
+# Private Übergabenotiz
+/HANDOFF.md
