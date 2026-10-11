@@ -73,10 +73,21 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 
 ## Installation
 
-1. Download **`Vibewright Setup x.y.z.exe`** from the [Releases](../../releases) page.
+1. Download **`Vibewright.Setup.x.y.z.exe`** from the [Releases](../../releases) page.
+   *Optional but recommended:* [verify the download](#verify-your-download).
 2. Run it and choose an installation folder.
    > The installer is not code-signed yet, so Windows SmartScreen may warn you. Click **More info → Run anyway**.
 3. Start Vibewright. On first launch it checks Claude Code, lets you sign in and asks where your projects should live.
+
+### Verify your download
+
+Every release lists the **SHA-256 checksum** of the installer in its release notes and in an attached `SHA256SUMS.txt` (GitHub also shows it next to the file). In PowerShell, inside your download folder:
+
+```powershell
+(Get-FileHash .\Vibewright.Setup.0.1.0.exe -Algorithm SHA256).Hash
+```
+
+If the output matches the published value, your file is exactly the released one. Prefer to check the code yourself? [Run from source](#run-from-source) or build the installer with `npm run exe`.
 
 ### Run from source
 
