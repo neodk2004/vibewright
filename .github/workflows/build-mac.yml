@@ -63,7 +63,8 @@ jobs:
             echo "Signing: ad-hoc"
           fi
           if [ -n "${APPLE_ID:-}" ]; then echo "Notarization: yes"; else echo "Notarization: no"; fi
-          npm run exe:mac
+          # DEBUG: electron-builder zeigt sonst bei codesign-Fehlern nicht den eigentlichen Grund
+          DEBUG=electron-builder npm run exe:mac
 
       - name: Check signature and notarization
         run: |

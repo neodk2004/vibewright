@@ -39,7 +39,14 @@
     ],
     "win": {
       "icon": "build/icon.ico",
-      "target": "nsis"
+      "target": "nsis",
+      "extraFiles": [
+        "THIRD_PARTY_NOTICES.md",
+        {
+          "from": "LICENSE",
+          "to": "LICENSE.vibewright.txt"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -51,13 +58,6 @@
       "license": "build/license.txt"
     },
     "npmRebuild": false,
-    "extraFiles": [
-      "THIRD_PARTY_NOTICES.md",
-      {
-        "from": "LICENSE",
-        "to": "LICENSE.vibewright.txt"
-      }
-    ],
     "mac": {
       "target": [
         "dmg",
@@ -69,7 +69,14 @@
       "gatekeeperAssess": false,
       "artifactName": "Vibewright-${version}-mac-${arch}.${ext}",
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extraResources": [
+        "THIRD_PARTY_NOTICES.md",
+        {
+          "from": "LICENSE",
+          "to": "LICENSE.vibewright.txt"
+        }
+      ]
     },
     "dmg": {
       "title": "Vibewright ${version}"
