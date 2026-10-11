@@ -1,0 +1,117 @@
+# Scans the release installer with VirusTotal and publishes the result.
+# Uses only curl, jq and the official GitHub CLI – no third-party actions.
+# Needs the repository secret VT_API_KEY (a free VirusTotal account is enough).
+name: VirusTotal scan
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to scan (draft releases work too)
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write # edit release notes, commit the badge file
+
+concurrency: virustotal
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download the installer from the release
+        run: |
+          gh release download "$TAG" --pattern '*.exe' --dir dist
+          ls -l dist
+
+      - name: Upload to VirusTotal and wait for all engines
+        id: vt
+        run: |
+          set -euo pipefail
+          FILE=$(ls dist/*.exe | head -1)
+          SHA=$(sha256sum "$FILE" | cut -d' ' -f1)
+          echo "File: $FILE  SHA-256: $SHA"
+
+          # Files > 32 MB need a one-time upload URL
+          UPLOAD_URL=$(curl -sSf -H "x-apikey: $VT_API_KEY" https://www.virustotal.com/api/v3/files/upload_url | jq -r .data)
+          ANALYSIS=$(curl -sSf -H "x-apikey: $VT_API_KEY" -F "file=@$FILE" "$UPLOAD_URL" | jq -r .data.id)
+          echo "Analysis: $ANALYSIS"
+
+          # Free API: max. 4 requests per minute → poll every 20 s, up to 20 min
+          STATUS=queued
+          for i in $(seq 1 60); do
+            sleep 20
+            RESULT=$(curl -sSf -H "x-apikey: $VT_API_KEY" "https://www.virustotal.com/api/v3/analyses/$ANALYSIS")
+            STATUS=$(echo "$RESULT" | jq -r .data.attributes.status)
+            echo "[$i] $STATUS"
+            [ "$STATUS" = completed ] && break
+          done
+          [ "$STATUS" = completed ] || { echo "VirusTotal did not finish in time"; exit 1; }
+
+          STATS=$(echo "$RESULT" | jq .data.attributes.stats)
+          echo "$STATS"
+          DETECTED=$(echo "$STATS" | jq '.malicious + .suspicious')
+          ENGINES=$(echo "$STATS" | jq '.malicious + .suspicious + .undetected + .harmless')
+          # Unsigned installers sometimes get 1–2 false positives from heuristic engines
+          if [ "$DETECTED" -eq 0 ]; then COLOR=brightgreen; elif [ "$DETECTED" -le 2 ]; then COLOR=yellow; else COLOR=red; fi
+
+          {
+            echo "sha=$SHA"
+            echo "detected=$DETECTED"
+            echo "engines=$ENGINES"
+            echo "color=$COLOR"
+            echo "link=https://www.virustotal.com/gui/file/$SHA"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Add the result to the release notes
+        env:
+          SHA: ${{ steps.vt.outputs.sha }}
+          DETECTED: ${{ steps.vt.outputs.detected }}
+          ENGINES: ${{ steps.vt.outputs.engines }}
+          COLOR: ${{ steps.vt.outputs.color }}
+          LINK: ${{ steps.vt.outputs.link }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json body -q .body > body.md
+          # Replace an older scan section instead of adding a second one
+          sed -i '/<!-- virustotal:start -->/,/<!-- virustotal:end -->/d' body.md
+          {
+            echo ""
+            echo "<!-- virustotal:start -->"
+            echo "### 🛡️ VirusTotal"
+            echo ""
+            echo "[![VirusTotal](https://img.shields.io/badge/VirusTotal-${DETECTED}%2F${ENGINES}%20detections-${COLOR})]($LINK)"
+            echo ""
+            echo "Scanned on $(date -u +%Y-%m-%d) by ${ENGINES} antivirus engines – [full report]($LINK). SHA-256: \`$SHA\`"
+            echo "<!-- virustotal:end -->"
+          } >> body.md
+          gh release edit "$TAG" --notes-file body.md
+
+      - name: Update the README badge
+        env:
+          DETECTED: ${{ steps.vt.outputs.detected }}
+          ENGINES: ${{ steps.vt.outputs.engines }}
+          COLOR: ${{ steps.vt.outputs.color }}
+        run: |
+          set -euo pipefail
+          mkdir -p .github/badges
+          jq -n --arg m "${DETECTED}/${ENGINES} · ${TAG}" --arg c "$COLOR" \
+            '{schemaVersion: 1, label: "VirusTotal", message: $m, color: $c}' > .github/badges/virustotal.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/badges/virustotal.json
+          git diff --cached --quiet && exit 0
+          git commit -m "VirusTotal badge: ${TAG} (${DETECTED}/${ENGINES})"
+          git push

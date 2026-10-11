@@ -11,6 +11,7 @@ Turn a one-line idea into a complete project roadmap – and build it with Claud
   <img src="https://img.shields.io/badge/license-MIT-5fd0e0" alt="MIT License">
   <img src="https://img.shields.io/badge/powered%20by-Claude%20Code-9d8cff" alt="Claude Code">
   <img src="https://img.shields.io/badge/language-English%20%7C%20Deutsch-555" alt="English | Deutsch">
+  <a href="https://github.com/neodk2004/vibewright/releases/latest"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fneodk2004%2Fvibewright%2Fmain%2F.github%2Fbadges%2Fvirustotal.json" alt="VirusTotal scan"></a>
 </p>
 
 <p align="center"><img src="docs/screenshots/cockpit.png" alt="Vibewright cockpit" width="860"></p>
@@ -87,7 +88,9 @@ Every release lists the **SHA-256 checksum** of the installer in its release not
 (Get-FileHash .\Vibewright.Setup.0.1.0.exe -Algorithm SHA256).Hash
 ```
 
-If the output matches the published value, your file is exactly the released one. Prefer to check the code yourself? [Run from source](#run-from-source) or build the installer with `npm run exe`.
+If the output matches the published value, your file is exactly the released one.
+
+Every installer is also **scanned by VirusTotal** (around 70 antivirus engines) with the public workflow [`.github/workflows/virustotal.yml`](.github/workflows/virustotal.yml). The result and a link to the full report are added to the release notes; the badge at the top shows the latest result. Prefer to check the code yourself? [Run from source](#run-from-source) or build the installer with `npm run exe`.
 
 ### Run from source
 
