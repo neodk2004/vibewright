@@ -1,0 +1,59 @@
+# Builds the macOS app (Apple Silicon) on a GitHub-hosted Mac and smoke-tests it.
+# Result: .dmg + .zip and screenshots as a workflow artifact.
+name: Build macOS
+
+on:
+  push:
+    branches: [mac]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest # Apple Silicon (arm64)
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test – node-pty works inside Electron
+        run: perl -e 'alarm 60; exec @ARGV' npx electron test/pty-check.js
+
+      - name: Build .dmg and .zip (ad-hoc signed, not notarized)
+        run: npm run exe:mac
+
+      - name: Smoke test – start the built app and take screenshots
+        run: |
+          set -euo pipefail
+          APP="dist/mac-arm64/Vibewright.app/Contents/MacOS/Vibewright"
+          ls -la dist dist/mac-arm64
+          codesign -dv "dist/mac-arm64/Vibewright.app" 2>&1 | head -5 || true
+          mkdir -p shots /tmp/kph/ablage
+          echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"de"}' > /tmp/kph/einstellungen.json
+          # Claude Code is not installed on the runner → the welcome/setup page must appear
+          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-de.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
+          echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"en"}' > /tmp/kph/einstellungen.json
+          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-en.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
+          perl -e 'alarm 60; exec @ARGV' npx electron test/splash-check.js "$PWD/shots/splash.png"
+          ls -la shots
+          test -s shots/start-de.png && test -s shots/start-en.png && test -s shots/splash.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vibewright-mac-arm64
+          path: |
+            app/dist/*.dmg
+            app/dist/*.zip
+            app/shots/*.png
+          retention-days: 14

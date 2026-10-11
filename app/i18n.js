@@ -62,7 +62,7 @@ const UI_EN = {
   'Die Sitzung ist beendet.': 'The session has ended.', 'Claude arbeitet …': 'Claude is working …', 'wartet auf dich': 'waiting for you',
   'Mir ist noch was eingefallen': 'I just had another idea', 'Gedanke eintippen …': 'Type your thought …', 'Einarbeiten': 'Add it',
   'Claude ordnet den Gedanken in die passende Phase ein.': 'Claude files the thought into the matching phase.', 'Claude ordnet ein …': 'Claude is sorting it in …',
-  'Strg+Enter oder „Einarbeiten“': 'Ctrl+Enter or "Add it"', 'Bitte erst einen Gedanken eintippen.': 'Please type a thought first.',
+  'Strg+Enter oder „Einarbeiten“': 'Ctrl+Enter or "Add it"', '⌘+Enter oder „Einarbeiten“': '⌘+Enter or "Add it"', 'Bitte erst einen Gedanken eintippen.': 'Please type a thought first.',
   // Einstellungen
   'Verbindungen zu Claude, deiner Ablage und Git': 'Connections to Claude, your storage and Git', 'Sprache': 'Language',
   'Modell für die Planung': 'Model for planning', 'am sparsamsten': 'most economical', 'Standard, schnell': 'default, fast', 'am gründlichsten': 'most thorough',

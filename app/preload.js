@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('api', {
   ...Object.fromEntries(kanaele.map((k) => [k, (...a) => ipcRenderer.invoke(k, ...a)])),
   on: (k, cb) => ereignisse.includes(k) && ipcRenderer.on(k, (_e, ...a) => cb(...a)),
   senden: (k, ...a) => senden.includes(k) && ipcRenderer.send(k, ...a),
+  plattform: process.platform,
 });

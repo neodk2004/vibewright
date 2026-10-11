@@ -62,9 +62,16 @@ async function checks() {
   return { claude: true, version: v.out.trim(), loggedIn: !!auth.loggedIn, abo: auth.subscriptionType || '', apiKey: !!auth.loggedIn && auth.authMethod !== 'claude.ai' };
 }
 
+const WIN = process.platform === 'win32';
+const MAC = process.platform === 'darwin';
+// Obsidian merkt sich seine Vaults je nach System an anderer Stelle
+const obsidianJson = () => (WIN ? path.join(process.env.APPDATA || '', 'obsidian', 'obsidian.json')
+  : MAC ? path.join(os.homedir(), 'Library', 'Application Support', 'obsidian', 'obsidian.json')
+  : path.join(os.homedir(), '.config', 'obsidian', 'obsidian.json'));
+
 function obsidianVaults() {
   try {
-    const j = JSON.parse(fs.readFileSync(path.join(process.env.APPDATA || '', 'obsidian', 'obsidian.json'), 'utf8'));
+    const j = JSON.parse(fs.readFileSync(obsidianJson(), 'utf8'));
     return Object.values(j.vaults || {}).map((v) => v.path).filter((p) => fs.existsSync(p));
   } catch { return []; }
 }
@@ -253,10 +260,10 @@ function inventar() {
 
 async function vorhanden(e) {
   if (e.exe && /^[\w.+-]+$/.test(e.exe)) {
-    const r = await new Promise((res) => execFile('where.exe', [e.exe], { windowsHide: true }, (err) => res(!err)));
+    const r = await new Promise((res) => execFile(WIN ? 'where.exe' : 'which', [e.exe], { windowsHide: true }, (err) => res(!err)));
     if (r) return true;
   }
-  return (e.pfade || []).some((p) => fs.existsSync(p.replace(/%([^%]+)%/g, (_, k) => process.env[k] ?? '')));
+  return (e.pfade || []).some((p) => fs.existsSync(p.replace(/%([^%]+)%/g, (_, k) => process.env[k] ?? '').replace(/^~(?=\/)/, os.homedir())));
 }
 
 async function werkzeugCheck(st) {
@@ -264,7 +271,7 @@ async function werkzeugCheck(st) {
   const mcp = (await claudeLauf(['mcp', 'list'])).out.split('\n').filter((l) => l.includes(':') && !/^Checking/.test(l)).join('\n');
   const prompt = `Der Plan ist freigegeben. Schritt: Werkzeug-Check. Was brauchen die Phasen an Systemwerkzeugen (Programme, SDKs, Laufzeiten, VMs) und an Claude-Erweiterungen (Plugins, Skills, MCP)?
 Inventar dieses Rechners:
-- Windows: ${os.version()} (Build ${os.release()})
+- Betriebssystem: ${os.version()} (${MAC ? 'macOS' : WIN ? 'Windows' : 'Linux'}, ${os.arch()}, Release ${os.release()})
 - Installierte Claude-Plugins: ${inv.plugins.join(', ') || 'keine'}
 - Eigene Skills: ${inv.skills.join(', ') || 'keine'}
 - MCP-Server: ${mcp || 'keine'}
@@ -273,11 +280,11 @@ ${inv.katalog.join('\n') || '(nicht verfügbar)'}
 
 Regeln:
 - Nur offizielle Quellen: offizieller Katalog oben oder die Download-Seite des Herstellers. Nur was eine Phase wirklich braucht.
-- art=system: gib exe (Dateiname wie im PATH, z. B. ffmpeg.exe) und pfade (typische Installationspfade mit %ProgramFiles%, %LOCALAPPDATA% usw.) an; status setzt die App selbst, schreib dort "fehlt".
+- art=system: gib exe (Programmname wie im PATH${WIN ? ', z. B. ffmpeg.exe' : ', z. B. ffmpeg'}) und pfade (typische Installationspfade${WIN ? ' mit %ProgramFiles%, %LOCALAPPDATA% usw.' : MAC ? ', z. B. /Applications/Name.app oder ~/Applications/Name.app' : ''}) an; status setzt die App selbst, schreib dort "fehlt". Empfiehl nur Programme, die es für dieses Betriebssystem gibt.
 - art=claude: status anhand des Inventars. Fehlendes Fachwissen ohne passenden offiziellen Eintrag → aktion eigener_skill.
 - bedarf = kurzer Name (höchstens 6 Wörter, z. B. „Raspberry Pi Imager“), Details gehören in empfehlung. quelle = bei art=system die offizielle Download-Seite als vollständige https-URL (keine winget-IDs oder Befehle, der Nutzer ist Laie); bei art=claude der Katalogname. empfehlung in Laiensprache.
 - phase = erste Phase, die den Eintrag braucht.
-- Widersprüche zum Plan (z. B. Werkzeug läuft auf dieser Windows-Edition nicht) → plan_korrekturen.`;
+- Widersprüche zum Plan (z. B. Werkzeug läuft auf diesem Betriebssystem bzw. dieser Edition nicht) → plan_korrekturen.`;
   const d = await ask(st, prompt, S_WERKZEUG);
   for (const e of d.eintraege) {
     if (e.art !== 'system' || e.aktion === 'nicht_noetig') { if (e.aktion === 'nicht_noetig') e.status = 'nicht_noetig'; continue; }
@@ -642,8 +649,20 @@ function claudeVorbereiten(info, name) {
 // Ohne Shell startet Windows nur .exe-Dateien. Bei npm steckt hinter claude.cmd ein node-Skript oder eine .exe – das lesen wir aus.
 let claudeCache = null;
 const wo = (name) => { try { return require('child_process').execFileSync('where.exe', [name], { windowsHide: true }).toString().split(/\r?\n/).map((s) => s.trim()).filter(Boolean); } catch { return []; } };
+// macOS/Linux: claude ist eine ausführbare Datei bzw. ein Symlink auf ein node-Skript mit Shebang – direkt startbar.
+// Typische Orte zusätzlich prüfen, weil per Finder gestartete Apps nicht den PATH der Shell erben.
+function claudeBefehlUnix() {
+  let treffer = [];
+  try { treffer = require('child_process').execFileSync('which', ['-a', 'claude']).toString().split('\n').map((s) => s.trim()).filter(Boolean); } catch {}
+  const h = os.homedir();
+  const orte = [...treffer, path.join(h, '.local', 'bin', 'claude'), path.join(h, '.claude', 'local', 'claude'),
+    '/opt/homebrew/bin/claude', '/usr/local/bin/claude', path.join(h, '.npm-global', 'bin', 'claude')];
+  const datei = orte.find((p) => { try { fs.accessSync(p, fs.constants.X_OK); return true; } catch { return false; } });
+  return datei ? (claudeCache = { datei, vorne: [] }) : null;
+}
 function claudeBefehl() {
   if (claudeCache) return claudeCache;
+  if (!WIN) return claudeBefehlUnix();
   const treffer = wo('claude');
   const exe = treffer.find((p) => /\.exe$/i.test(p)) || [path.join(os.homedir(), '.local', 'bin', 'claude.exe')].find((p) => fs.existsSync(p));
   if (exe) return (claudeCache = { datei: exe, vorne: [] });

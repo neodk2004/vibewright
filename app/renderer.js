@@ -1,3 +1,4 @@
+const MAC = api.plattform === 'darwin';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -263,7 +264,7 @@ async function einstellungen() {
       ${g.installiert ? `${punkt(g.name && g.email, g.name && g.email ? 'Name und E-Mail für Commits eingetragen' : 'Name und E-Mail fehlen noch')}
         <input type="text" id="g-name" placeholder="Dein Name" value="${esc(g.name)}">
         <input type="text" id="g-mail" placeholder="E-Mail" value="${esc(g.email)}">`
-        : '<span class="muted klein">Offizieller Download: <a href="#" data-url="https://git-scm.com/download/win">git-scm.com/download/win</a></span>'}
+        : `<span class="muted klein">Offizieller Download: <a href="#" data-url="https://git-scm.com/download/${MAC ? 'mac' : 'win'}">git-scm.com/download/${MAC ? 'mac' : 'win'}</a></span>`}
       <label class="schalter"><input type="checkbox" id="g-auto" ${e.gitAuto ? 'checked' : ''}><span>Code-Ordner automatisch als Git-Projekt anlegen<small>Claude macht nach jedem erledigten Schritt einen Commit – so kannst du jederzeit zurück.</small></span></label>
       <div class="unten">${g.installiert ? '<button class="btn" id="g-speichern">Speichern</button>' : ''}<span class="muted klein" id="g-info"></span></div>
     </div>
@@ -509,10 +510,10 @@ function ideeBinden(st, neuZeichnen) {
   feld.oninput = () => { // Entwurf überlebt das Neuzeichnen durch neue Häkchen
     ideeEntwurf = feld.value;
     wachsen();
-    $('#idee-info').innerHTML = feld.value.trim() ? 'Strg+Enter oder „Einarbeiten“' : infoAlt; // spart Platz beim Tippen
+    $('#idee-info').innerHTML = feld.value.trim() ? (MAC ? '⌘+Enter oder „Einarbeiten“' : 'Strg+Enter oder „Einarbeiten“') : infoAlt; // spart Platz beim Tippen
   };
   if (ideeEntwurf) requestAnimationFrame(wachsen);
-  feld.onkeydown = (e) => { if (e.key === 'Enter' && e.ctrlKey) $('#idee-los').click(); };
+  feld.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('#idee-los').click(); }; // Strg bzw. ⌘ auf dem Mac
   $('#idee-los').onclick = async () => {
     if (!feld.value.trim()) return feld.focus();
     $('#idee-los').disabled = true;
@@ -534,7 +535,7 @@ function terminalAnzeigen(ziel) {
   ziel.appendChild(termBox);
   if (!term) {
     term = new Terminal({
-      fontFamily: '"Cascadia Mono", Consolas, monospace', fontSize: 13, cursorBlink: true, scrollback: 5000,
+      fontFamily: '"Cascadia Mono", Consolas, "SF Mono", Menlo, monospace', fontSize: 13, cursorBlink: true, scrollback: 5000,
       theme: { background: '#0e0f11', foreground: '#e6e6e8', cursor: '#9d8cff', selectionBackground: '#9d8cff55' },
     });
     fit = new FitAddon.FitAddon();

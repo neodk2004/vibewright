@@ -8,7 +8,8 @@
     "start": "electron .",
     "test": "node test/claude-finden.js && node test/e2e.js",
     "exe": "electron-builder --win nsis",
-    "notices": "node build/hinweise-bauen.js"
+    "notices": "node build/hinweise-bauen.js",
+    "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"
   },
   "devDependencies": {
     "electron": "33.2.0",
@@ -56,7 +57,22 @@
         "from": "LICENSE",
         "to": "LICENSE.vibewright.txt"
       }
-    ]
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "artifactName": "Vibewright-${version}-mac-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Vibewright ${version}"
+    }
   },
   "license": "MIT",
   "author": "neodk2004",

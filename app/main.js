@@ -2,6 +2,18 @@ const { app, BrowserWindow, ipcMain, shell, dialog, nativeTheme, screen } = requ
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const WIN = process.platform === 'win32';
+const MAC = process.platform === 'darwin';
+
+// macOS/Linux: Per Finder gestartete Apps kennen den PATH der Shell nicht (claude, git, node fehlen sonst).
+// Einmal beim Start aus der Login-Shell holen – Marker trennen den PATH von eventuellen Begrüßungsausgaben.
+if (!WIN) {
+  try {
+    const aus = require('child_process').execFileSync(process.env.SHELL || '/bin/zsh', ['-ilc', 'echo "__PFAD__${PATH}__PFAD__"'], { timeout: 4000 }).toString();
+    const pfad = aus.match(/__PFAD__(.*)__PFAD__/)?.[1];
+    if (pfad) process.env.PATH = pfad;
+  } catch {}
+}
 const core = require('./core');
 
 // Einstellungsordner fest auf den alten Namen, damit Einstellungen das Umbenennen in „Vibewright“ überleben; KPH_USERDATA für Tests
@@ -46,7 +58,14 @@ handle('git-identitaet', async (name, email) => {
   return gitStatus();
 });
 // Anmeldung öffnet den Browser; dafür reicht ein normales Terminalfenster (selten gebraucht)
-handle('claude-anmelden', () => { require('child_process').spawn('cmd.exe', ['/c', 'start', '', 'cmd', '/k', 'claude auth login'], { detached: true, stdio: 'ignore' }).unref(); });
+handle('claude-anmelden', () => {
+  const cp = require('child_process');
+  if (WIN) return cp.spawn('cmd.exe', ['/c', 'start', '', 'cmd', '/k', 'claude auth login'], { detached: true, stdio: 'ignore' }).unref();
+  // macOS: im Terminal öffnen; Claude-Pfad ausdrücklich angeben, falls die Terminal-Shell ihn nicht kennt
+  const claude = core.claudeBefehl()?.datei || 'claude';
+  if (MAC) return cp.spawn('osascript', ['-e', `tell application "Terminal" to do script "'${claude.replace(/'/g, '')}' auth login"`, '-e', 'tell application "Terminal" to activate'], { detached: true, stdio: 'ignore' }).unref();
+  cp.spawn('x-terminal-emulator', ['-e', claude, 'auth', 'login'], { detached: true, stdio: 'ignore' }).unref();
+});
 
 // Code-Ordner beim ersten Start als Git-Projekt anlegen (Schalter in den Einstellungen) – Grundlage für Undo per Commit
 async function gitAnlegen(ordner) {
@@ -65,8 +84,8 @@ handle('ablage', (modus, ablage) => {
   return lies();
 });
 handle('obsidian-installieren', async () => {
-  // winget fehlt auf manchen Windows-Versionen → dann die offizielle Download-Seite öffnen
-  const r = await core.run('winget', ['install', '-e', '--id', 'Obsidian.Obsidian', '--accept-source-agreements', '--accept-package-agreements']);
+  // Windows: über winget; fehlt winget (oder auf macOS/Linux) → offizielle Download-Seite öffnen
+  const r = WIN ? await core.run('winget', ['install', '-e', '--id', 'Obsidian.Obsidian', '--accept-source-agreements', '--accept-package-agreements']) : { code: 1 };
   const download = r.code !== 0;
   if (download) shell.openExternal('https://obsidian.md/download');
   const vault = path.join(DOKUMENTE, 'Obsidian', 'Projekte');
@@ -163,7 +182,10 @@ function fenstergroesse() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   return { width: Math.min(1200, Math.round(width * 0.92)), height: Math.min(780, Math.round(height * 0.92)) };
 }
-app.setAppUserModelId('de.vibewright.app'); // eigenes Taskleisten-Icon statt Electron-Standard
+if (WIN) app.setAppUserModelId('de.vibewright.app'); // eigenes Taskleisten-Icon statt Electron-Standard
+// macOS braucht ein App-Menü – ohne „Bearbeiten“-Menü gehen ⌘C/⌘V/⌘A in Eingabefeldern nicht
+if (MAC) app.whenReady().then(() => require('electron').Menu.setApplicationMenu(require('electron').Menu.buildFromTemplate(
+  [{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' }])));
 
 app.whenReady().then(() => {
   // Splash-Screen beim Start (nicht im Screenshot-Testmodus); Hauptfenster lädt derweil unsichtbar

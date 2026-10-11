@@ -1,5 +1,7 @@
 // Prüft, dass Claude auch bei einer npm-Installation (claude.cmd) gefunden wird – ohne echtes npm.
 // Aufruf: node test/claude-finden.js
+// Nur Windows betrifft claude.cmd – auf anderen Systemen gibt es nichts zu prüfen
+if (process.platform !== 'win32') { console.log('übersprungen (nur Windows)'); process.exit(0); }
 const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
