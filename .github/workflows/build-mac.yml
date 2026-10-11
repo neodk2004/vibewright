@@ -39,7 +39,13 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run exe:mac
+        run: |
+          # Missing secrets arrive as empty strings – electron-builder would treat them as a certificate path
+          [ -n "$CSC_LINK" ] || unset CSC_LINK CSC_KEY_PASSWORD
+          [ -n "$APPLE_ID" ] || unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+          if [ -n "${CSC_LINK:-}" ]; then echo "Signing: Developer ID"; else echo "Signing: ad-hoc"; fi
+          if [ -n "${APPLE_ID:-}" ]; then echo "Notarization: yes"; else echo "Notarization: no"; fi
+          npm run exe:mac
 
       - name: Check signature and notarization
         run: |
