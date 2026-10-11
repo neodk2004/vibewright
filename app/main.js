@@ -191,6 +191,7 @@ app.whenReady().then(() => {
   // Splash-Screen beim Start (nicht im Screenshot-Testmodus); Hauptfenster lädt derweil unsichtbar
   const splash = process.env.SCREENSHOT ? null : new BrowserWindow({
     width: 420, height: 350, frame: false, transparent: true, resizable: false, alwaysOnTop: true, show: false, icon: ICON, title: 'Vibewright',
+    webPreferences: { backgroundThrottling: false }, // Animation auch laufen lassen, wenn macOS das Fenster für verdeckt hält
   });
   splash?.loadFile('splash.html');
   // Splash bleibt ab dem Moment, in dem er sichtbar ist, mindestens 2 s stehen – auch wenn die App schon fertig ist
