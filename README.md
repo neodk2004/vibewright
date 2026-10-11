@@ -7,7 +7,7 @@
 Turn a one-line idea into a complete project roadmap – and build it with Claude Code, right inside the app.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-6a55e8" alt="Windows">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-6a55e8" alt="Windows | macOS">
   <img src="https://img.shields.io/badge/license-MIT-5fd0e0" alt="MIT License">
   <img src="https://img.shields.io/badge/powered%20by-Claude%20Code-9d8cff" alt="Claude Code">
   <img src="https://img.shields.io/badge/language-English%20%7C%20Deutsch-555" alt="English | Deutsch">
@@ -22,7 +22,7 @@ Turn a one-line idea into a complete project roadmap – and build it with Claud
 
 You have an idea. Maybe a bird house camera, a podcast, a home server. Getting from *"I'd like to…"* to *"it works"* usually means juggling chats, notes, half-finished plans and forgotten next steps.
 
-Vibewright is a Windows desktop app that does the project management for you. You type one sentence; Vibewright interviews you, writes a needs analysis, cuts the goal into phases, checks which tools you and Claude need – and then lets you build it step by step with **Claude Code running inside the app**. You stay the decision maker: you click, approve and tick off. Claude does the heavy lifting in the background.
+Vibewright is a desktop app for Windows and macOS that does the project management for you. You type one sentence; Vibewright interviews you, writes a needs analysis, cuts the goal into phases, checks which tools you and Claude need – and then lets you build it step by step with **Claude Code running inside the app**. You stay the decision maker: you click, approve and tick off. Claude does the heavy lifting in the background.
 
 ```
 Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool check ──► Build
@@ -34,7 +34,7 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 - **Guided interview** – one multiple-choice question per screen (keys 1–4), with your own answer as an option. Two short rounds, follow-up questions only where answers leave gaps.
 - **Needs analysis** – goal, scope, must-have / could-have / non-goals, risks you didn't think of, and a feasibility traffic light.
 - **Plan as a roadmap** – 3–6 phases with goals, "done when" criteria and concrete steps in plain language (no unexplained commands).
-- **Tool check** – inspects your PC and your Claude setup (plugins, skills, MCP servers, Windows edition) and recommends only what a phase really needs, from official sources. Nothing gets installed without your OK.
+- **Tool check** – inspects your PC and your Claude setup (plugins, skills, MCP servers, operating system) and recommends only what a phase really needs, from official sources. Nothing gets installed without your OK.
 - **Cockpit** – the current phase with its checklist, progress, next step and all phases at a glance.
 - **Claude Code inside the app** – an embedded terminal runs Claude Code with a generated `CLAUDE.md` that knows your project, phase and next step. Claude ticks off finished steps; the checklist updates live.
 - **"I just had another idea"** – type a thought any time; Claude sorts it into the right phase (or creates a new one). While Claude is working, the idea waits until the current step is done.
@@ -66,13 +66,15 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 
 | | |
 |---|---|
-| **Windows 10 or 11** | 64-bit |
+| **Windows 10 or 11** (64-bit) **or macOS 11 Big Sur or later** | Mac: Apple Silicon (M1–M4) and Intel are both supported |
 | **Claude Code** | installed and signed in – [official setup guide](https://docs.claude.com/en/docs/claude-code/setup). Native installer and npm installation are both supported. |
 | **Claude subscription** | Pro or Max recommended. Signing in with an API key works too, but then every call is billed separately. |
 | Obsidian *(optional)* | [obsidian.md](https://obsidian.md) – with the community plugins *Dataview* and *Kanban* for live tables and a project board. Without Obsidian, Vibewright saves `.md` files plus an `.html` dashboard. |
-| Git *(optional)* | [git-scm.com](https://git-scm.com/download/win) – for the automatic commit-per-step safety net. |
+| Git *(optional)* | [git-scm.com](https://git-scm.com/downloads) – for the automatic commit-per-step safety net. |
 
 ## Installation
+
+### Windows
 
 1. Download **`Vibewright.Setup.x.y.z.exe`** from the [Releases](../../releases) page.
    *Optional but recommended:* [verify the download](#verify-your-download).
@@ -80,12 +82,28 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
    > The installer is not code-signed yet, so Windows SmartScreen may warn you. Click **More info → Run anyway**.
 3. Start Vibewright. On first launch it checks Claude Code, lets you sign in and asks where your projects should live.
 
+### macOS
+
+1. Download the file for your Mac from the [macOS release](../../releases/tag/v0.1.0-mac):
+   - **Apple Silicon** (M1, M2, M3, M4 …): `Vibewright-x.y.z-mac-arm64.dmg`
+   - **Intel**: `Vibewright-x.y.z-mac-x64.dmg`
+
+   Not sure? Apple menu → *About This Mac* → "Chip" (Apple M…) or "Processor" (Intel).
+2. Open the `.dmg` and drag **Vibewright** into **Applications**.
+3. Start Vibewright from *Applications*. The app is **signed with an Apple Developer ID and notarized by Apple**, so macOS opens it without warnings.
+
 ### Verify your download
 
-Every release lists the **SHA-256 checksum** of the installer in its release notes and in an attached `SHA256SUMS.txt` (GitHub also shows it next to the file). In PowerShell, inside your download folder:
+Every release lists the **SHA-256 checksum** of the installer in its release notes and in an attached `SHA256SUMS.txt` (GitHub also shows it next to the file). Inside your download folder:
 
 ```powershell
+# Windows (PowerShell)
 (Get-FileHash .\Vibewright.Setup.0.1.0.exe -Algorithm SHA256).Hash
+```
+
+```bash
+# macOS (Terminal)
+shasum -a 256 Vibewright-0.1.0-mac-arm64.dmg
 ```
 
 If the output matches the published value, your file is exactly the released one.
@@ -101,6 +119,7 @@ npm install
 npm start            # starts the app
 npm test             # end-to-end test with real Claude calls (uses a bit of your limit)
 npm run exe          # builds the Windows installer into app/dist/
+npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 ```
 
 ## How it works
@@ -127,7 +146,7 @@ npm run exe          # builds the Windows installer into app/dist/
 ## Privacy
 
 - Vibewright itself sends **no telemetry** and stores its settings only on your PC (`%APPDATA%`).
-- What you plan with Claude (your idea, answers, plan, a list of installed Claude plugins/skills and your Windows version for the tool check) is sent to Anthropic through Claude Code – exactly like any other Claude Code usage.
+- What you plan with Claude (your idea, answers, plan, a list of installed Claude plugins/skills and your operating system for the tool check) is sent to Anthropic through Claude Code – exactly like any other Claude Code usage.
 - If you push a project to GitHub, the Git commits contain the name and email from your Git config. Use GitHub's `noreply` address if you don't want your email to be public.
 
 ## Project structure

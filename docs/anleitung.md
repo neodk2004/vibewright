@@ -27,7 +27,7 @@
 
 ## 1. Voraussetzungen
 
-- **Windows 10 oder 11** (64 Bit)
+- **Windows 10 oder 11** (64 Bit) oder **macOS 11 Big Sur oder neuer** (Apple Silicon oder Intel)
 - **Claude Code**, installiert und angemeldet – siehe [offizielle Anleitung](https://docs.claude.com/en/docs/claude-code/setup). Nativer Installer und npm-Installation funktionieren beide.
 - Ein **Claude-Abo** (Pro oder Max empfohlen). Mit API-Key geht es auch, dann wird aber jede Nutzung einzeln abgerechnet – Vibewright weist darauf hin.
 

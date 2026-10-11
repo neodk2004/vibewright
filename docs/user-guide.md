@@ -29,7 +29,7 @@
 
 You need:
 
-- **Windows 10 or 11** (64-bit)
+- **Windows 10 or 11** (64-bit) or **macOS 11 Big Sur or later** (Apple Silicon or Intel)
 - **Claude Code**, installed and signed in – see the [official setup guide](https://docs.claude.com/en/docs/claude-code/setup). Both the native installer and an npm installation work.
 - A **Claude subscription** (Pro or Max recommended). Signing in with an API key also works, but every call is then billed separately – Vibewright shows a notice in that case.
 

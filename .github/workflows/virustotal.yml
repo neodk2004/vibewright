@@ -20,6 +20,8 @@ concurrency: virustotal
 
 jobs:
   scan:
+    # Mac releases (tag ends in -mac) contain no Windows installer – Apple notarizes those instead
+    if: ${{ !endsWith(github.event.release.tag_name || inputs.tag, '-mac') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
