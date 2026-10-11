@@ -29,7 +29,8 @@
   @keyframes lauf{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
   .fuss{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:11px;line-height:1.6;color:#5b5f66;animation:text .4s 1s both}
   .fuss span{color:#8d9199}
-  @media (prefers-reduced-motion:reduce){*{animation:none !important}}
+  /* „Bewegung reduzieren“: keine Animationen – das Logo steht sofort im fertigen Zustand da */
+  @media (prefers-reduced-motion:reduce){*{animation:none !important}.welle,.balken{stroke-dashoffset:0}.orb,.glow{transform:none}}
 </style>
 </head>
 <body>
