@@ -123,6 +123,10 @@ handle('idee', async (name, text) => {
   return sitzung?.name === name ? st : core.ideenVerarbeiten(info(), name);
 });
 handle('sitzung-beenden', () => sitzungBeenden());
+// Läuft gerade Claude in diesem Projekt: erst beenden, sonst sperrt Windows den Ordner
+const ohneSitzung = (name) => { if (sitzung?.name === name) sitzungBeenden(); };
+handle('archivieren', (name) => (ohneSitzung(name), core.archivieren(info(), name)));
+handle('loeschen', (name) => (ohneSitzung(name), core.loeschen(info(), name)));
 app.on('before-quit', sitzungBeenden);
 
 handle('claude-starten', async (name, cols = 100, rows = 30) => {

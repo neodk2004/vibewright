@@ -41,6 +41,10 @@ button,input,textarea{font:inherit;color:inherit}
 #kopf:empty{padding:0}
 #kopf h1{font:600 20px/1.3 "Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;margin:0}
 #kopf .idee{color:var(--muted);margin:2px 0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kopf-zeile{display:flex;align-items:center;gap:12px;min-height:30px}
+.kopf-akt{margin-left:auto;display:flex;gap:2px}
+.kopf-akt .btn{padding:4px 10px;font-size:12.5px}
+#k-loeschen:hover{color:var(--bad)}
 #inhalt{padding:20px 32px;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 #inhalt>*{flex:none}
 #aktionen{display:flex;align-items:center;gap:8px;padding:12px 32px;border-top:1px solid var(--line);background:var(--panel);min-height:60px}
@@ -63,6 +67,7 @@ button,input,textarea{font:inherit;color:inherit}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.ghost{border-color:transparent;background:none;color:var(--muted)} .btn.ghost:hover{color:var(--text)}
+.btn.gefahr{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600} .btn.gefahr:hover{filter:brightness(1.08)}
 input[type=text],textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:var(--r);padding:8px 10px;outline:none}
 input[type=text]:focus,textarea:focus{border-color:var(--accent)}
 kbd{font:11px/1 ui-monospace,Consolas,monospace;border:1px solid var(--line);border-radius:4px;padding:3px 5px;color:var(--muted)}

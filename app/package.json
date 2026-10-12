@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/claude-finden.js && node test/e2e.js",
+    "test": "node test/claude-finden.js && node test/archiv.js && node test/e2e.js",
     "exe": "electron-builder --win nsis",
     "notices": "node build/hinweise-bauen.js",
     "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"

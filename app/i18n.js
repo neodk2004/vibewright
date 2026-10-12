@@ -80,6 +80,15 @@ const UI_EN = {
   'Claude macht nach jedem erledigten Schritt einen Commit – so kannst du jederzeit zurück.': 'Claude commits after every finished step – so you can always go back.',
   'Bitte Name und gültige E-Mail eintragen.': 'Please enter a name and a valid email.', 'Kein Arbeitsordner gewählt.': 'No work folder chosen.',
   'Claude Code wurde nicht gefunden. Bitte installieren und die App neu starten.': 'Claude Code was not found. Please install it and restart the app.',
+  // Archivieren & Löschen
+  'Archivieren': 'Archive', 'Löschen': 'Delete', 'Alles als ZIP-Datei aufheben': 'Keep everything as a ZIP file', 'Abbrechen': 'Cancel', 'Endgültig löschen': 'Delete for good',
+  'Achtung:': 'Warning:', 'Mit der nächsten Bestätigung sind alle Daten dieses Projekts endgültig weg – Interview, Bedarfsanalyse, Plan, Punkte und Dashboard. Das lässt sich nicht rückgängig machen.':
+    'With the next confirmation, all data of this project is gone for good – interview, needs analysis, plan, tasks and dashboard. This cannot be undone.',
+  'Dein Code-Ordner bleibt erhalten:': 'Your code folder is kept:', 'Lieber aufheben? „Archivieren“ packt alles in eine ZIP-Datei.': 'Rather keep it? "Archive" packs everything into a ZIP file.',
+  'Projekt wird archiviert …': 'Archiving project …', 'Dateien sammeln': 'Collect files', 'ZIP-Datei packen': 'Pack ZIP file', 'Aufräumen': 'Clean up',
+  'Archiviert': 'Archived', 'Das Projekt steckt jetzt komplett in einer ZIP-Datei und ist aus der Liste verschwunden.': 'The whole project is now in a ZIP file and has been removed from the list.',
+  'Zurückholen: ZIP-Datei entpacken und den Ordner wieder in die Ablage legen.': 'To restore: unzip the file and put the folder back into your storage.',
+  'Im Ordner zeigen': 'Show in folder', 'Projekt nicht gefunden.': 'Project not found.',
 };
 const UI_EN_MUSTER = [
   [/^Runde (\d+) · Frage (\d+) von (\d+)( · mehrere möglich)?$/, (_m, a, b, c, d) => `Round ${a} · Question ${b} of ${c}${d ? ' · multiple allowed' : ''}`],
@@ -92,6 +101,8 @@ const UI_EN_MUSTER = [
   [/^(\d+) Idee wartet auf das Ende des aktuellen Schritts$/, '$1 idea waits for the current step to finish'],
   [/^(\d+) Ideen warten auf das Ende des aktuellen Schritts$/, '$1 ideas wait for the current step to finish'],
   [/^Konnte nicht eingeordnet werden: (.*)$/, 'Could not be sorted in: $1'],
+  [/^„(.*)“ löschen\?$/, 'Delete "$1"?'],
+  [/^Archivieren fehlgeschlagen: (.*)$/s, 'Archiving failed: $1'],
   [/^„(.*)“ gibt es in der Ablage schon\. Bitte einen anderen Namen wählen – vorhandene Projekte werden nie überschrieben\.$/, '"$1" already exists. Please choose another name – existing projects are never overwritten.'],
   [/^Limit erreicht – der Stand ist gespeichert\. Später auf „Erneut versuchen“ klicken\. (.*)$/, 'Limit reached – progress is saved. Click "Try again" later. $1'],
 ];

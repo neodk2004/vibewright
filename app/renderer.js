@@ -29,9 +29,12 @@ function schrittNr(st) {
 function setKopf(st) {
   if (!st) return (kopf.innerHTML = '');
   const n = schrittNr(st);
-  kopf.innerHTML = `<h1>${esc(st.name)}</h1><div class="idee">${esc(st.plan?.einzeiler || st.idee)}</div>
+  kopf.innerHTML = `<div class="kopf-zeile"><h1>${esc(st.name)}</h1><span class="kopf-akt">
+    <button class="btn ghost" id="k-archiv" title="Alles als ZIP-Datei aufheben">Archivieren</button><button class="btn ghost" id="k-loeschen">Löschen</button></span></div><div class="idee">${esc(st.plan?.einzeiler || st.idee)}</div>
     <div class="steps">${SCHRITTE.map((s, i) => `${i ? '<span class="ln"></span>' : ''}<span class="st ${i < n ? 'done' : i === n ? 'now' : ''}"><i>${i < n ? '✓' : i + 1}</i>${s}</span>`).join('')}
     ${n === 4 && typeof sitzungName !== 'undefined' && sitzungName === st.name ? '<span class="kopf-orb" id="kopf-orb"><span class="mini-orb"><i></i><i></i><i></i></span><span class="was"></span></span>' : ''}</div>`;
+  $('#k-archiv').onclick = () => archivieren(st);
+  $('#k-loeschen').onclick = () => loeschenFragen(st);
   orbAktualisieren();
 }
 
@@ -51,7 +54,7 @@ function setAktionen(liste = [], ziel = aktionen) {
   ziel.innerHTML = liste.map((a, i) => a === 'sp' ? '<span class="sp"></span>'
     : a.info ? `<span class="muted" style="font-size:12.5px">${esc(a.info)}</span>`
     : a.input ? `<input type="text" id="${a.input}" placeholder="${esc(a.platzhalter)}">`
-    : `<button class="btn ${a.primary ? 'primary' : ''} ${a.ghost ? 'ghost' : ''}" data-i="${i}" ${a.id ? `id="${a.id}"` : ''}>${esc(a.text)}</button>`).join('');
+    : `<button class="btn ${a.primary ? 'primary' : ''} ${a.ghost ? 'ghost' : ''} ${a.gefahr ? 'gefahr' : ''}" data-i="${i}" ${a.id ? `id="${a.id}"` : ''}>${esc(a.text)}</button>`).join('');
   $$('button', ziel).forEach((b) => (b.onclick = liste[b.dataset.i].klick));
 }
 
@@ -105,9 +108,11 @@ const ARBEIT = {
   plan: ['Ziel in Phasen schneiden', 'Schritte ordnen', 'Aufwand schätzen', 'Laufkarte zeichnen'],
   werkzeug: ['Rechner untersuchen', 'Plugins abgleichen', 'Offizielle Quellen suchen', 'Empfehlungen schreiben'],
   schreiben: ['Punkte anlegen', 'Dashboard bauen', 'Fortschritt einrichten'],
+  archiv: ['Dateien sammeln', 'ZIP-Datei packen', 'Aufräumen'],
   standard: ['Nachdenken', 'Ordnen', 'Formulieren'],
 };
 function arbeitFuer(text) {
+  if (/archiviert/.test(text)) return [ARBEIT.archiv, 2];
   if (/Prüfe/.test(text)) return [ARBEIT.start, 4];
   if (/Fragen|fehlt/.test(text)) return [ARBEIT.fragen, 12];
   if (/Bedarfsanalyse/.test(text)) return [ARBEIT.analyse, 18];
@@ -125,6 +130,7 @@ function laden(st, text) {
     <ul class="sim-liste">${teile.map((t) => `<li><span class="h"></span>${esc(t)}</li>`).join('')}</ul>
     <div class="bar sim-bar"><i style="transition-duration:${sek * 1.6}s"></i></div>
     <div class="muted num" id="sek">0 s</div></div></div>`, [], true);
+  $('.kopf-akt')?.remove(); // während Claude arbeitet nicht archivieren/löschen
   const li = $$('.sim-liste li');
   li[0]?.classList.add('jetzt');
   requestAnimationFrame(() => requestAnimationFrame(() => { const b = $('.sim-bar i'); if (b) b.style.width = '92%'; }));
@@ -305,6 +311,33 @@ async function anlegen() {
   aktuell = st;
   seitenleiste();
   schritt(st, {}, 'Claude stellt die ersten Fragen zusammen …');
+}
+
+// ---------- Archivieren & Löschen ----------
+async function zurueckZu(st) { const r = await api.laden(st.name); zeige(r.fehler ? st : r); }
+function loeschenFragen(st) {
+  ansicht(st, `<div class="mitte"><div class="box"><h2>„${esc(st.name)}“ löschen?</h2>
+    <div class="fehler"><b>Achtung:</b> Mit der nächsten Bestätigung sind alle Daten dieses Projekts endgültig weg – Interview, Bedarfsanalyse, Plan, Punkte und Dashboard. Das lässt sich nicht rückgängig machen.</div>
+    ${st.repo ? `<p class="muted">Dein Code-Ordner bleibt erhalten:<br>${esc(st.repo)}</p>` : ''}
+    <p class="muted">Lieber aufheben? „Archivieren“ packt alles in eine ZIP-Datei.</p></div></div>`,
+  [{ text: 'Abbrechen', ghost: true, klick: () => zurueckZu(st) }, 'sp', { text: 'Archivieren', klick: () => archivieren(st) },
+    { text: 'Endgültig löschen', gefahr: true, klick: async () => {
+      const r = await api.loeschen(st.name);
+      if (r?.fehler) return $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(r.fehler)}</div>`);
+      neuesProjekt();
+    } }]);
+  $('.kopf-akt')?.remove();
+}
+async function archivieren(st) {
+  laden(st, 'Projekt wird archiviert …');
+  const zip = await api.archivieren(st.name);
+  if (zip?.fehler) return ansicht(st, `<div class="mitte"><div class="box"><h2>Das hat nicht geklappt</h2><div class="fehler">${esc(zip.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: () => zurueckZu(st) }]);
+  aktuell = null;
+  seitenleiste();
+  ansicht(null, `<div class="mitte"><div class="box"><h2>Archiviert</h2>
+    <p>Das Projekt steckt jetzt komplett in einer ZIP-Datei und ist aus der Liste verschwunden.</p><p class="muted pfad">${esc(zip)}</p>
+    <p class="muted klein">Zurückholen: ZIP-Datei entpacken und den Ordner wieder in die Ablage legen.</p></div></div>`,
+  [{ text: 'Im Ordner zeigen', klick: () => api.ordner(zip.replace(/[\\/][^\\/]+$/, '')) }, 'sp', { text: 'Weiter', primary: true, klick: neuesProjekt }]);
 }
 
 // ---------- Ablauf ----------

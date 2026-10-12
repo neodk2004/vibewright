@@ -20,9 +20,9 @@ Recommend only official or verified tools and only what is really needed. Point 
 
 // ---------- Prozesse ----------
 
-function run(cmd, args, { input, cwd } = {}) {
+function run(cmd, args, { input, cwd, env } = {}) {
   return new Promise((resolve) => {
-    const p = spawn(cmd, args, { cwd, windowsHide: true });
+    const p = spawn(cmd, args, { cwd, env, windowsHide: true });
     let out = '', err = '';
     p.stdout.on('data', (d) => (out += d));
     p.stderr.on('data', (d) => (err += d));
@@ -153,6 +153,48 @@ function neu(info, name, idee) {
   fs.mkdirSync(path.join(info.ablage, name, punkteOrdner(st)), { recursive: true });
   speichern(info, st);
   return st;
+}
+
+// ---------- Archivieren & Löschen ----------
+// Nur echte Projektordner direkt in der Ablage – kein „..“ oder Unterpfad aus der Oberfläche
+function projektOrdner(info, name) {
+  const o = path.resolve(info.ablage, String(name));
+  if (path.dirname(o) !== path.resolve(info.ablage) || !fs.existsSync(path.join(o, STATE))) throw new Error('Projekt nicht gefunden.');
+  return o;
+}
+function kanbanEntfernen(info, name) {
+  const k = path.join(info.ablage, 'Projekte-Kanban.md');
+  if (!fs.existsSync(k)) return;
+  const s = fs.readFileSync(k, 'utf8');
+  const n = s.split('\n').filter((z) => !z.includes(`[[${name} – Dashboard|`)).join('\n');
+  if (n !== s) fs.writeFileSync(k, n, 'utf8');
+}
+// Endgültig: Projektordner weg (ein eigener Code-Ordner bleibt unberührt)
+function loeschen(info, name) {
+  fs.rmSync(projektOrdner(info, name), { recursive: true, maxRetries: 5 });
+  kanbanEntfernen(info, name);
+}
+// Projektordner als ZIP nach „Archiv“ in der Ablage, danach aus der Liste entfernen
+async function archivieren(info, name) {
+  const quelle = projektOrdner(info, name);
+  const ziel = path.join(info.ablage, laden(info, name).sprache === 'en' ? 'Archive' : 'Archiv');
+  fs.mkdirSync(ziel, { recursive: true });
+  let zip = path.join(ziel, `${name} – ${heute()}.zip`);
+  for (let n = 2; fs.existsSync(zip); n++) zip = path.join(ziel, `${name} – ${heute()} (${n}).zip`);
+  // Windows: .NET über PowerShell (tar.exe verstümmelt Umlaute; CreateFromDirectory schreibt „\“ statt „/“, das macOS nicht versteht)
+  // macOS: ditto wie „Komprimieren“ im Finder
+  const r = WIN
+    ? await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem
+$basis = (Split-Path -LiteralPath $env:VW_QUELLE -Parent).Length + 1
+$z = [IO.Compression.ZipFile]::Open($env:VW_ZIEL, 'Create')
+try { Get-ChildItem -LiteralPath $env:VW_QUELLE -Recurse -Force | ForEach-Object {
+  $n = $_.FullName.Substring($basis).Replace('\\', '/')
+  if ($_.PSIsContainer) { [void]$z.CreateEntry("$n/") } else { [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($z, $_.FullName, $n) } } }
+finally { $z.Dispose() }`], { env: { ...process.env, VW_QUELLE: quelle, VW_ZIEL: zip } })
+    : await run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', quelle, zip]);
+  if (r.code !== 0 || !fs.existsSync(zip)) throw new Error(`Archivieren fehlgeschlagen: ${(r.err || r.out).trim().slice(0, 300)}`);
+  loeschen(info, name);
+  return zip;
 }
 
 // ---------- Schemas ----------
@@ -710,4 +752,4 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren };
