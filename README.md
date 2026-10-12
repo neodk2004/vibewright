@@ -87,7 +87,7 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 
 ### macOS
 
-1. Download the file for your Mac from the [macOS release](../../releases/tag/v0.1.0-mac):
+1. Download the file for your Mac from the [latest release](../../releases/latest):
    - **Apple Silicon** (M1, M2, M3, M4 …): `Vibewright-x.y.z-mac-arm64.dmg`
    - **Intel**: `Vibewright-x.y.z-mac-x64.dmg`
 
@@ -101,12 +101,12 @@ Every release lists the **SHA-256 checksum** of the installer in its release not
 
 ```powershell
 # Windows (PowerShell)
-(Get-FileHash .\Vibewright.Setup.0.1.0.exe -Algorithm SHA256).Hash
+(Get-FileHash .\Vibewright.Setup.0.2.0.exe -Algorithm SHA256).Hash
 ```
 
 ```bash
 # macOS (Terminal)
-shasum -a 256 Vibewright-0.1.0-mac-arm64.dmg
+shasum -a 256 Vibewright-0.2.0-mac-arm64.dmg
 ```
 
 If the output matches the published value, your file is exactly the released one.
