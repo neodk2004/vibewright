@@ -116,4 +116,5 @@ jobs:
           git add .github/badges/virustotal.json
           git diff --cached --quiet && exit 0
           git commit -m "VirusTotal badge: ${TAG} (${DETECTED}/${ENGINES})"
+          git pull --rebase origin main # another workflow or person may have pushed meanwhile
           git push

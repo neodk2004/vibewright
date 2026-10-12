@@ -31,4 +31,5 @@ jobs:
           git add README.md
           git diff --cached --quiet && exit 0
           git commit -m "README: What's new aus CHANGELOG.md [skip ci]"
+          git pull --rebase origin main # another workflow or person may have pushed meanwhile
           git push

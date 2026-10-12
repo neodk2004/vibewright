@@ -8,6 +8,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 - **Archive projects:** packs a project into a ZIP file in the `Archiv` folder of your storage and removes it from the list. File names with umlauts stay intact on Windows and macOS.
 - **Delete projects:** shows a clear warning first; the next confirmation removes the project for good. Your own code folder is never touched.
 - Both actions are in the header of every project. Archiving or deleting also removes the project's line from the Obsidian kanban board and ends a running Claude session for that project.
+- Windows and macOS (Apple Silicon + Intel) now ship together in one release.
 
 ## [0.1.0-mac] – 2026-10-11
 
