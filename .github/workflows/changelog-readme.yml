@@ -1,0 +1,34 @@
+# Keeps the "What's new" section of README.md in sync with CHANGELOG.md.
+# Uses only Node (preinstalled on the runner) and git – no third-party actions.
+name: Changelog → README
+
+on:
+  push:
+    branches: [main]
+    paths: [CHANGELOG.md, .github/changelog-readme.js]
+  workflow_dispatch:
+
+permissions:
+  contents: write # commit the updated README
+
+concurrency: changelog-readme
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the newest versions into README.md
+        run: node .github/changelog-readme.js
+
+      - name: Commit if something changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet && exit 0
+          git commit -m "README: What's new aus CHANGELOG.md [skip ci]"
+          git push
