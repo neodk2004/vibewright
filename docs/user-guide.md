@@ -190,7 +190,7 @@ The language is fixed **per project** when the project is created, so existing p
 
 **Windows shows a SmartScreen warning when installing.** The installer is not code-signed yet. Click *More info → Run anyway*.
 
-**How do I know the installer is genuine?** Compare its SHA-256 checksum with the value in the release notes (or `SHA256SUMS.txt`). In PowerShell, in your download folder: `(Get-FileHash .\Vibewright.Setup.0.2.1.exe -Algorithm SHA256).Hash` – the result must match.
+**How do I know the installer is genuine?** Compare its SHA-256 checksum with the value in the release notes (or `SHA256SUMS.txt`). In PowerShell, in your download folder: `(Get-FileHash .\Vibewright.Setup.0.2.2.exe -Algorithm SHA256).Hash` – the result must match.
 
 **"Claude Code was not found".** Install Claude Code and restart Vibewright. Both `claude.exe` (native installer) and npm installations are detected.
 
