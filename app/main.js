@@ -28,7 +28,11 @@ const info = () => core.ablageInfo(lies());
 // Jeder Handler liefert {fehler} statt zu werfen, damit die Oberfläche es anzeigen kann
 const handle = (kanal, fn) => ipcMain.handle(kanal, async (_e, ...a) => { try { return await fn(...a); } catch (e) { return { fehler: e.message }; } });
 
-handle('start', async () => ({ checks: await core.checks(), settings: lies(), vaults: core.obsidianVaults() }));
+handle('start', async () => {
+  const s = lies();
+  return { checks: await core.checks(), settings: s, vaults: core.obsidianVaults(), ablageFehlt: !!s.ablage && !fs.existsSync(s.ablage) };
+});
+handle('programmordner', (p) => core.imProgrammordner(p));
 core.setModell(lies().modell);
 core.setSprache(lies().sprache || 'de');
 
@@ -46,7 +50,7 @@ handle('einstellungen', async () => {
   return { claude: await core.checks(), modell: s.modell || 'sonnet', sprache: s.sprache || 'de', ablage: core.ablageInfo(s), vaults: core.obsidianVaults(), git: await gitStatus(), gitAuto: s.gitAuto !== false };
 });
 handle('einstellung', (schluessel, wert) => {
-  if (!['modell', 'gitAuto', 'sprache'].includes(schluessel)) throw new Error('Unbekannte Einstellung');
+  if (!['modell', 'gitAuto', 'sprache', 'programmordnerOk'].includes(schluessel)) throw new Error('Unbekannte Einstellung');
   speichereEinstellung({ [schluessel]: wert });
   if (schluessel === 'modell') core.setModell(wert);
   if (schluessel === 'sprache') core.setSprache(wert);

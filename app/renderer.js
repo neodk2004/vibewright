@@ -89,7 +89,12 @@ const projektFarbe = (name) => FARBEN[[...name].reduce((h, c) => (h * 31 + c.cha
 
 async function seitenleiste() {
   const liste = await api.projekte();
-  if (liste.fehler) return;
+  if (liste.fehler) {
+    // Ablage ist während der Arbeit verschwunden: sichtbar machen, Klick führt zur Erklärung
+    $('#liste').innerHTML = '<button class="karte-p" id="liste-fehler" style="--pf:var(--bad)"><span class="n">⚠ Ablage nicht gefunden</span><span class="s">Klicken für Details</span></button>';
+    $('#liste-fehler').onclick = start;
+    return;
+  }
   $('#liste').innerHTML = liste.length ? liste.map((p) => {
     const s = sitzungName === p.name ? '<span class="live">●</span> Claude arbeitet'
       : p.offen?.typ === 'fertig' ? `${p.stand?.fortschritt ?? 0} % · Phase ${(p.stand?.aktiv ?? 0) + 1}` : SCHRITTE[schrittNr(p)];
@@ -193,16 +198,43 @@ async function start() {
       </div></div>`, [checks.claude ? { text: 'Anmelden', klick: () => api['claude-anmelden']() } : 'sp', 'sp', { text: 'Erneut prüfen', primary: true, klick: start }]);
   }
   if (!settings.ablage) return ablageWaehlen(vaults);
+  if (r.ablageFehlt) return ablageFehlt(vaults);
+  const prog = await api.programmordner(settings.ablage);
+  if (prog && settings.programmordnerOk !== settings.ablage) return programmordnerWarnung(prog, vaults);
   await seitenleiste();
   aktuell ? zeige(await api.laden(aktuell.name)) : neuesProjekt();
 }
 
-function ablageWaehlen(vaults) {
+// Ablage-Ordner fehlt (verschoben, gelöscht, Laufwerk nicht verbunden) – deutlich sagen statt eine leere Liste zu zeigen
+function ablageFehlt(vaults) {
+  aktuell = null;
+  $('#liste').innerHTML = '';
+  ansicht(null, `<div class="mitte"><div class="box"><h2>Deine Ablage wurde nicht gefunden</h2>
+    <p class="muted pfad">${esc(settings.ablage)}</p>
+    <p>Der Ordner wurde verschoben, umbenannt oder gelöscht – zum Beispiel durch ein Programm-Update – oder das Laufwerk ist gerade nicht verbunden.</p>
+    <p class="muted klein">Liegt der Ordner wieder an seinem Platz, sind auch deine Projekte wieder da.</p></div></div>`,
+  [{ text: 'Andere Ablage wählen', klick: () => ablageWaehlen(vaults) }, 'sp', { text: 'Erneut prüfen', primary: true, klick: start }]);
+}
+// Ablage im Installationsordner eines Programms: ein Update oder eine Neuinstallation löscht sie mit
+function programmordnerWarnung(prog, vaults) {
+  aktuell = null;
+  ansicht(null, `<div class="mitte"><div class="box"><h2>Achtung: Ablage im Programmordner</h2>
+    <div class="fehler">Deine Ablage liegt im Installationsordner eines Programms. Ein Update oder eine Neuinstallation löscht diesen Ordner samt Inhalt – auch deine Projekte.</div>
+    <p class="muted pfad">${esc(prog)}</p>
+    <p>So ist es sicher: Obsidian schließen, den Vault-Ordner an einen eigenen Platz verschieben (z. B. in <b>Dokumente</b>), in Obsidian „Ordner als Vault öffnen“ wählen und hier „Ablage wechseln“.</p></div></div>`,
+  [{ text: 'Trotzdem weiter', ghost: true, klick: async () => { await api.einstellung('programmordnerOk', settings.ablage); start(); } },
+    'sp', { text: 'Ablage wechseln', primary: true, klick: () => ablageWaehlen(vaults) }]);
+}
+
+async function ablageWaehlen(vaults) {
   aktuell = null;
   if (vaults.length) {
+    // Vaults im Programmordner markieren und nicht vorauswählen
+    const gefahr = await Promise.all(vaults.map((v) => api.programmordner(v)));
+    const erster = Math.max(gefahr.findIndex((g) => !g), 0);
     ansicht(null, `<div class="mitte"><div class="box"><h2>Wo sollen deine Projekte liegen?</h2>
       <p class="muted">Gefundene Obsidian-Vaults – Dashboards, Punkte und Kanban landen dort im gewohnten Format.</p>
-      ${vaults.map((v, i) => `<label class="opt ${i ? '' : 'on'}"><input type="radio" name="v" value="${esc(v)}" ${i ? '' : 'checked'} hidden>${esc(v)}</label>`).join('')}
+      ${vaults.map((v, i) => `<label class="opt ${i === erster ? 'on' : ''}"><input type="radio" name="v" value="${esc(v)}" ${i === erster ? 'checked' : ''} hidden>${esc(v)}${gefahr[i] ? '<span class="hinweis-tag" title="Ein Update von Obsidian löscht diesen Ordner">⚠ Programmordner – nicht sicher</span>' : ''}</label>`).join('')}
       </div></div>`, [{ text: 'Lieber lokal als .md + .html', klick: lokal }, 'sp', { text: 'Diesen Vault nehmen', primary: true, klick: async () => (await api.ablage('obsidian', $('input[name=v]:checked').value), start()) }]);
     $$('.opt').forEach((l) => l.addEventListener('click', () => { $$('.opt').forEach((x) => x.classList.remove('on')); l.classList.add('on'); $('input', l).checked = true; }));
   } else {

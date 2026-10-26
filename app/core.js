@@ -133,11 +133,24 @@ function speichern(info, st) {
 }
 
 function projekte(info) {
-  if (!info.ablage || !fs.existsSync(info.ablage)) return [];
+  if (!info.ablage) return [];
+  // Fehlende Ablage melden statt still „Noch keine Projekte“ zu zeigen (Ordner verschoben, gelöscht, Laufwerk weg)
+  if (!fs.existsSync(info.ablage)) throw new Error('Ablage nicht gefunden');
   return fs.readdirSync(info.ablage, { withFileTypes: true })
     .filter((d) => d.isDirectory() && fs.existsSync(path.join(info.ablage, d.name, STATE)))
-    .map((d) => JSON.parse(fs.readFileSync(path.join(info.ablage, d.name, STATE), 'utf8')))
+    .map((d) => { try { return JSON.parse(fs.readFileSync(path.join(info.ablage, d.name, STATE), 'utf8')); } catch { return null; } })
+    .filter(Boolean) // eine kaputte Zustandsdatei soll nicht die ganze Liste verstecken
     .sort((a, b) => (b.aktualisiert || '').localeCompare(a.aktualisiert || ''));
+}
+
+// Liegt die Ablage in einem Installationsordner (z. B. Vault im Obsidian-Programmordner), löscht ein Update sie mit.
+// Erkennung: irgendein Ordner auf dem Weg nach oben enthält die Programmdatei bzw. einen Deinstaller oder ist ein .app-Paket.
+function imProgrammordner(p) {
+  for (let d = path.resolve(p); ; d = path.dirname(d)) {
+    if (/\.app$/i.test(d)) return d;
+    try { if (fs.readdirSync(d).some((f) => /^(obsidian\.exe|uninstall .+\.exe|unins\d+\.exe)$/i.test(f))) return d; } catch {}
+    if (path.dirname(d) === d) return null;
+  }
 }
 
 function laden(info, name) {
@@ -752,4 +765,4 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner };
