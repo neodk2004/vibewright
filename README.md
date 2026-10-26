@@ -130,6 +130,16 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+### [0.2.1](https://github.com/neodk2004/vibewright/releases/tag/v0.2.1) – 2026-10-26
+
+#### Added
+- **Update notice:** once per start, Vibewright checks GitHub for a newer release and shows a green notice at the bottom left that opens the download page. No project data is sent.
+- **Warning for storage inside a program folder:** if your vault or storage folder lies inside an app's installation folder (for example a vault inside the Obsidian program folder), Vibewright warns you – an update or reinstall of that app deletes the folder with everything in it. Such vaults are also marked when you choose your storage.
+
+#### Fixed
+- **Missing storage folder:** if the storage folder was moved, deleted or its drive is not connected, Vibewright now says so clearly (with "Choose another storage" and "Check again") instead of silently showing an empty project list.
+- One damaged project file no longer hides all other projects from the list.
+
 ### [0.2.0](https://github.com/neodk2004/vibewright/releases/tag/v0.2.0) – 2026-10-12
 
 #### Added
@@ -146,18 +156,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - Splash screen: logo now shows immediately with "Reduce motion" enabled, and the animation keeps running on macOS.
-
-### [0.1.0](https://github.com/neodk2004/vibewright/releases/tag/v0.1.0) – 2026-10-11
-
-First public release (Windows).
-
-#### Added
-- Guided interview, needs analysis, plan and tool check – you only approve.
-- Cockpit with live checklist, progress and an "I just had another idea" tile.
-- Claude Code in an embedded terminal; finished steps are ticked automatically.
-- Obsidian (Dataview/Kanban) or local Markdown + HTML dashboard.
-- Optional Git safety net (commit per step), English and German interface.
-- VirusTotal scan of every Windows installer, published in the release notes.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
