@@ -311,7 +311,7 @@ async function einstellungen() {
     { text: 'Anleitung', ghost: true, klick: () => api.link(`https://github.com/neodk2004/vibewright/wiki${uiSprache === 'en' ? '/Home-English' : ''}`) },
     { text: 'Fehler melden', ghost: true, klick: () => api['fehler-melden']() },
     { text: 'Lizenzen & Quellen', ghost: true, klick: () => api.link('https://github.com/neodk2004/vibewright/blob/main/THIRD_PARTY_NOTICES.md') },
-    { info: 'Vibewright 0.2.0 · © 2026 neodk2004 · MIT License' }]);
+    { info: `Vibewright ${e.version} · © 2026 neodk2004 · MIT License` }]);
   $$('.seg button[data-m]').forEach((b) => (b.onclick = async () => { await api.einstellung('modell', b.dataset.m); einstellungen(); }));
   $$('.seg button[data-s]').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   $('#anmelden')?.addEventListener('click', async () => { await api['claude-anmelden'](); $('#claude-unten').insertAdjacentHTML('beforeend', '<span class="muted klein">Im Browser anmelden, dann „Neu prüfen“.</span>'); });

@@ -59,7 +59,7 @@ async function gitStatus() {
 }
 handle('einstellungen', async () => {
   const s = lies();
-  return { claude: await core.checks(), modell: s.modell || 'sonnet', sprache: s.sprache || 'de', ablage: core.ablageInfo(s), vaults: core.obsidianVaults(), git: await gitStatus(), gitAuto: s.gitAuto !== false };
+  return { claude: await core.checks(), modell: s.modell || 'sonnet', sprache: s.sprache || 'de', ablage: core.ablageInfo(s), vaults: core.obsidianVaults(), git: await gitStatus(), gitAuto: s.gitAuto !== false, version: app.getVersion() };
 });
 handle('einstellung', (schluessel, wert) => {
   if (!['modell', 'gitAuto', 'sprache', 'programmordnerOk'].includes(schluessel)) throw new Error('Unbekannte Einstellung');
