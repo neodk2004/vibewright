@@ -111,7 +111,7 @@ const ARBEIT = {
   fragen: ['Idee lesen', 'Zielgruppe überlegen', 'Lücken suchen', 'Fragen formulieren'],
   analyse: ['Antworten auswerten', 'Muss und Kann trennen', 'Risiken abwägen', 'Machbarkeit einschätzen'],
   plan: ['Ziel in Phasen schneiden', 'Schritte ordnen', 'Aufwand schätzen', 'Laufkarte zeichnen'],
-  werkzeug: ['Rechner untersuchen', 'Plugins abgleichen', 'Offizielle Quellen suchen', 'Empfehlungen schreiben'],
+  werkzeug: ['Rechner untersuchen', 'Plugins abgleichen', 'Offizielle Quellen suchen', 'Links und Skills prüfen', 'Empfehlungen schreiben'],
   schreiben: ['Punkte anlegen', 'Dashboard bauen', 'Fortschritt einrichten'],
   archiv: ['Dateien sammeln', 'ZIP-Datei packen', 'Aufräumen'],
   standard: ['Nachdenken', 'Ordnen', 'Formulieren'],
@@ -122,7 +122,7 @@ function arbeitFuer(text) {
   if (/Fragen|fehlt/.test(text)) return [ARBEIT.fragen, 12];
   if (/Bedarfsanalyse/.test(text)) return [ARBEIT.analyse, 18];
   if (/Plan/.test(text)) return [ARBEIT.plan, 18];
-  if (/Werkzeug/.test(text)) return [ARBEIT.werkzeug, 28];
+  if (/Werkzeug/.test(text)) return [ARBEIT.werkzeug, 45];
   if (/Dateien/.test(text)) return [ARBEIT.schreiben, 3];
   return [ARBEIT.standard, 15];
 }

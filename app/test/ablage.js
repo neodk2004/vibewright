@@ -33,3 +33,10 @@ assert.ok(!core.istNeuer('v0.2.0', '0.2.0'));
 assert.ok(!core.istNeuer('v0.1.0-mac', '0.2.0'));
 assert.ok(!core.istNeuer('v0.2.0-mac', '0.2.0'));
 console.log('versionen: ok');
+
+// Werkzeug-Check: GitHub-Adressen von SkillsMP zerlegen, Kopien für andere Agenten erkennen
+assert.deepStrictEqual(core.githubTeile('https://github.com/anthropics/skills/tree/main/skills/pdf'), { owner: 'anthropics', repo: 'skills', branch: 'main', pfad: 'skills/pdf' });
+assert.strictEqual(core.githubTeile('https://github.com/a/b'), null);
+for (const p of ['.kiro/skills/x', 'pi/core/skills/x', 'docs/ja-JP/skills/x', 'i18n/de/skills/x']) assert.ok(core.FREMDER_ORDNER.test(p), p);
+for (const p of ['skills/pdf', '.claude/skills/review', 'plugins/api/skills/x']) assert.ok(!core.FREMDER_ORDNER.test(p), p);
+console.log('quellen: ok');

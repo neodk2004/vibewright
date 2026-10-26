@@ -67,6 +67,12 @@ Claude stellt **bis zu zwei Runden mit je bis zu vier Fragen** zu Zielgruppe, Mu
 🚦 *Dritte Freigabe.* Vibewright prüft **deinen Rechner** und **dein Claude-Setup** (Plugins, Skills, MCP).
 Balken: 🟥 fehlt · 🟩 vorhanden · ⬜ nicht nötig. Fehlendes ist vorausgewählt. **Installiert wird nichts** – Angehaktes wird zur Aufgabe in der passenden Phase (Installationen oben, eigene Projekt-Skills unten). Widersprüche zum Plan korrigiert Claude und zeigt sie oben an. **Übernehmen** schreibt alle Dateien.
 
+**Woher die Vorschläge kommen**
+- **Dein Rechner:** installierte Programme (prüft Vibewright selbst), deine Claude-Plugins samt ihrer Skills, eigene Skills (auch im Code-Ordner des Projekts) und MCP-Server.
+- **Plugin-Kataloge:** alle Marktplätze, die du in Claude Code eingebunden hast (der offizielle zuerst), dazu der Katalog [claude-skills](https://github.com/alirezarezvani/claude-skills) – auch wenn du ihn noch nicht eingebunden hast.
+- **[SkillsMP](https://skillsmp.com):** Passt nichts aus den Katalogen, sucht Vibewright dort nach einem fertigen Skill. In Frage kommen nur Skills aus GitHub-Repos mit **mindestens 50.000 Sternen**, die **Claude-kompatibel** sind (gültige `SKILL.md` in einem Repo, das ein Claude-Plugin ist oder den Skill unter `.claude/skills` hat). Claude übernimmt einen nur, wenn er wirklich passt.
+- **Download-Links** werden geprüft: Ist einer tot, ersetzt Claude ihn durch die aktuelle Herstellerseite; klappt auch das nicht, steht ⚠ davor.
+
 ## 8. Die Dateien
 
 ```
@@ -127,6 +133,6 @@ Der Stand wird **nach jedem Schritt gespeichert**. Ist dein Claude-Limit erreich
 - **„Claude Code wurde nicht gefunden“:** Claude Code installieren und Vibewright neu starten.
 - **Keine Animationen:** In Windows sind die Animationseffekte ausgeschaltet (*Einstellungen → Barrierefreiheit → Visuelle Effekte*).
 - **Kleiner Bildschirm:** Unter ca. 720 px Höhe schaltet Vibewright in eine kompakte Ansicht.
-- **Werden Daten verschickt?** Vibewright selbst sendet keine Projektdaten. Einmal pro Start fragt es bei GitHub nach, ob es eine neue Version gibt (dann erscheint unten links ein grüner Hinweis). Was du mit Claude planst, geht über Claude Code an Anthropic – wie bei jeder Claude-Code-Nutzung.
+- **Werden Daten verschickt?** Vibewright selbst sendet keine Projektdaten. Einmal pro Start fragt es bei GitHub nach, ob es eine neue Version gibt (dann erscheint unten links ein grüner Hinweis). Beim Werkzeug-Check lädt es den Katalog *claude-skills* von GitHub, schickt je fehlendem Skill 1–3 englische Stichwörter an die Suche von SkillsMP (nie deine Idee oder deinen Plan) und ruft vorgeschlagene Download-Seiten einmal auf, um sie zu prüfen. Was du mit Claude planst, geht über Claude Code an Anthropic – wie bei jeder Claude-Code-Nutzung.
 - **Wo liegen die Einstellungen?** `%APPDATA%\Vibewright\einstellungen.json` (ältere Installationen: `%APPDATA%\ki-projekthelper`).
 - **Deinstallieren:** *Windows-Einstellungen → Apps → Vibewright*. Deine Projekte bleiben erhalten.

@@ -259,8 +259,15 @@ const S_WERKZEUG = {
       properties: { bedarf: { type: 'string' }, phase: { type: 'integer' }, art: { enum: ['system', 'claude'] },
         exe: { type: 'string' }, pfade: { type: 'array', items: { type: 'string' } },
         status: { enum: ['vorhanden', 'fehlt', 'nicht_noetig'] }, quelle: { type: 'string' }, empfehlung: { type: 'string' },
-        aktion: { enum: ['installieren', 'eigener_skill', 'nicht_noetig', 'vorhanden'] } } } },
+        aktion: { enum: ['installieren', 'eigener_skill', 'nicht_noetig', 'vorhanden'] }, suche: { type: 'string' } } } },
     plan_korrekturen: { type: 'array', items: { type: 'string' } },
+  },
+};
+const S_NACHPRUEFUNG = {
+  type: 'object', required: ['links', 'skills'],
+  properties: {
+    links: { type: 'array', items: { type: 'object', required: ['nr', 'quelle'], properties: { nr: { type: 'integer' }, quelle: { type: 'string' } } } },
+    skills: { type: 'array', items: { type: 'object', required: ['nr', 'wahl'], properties: { nr: { type: 'integer' }, wahl: { type: 'integer' } } } },
   },
 };
 
@@ -310,15 +317,84 @@ async function plan(st, wunsch) {
   st.offen = { typ: 'gate', schritt: 'plan' };
 }
 
-function inventar() {
-  const h = os.homedir();
+// ---------- Werkzeug-Check: Quellen ----------
+// Zusätzlicher Plugin-Katalog, auch wenn der Nutzer ihn noch nicht eingebunden hat (vom Nutzer als Quelle gewünscht)
+const ZUSATZ_KATALOG = { repo: 'alirezarezvani/claude-skills', url: 'https://raw.githubusercontent.com/alirezarezvani/claude-skills/main/.claude-plugin/marketplace.json' };
+// SkillsMP (skillsmp.com): nur Skills aus Repos mit mindestens so vielen GitHub-Sternen kommen in Frage
+const SKILLSMP_MIN_STERNE = 50000;
+const UA = 'Vibewright (+https://github.com/neodk2004/vibewright)';
+const unterordner = (p) => { try { return fs.readdirSync(p, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name); } catch { return []; } };
+const holeText = async (url, ms = 8000) => { try { const r = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(ms) }); return r.ok ? await r.text() : null; } catch { return null; } };
+
+// Was Claude Code auf diesem Rechner (und im Code-Ordner des Projekts) schon kann
+async function inventar(st) {
+  const h = os.homedir(), pl = path.join(h, '.claude', 'plugins');
   const lies = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; } };
-  const plugins = Object.keys(lies(path.join(h, '.claude', 'plugins', 'installed_plugins.json'))?.plugins || {});
-  let skills = [];
-  try { skills = fs.readdirSync(path.join(h, '.claude', 'skills')); } catch {}
-  const katalog = (lies(path.join(h, '.claude', 'plugins', 'marketplaces', 'claude-plugins-official', '.claude-plugin', 'marketplace.json'))?.plugins || [])
-    .map((p) => `${p.name} – ${(p.description || '').slice(0, 70)}`);
-  return { plugins, skills, katalog };
+  const aus = Object.entries(lies(path.join(h, '.claude', 'settings.json'))?.enabledPlugins || {}).filter(([, an]) => an === false).map(([n]) => n);
+  const repo = st.repo && path.resolve(st.repo);
+  const plugins = [], pluginSkills = [];
+  for (const [name, eintraege] of Object.entries(lies(path.join(pl, 'installed_plugins.json'))?.plugins || {})) {
+    // Projekt-Plugins gelten nur in ihrem eigenen Ordner
+    const e = [].concat(eintraege).find((x) => x.scope !== 'project' || (repo && path.resolve(x.projectPath || '') === repo));
+    if (!e) continue;
+    plugins.push(name + (aus.includes(name) ? ' (ausgeschaltet)' : ''));
+    if (e.installPath) pluginSkills.push(...unterordner(path.join(e.installPath, 'skills')).map((s) => `${name.split('@')[0]}:${s}`));
+  }
+  const skills = [...unterordner(path.join(h, '.claude', 'skills')), ...(repo ? unterordner(path.join(repo, '.claude', 'skills')).map((s) => `${s} (im Projektordner)`) : [])];
+  // Alle eingebundenen Marktplätze plus der Zusatz-Katalog (online, falls noch nicht eingebunden)
+  const kataloge = [];
+  for (const m of unterordner(path.join(pl, 'marketplaces'))) {
+    const d = lies(path.join(pl, 'marketplaces', m, '.claude-plugin', 'marketplace.json'));
+    if (d?.plugins?.length) kataloge.push({ name: d.name || m, eingebunden: true, plugins: d.plugins });
+  }
+  const zusatz = JSON.parse((await holeText(ZUSATZ_KATALOG.url)) || 'null');
+  if (zusatz?.plugins?.length && !kataloge.some((k) => k.name === zusatz.name)) kataloge.push({ name: zusatz.name, repo: ZUSATZ_KATALOG.repo, eingebunden: false, plugins: zusatz.plugins });
+  const katalogText = kataloge.map((k) => `Marktplatz „${k.name}“${k.eingebunden ? '' : ` (noch nicht eingebunden – Einbinden mit /plugin marketplace add ${k.repo})`}:\n`
+    + k.plugins.map((p) => `${p.name} – ${(p.description || '').slice(0, 70)}`).join('\n')).join('\n\n');
+  return { plugins, pluginSkills, skills, katalogText };
+}
+
+// Download-Link prüfen: nur 404/410 gilt als kaputt. Bot-Schutz (401/403/429) oder kein Netz → nicht beanstanden
+async function linkKaputt(url) {
+  if (!/^https:\/\//.test(url)) return false;
+  try {
+    const r = await fetch(url, { headers: { 'User-Agent': `Mozilla/5.0 ${UA}` }, redirect: 'follow', signal: AbortSignal.timeout(8000) });
+    r.body?.cancel?.().catch(() => {});
+    return r.status === 404 || r.status === 410;
+  } catch { return false; }
+}
+
+// https://github.com/{owner}/{repo}/tree/{branch}/{pfad} → Teile
+const githubTeile = (u) => { const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)$/.exec(u || ''); return m && { owner: m[1], repo: m[2], branch: m[3], pfad: m[4].replace(/\/$/, '') }; };
+// Kopien für andere Agenten oder Übersetzungen – nicht der eigentliche Claude-Skill
+const FREMDER_ORDNER = /(^|\/)(\.(kiro|codex|gemini|cursor|opencode|windsurf|hermes|agents)|pi|docs|i18n|locales?|translations?)(\/|$)/i;
+const repoIstClaudePlugin = new Map();
+// Claude-kompatibel = gültige SKILL.md (name + description) UND das Repo ist ein Claude-Plugin oder der Skill liegt in .claude/skills
+async function claudeKompatibel(g) {
+  const roh = (p) => `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${p}`;
+  if (!/(^|\/)\.claude\/skills\//.test(g.pfad)) {
+    const k = `${g.owner}/${g.repo}`;
+    if (!repoIstClaudePlugin.has(k)) repoIstClaudePlugin.set(k, holeText(roh('.claude-plugin/marketplace.json')).then(async (t) => !!(t || await holeText(roh('.claude-plugin/plugin.json')))));
+    if (!(await repoIstClaudePlugin.get(k))) return false;
+  }
+  const kopf = (await holeText(roh(`${g.pfad}/SKILL.md`)))?.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1];
+  return !!kopf && /^name:\s*["']?[a-z0-9-]{1,64}["']?\s*$/m.test(kopf) && /^description:\s*\S/m.test(kopf);
+}
+
+// SkillsMP-Suche (anonym, 50 Suchen/Tag): Treffer nach Sternen, nur ≥ 50.000 Sterne und Claude-kompatibel, höchstens 5
+async function skillsmpSuche(begriffe) {
+  const text = await holeText(`https://skillsmp.com/api/v1/skills/search?q=${encodeURIComponent(begriffe.slice(0, 200))}&sortBy=stars&limit=50`, 10000);
+  const treffer = JSON.parse(text || 'null')?.data?.skills || [];
+  const gefunden = [], gesehen = new Set();
+  for (const s of treffer) {
+    if (!(s.stars >= SKILLSMP_MIN_STERNE)) break; // Liste ist nach Sternen sortiert
+    const g = githubTeile(s.githubUrl);
+    if (!g || FREMDER_ORDNER.test(g.pfad) || gesehen.has(`${g.owner}/${g.repo}/${s.name}`)) continue;
+    gesehen.add(`${g.owner}/${g.repo}/${s.name}`);
+    if (await claudeKompatibel(g)) gefunden.push({ name: s.name, autor: s.author, beschreibung: (s.description || '').slice(0, 160), sterne: s.stars, url: s.githubUrl });
+    if (gefunden.length >= 5) break;
+  }
+  return gefunden;
 }
 
 async function vorhanden(e) {
@@ -330,22 +406,24 @@ async function vorhanden(e) {
 }
 
 async function werkzeugCheck(st) {
-  const inv = inventar();
+  const inv = await inventar(st);
   const mcp = (await claudeLauf(['mcp', 'list'])).out.split('\n').filter((l) => l.includes(':') && !/^Checking/.test(l)).join('\n');
   const prompt = `Der Plan ist freigegeben. Schritt: Werkzeug-Check. Was brauchen die Phasen an Systemwerkzeugen (Programme, SDKs, Laufzeiten, VMs) und an Claude-Erweiterungen (Plugins, Skills, MCP)?
 Inventar dieses Rechners:
 - Betriebssystem: ${os.version()} (${MAC ? 'macOS' : WIN ? 'Windows' : 'Linux'}, ${os.arch()}, Release ${os.release()})
 - Installierte Claude-Plugins: ${inv.plugins.join(', ') || 'keine'}
+- Skills aus diesen Plugins: ${inv.pluginSkills.join(', ') || 'keine'}
 - Eigene Skills: ${inv.skills.join(', ') || 'keine'}
 - MCP-Server: ${mcp || 'keine'}
-Offizieller Plugin-Katalog (Name – Beschreibung):
-${inv.katalog.join('\n') || '(nicht verfügbar)'}
+Plugin-Kataloge (Name – Beschreibung):
+${inv.katalogText || '(nicht verfügbar)'}
 
 Regeln:
-- Nur offizielle Quellen: offizieller Katalog oben oder die Download-Seite des Herstellers. Nur was eine Phase wirklich braucht.
+- Nur offizielle bzw. geprüfte Quellen: die Kataloge oben oder die Download-Seite des Herstellers. Nur was eine Phase wirklich braucht.
 - art=system: gib exe (Programmname wie im PATH${WIN ? ', z. B. ffmpeg.exe' : ', z. B. ffmpeg'}) und pfade (typische Installationspfade${WIN ? ' mit %ProgramFiles%, %LOCALAPPDATA% usw.' : MAC ? ', z. B. /Applications/Name.app oder ~/Applications/Name.app' : ''}) an; status setzt die App selbst, schreib dort "fehlt". Empfiehl nur Programme, die es für dieses Betriebssystem gibt.
-- art=claude: status anhand des Inventars. Fehlendes Fachwissen ohne passenden offiziellen Eintrag → aktion eigener_skill.
-- bedarf = kurzer Name (höchstens 6 Wörter, z. B. „Raspberry Pi Imager“), Details gehören in empfehlung. quelle = bei art=system die offizielle Download-Seite als vollständige https-URL (keine winget-IDs oder Befehle, der Nutzer ist Laie); bei art=claude der Katalogname. empfehlung in Laiensprache.
+- art=claude: status anhand des Inventars – auch Skills aus Plugins und Skills im Projektordner zählen als vorhanden. Reihenfolge: schon vorhanden > Katalog „claude-plugins-official“ > andere Kataloge. quelle = plugin@marktplatz; ist der Marktplatz noch nicht eingebunden, erkläre das Einbinden in empfehlung.
+- Fehlendes Fachwissen ohne passenden Katalog-Eintrag → aktion eigener_skill, dazu suche = 1–3 englische Stichwörter, mit denen sich ein fertiger Skill finden lässt (z. B. „pdf forms“).
+- bedarf = kurzer Name (höchstens 6 Wörter, z. B. „Raspberry Pi Imager“), Details gehören in empfehlung. quelle = bei art=system die offizielle Download-Seite als vollständige https-URL (keine winget-IDs oder Befehle, der Nutzer ist Laie). empfehlung in Laiensprache.
 - phase = erste Phase, die den Eintrag braucht.
 - Widersprüche zum Plan (z. B. Werkzeug läuft auf diesem Betriebssystem bzw. dieser Edition nicht) → plan_korrekturen.`;
   const d = await ask(st, prompt, S_WERKZEUG);
@@ -354,8 +432,43 @@ Regeln:
     e.status = (await vorhanden(e)) ? 'vorhanden' : 'fehlt';
     if (e.status === 'vorhanden' && e.aktion === 'installieren') e.aktion = 'vorhanden';
   }
+  await quellenPruefen(st, d);
   st.werkzeug = d;
   st.offen = { typ: 'werkzeug', eintraege: d.eintraege, korrekturen: d.plan_korrekturen };
+}
+
+// Nachprüfung: tote Download-Links ersetzen lassen und für eigene Skills fertige Skills auf SkillsMP suchen.
+// Ein zweiter Claude-Aufruf nur, wenn es etwas zu entscheiden gibt.
+async function quellenPruefen(st, d) {
+  const links = [];
+  await Promise.all(d.eintraege.map(async (e, i) => { if (e.art === 'system' && e.status === 'fehlt' && await linkKaputt(e.quelle)) links.push(i); }));
+  const kandidaten = {};
+  // ponytail: höchstens 4 Suchen pro Check – SkillsMP erlaubt anonym 50 Suchen am Tag
+  const suchen = d.eintraege.map((e, i) => [i, e]).filter(([, e]) => e.aktion === 'eigener_skill' && e.suche?.trim()).slice(0, 4);
+  for (const [i, e] of suchen) {
+    const k = await skillsmpSuche(e.suche);
+    if (k.length) kandidaten[i] = k;
+  }
+  if (!links.length && !Object.keys(kandidaten).length) return;
+  const prompt = `Nachprüfung zum Werkzeug-Check (Nummern = Position in deiner Liste, ab 0).
+${links.length ? `Diese Download-Links sind nicht erreichbar (404). Nenne je die aktuelle offizielle Download-Seite des Herstellers als vollständige https-URL:\n${links.map((i) => `- Nr. ${i}: ${d.eintraege[i].bedarf} – ${d.eintraege[i].quelle}`).join('\n')}\n` : ''}${Object.keys(kandidaten).length ? `Für diese eigenen Skills gibt es fertige, Claude-kompatible Skills auf SkillsMP (GitHub-Repos mit mindestens ${SKILLSMP_MIN_STERNE.toLocaleString('de-DE')} Sternen). Wähle je den passenden (wahl = Nummer ab 1) oder 0, wenn keiner wirklich passt – im Zweifel 0:\n${Object.entries(kandidaten).map(([i, k]) => `- Nr. ${i}: ${d.eintraege[i].bedarf}\n${k.map((x, j) => `  ${j + 1}. ${x.name} (${x.autor}) – ${x.beschreibung}`).join('\n')}`).join('\n')}` : ''}`;
+  const n = await ask(st, prompt, S_NACHPRUEFUNG);
+  const t = (de, en) => (st.sprache === 'en' ? en : de);
+  for (const l of n.links) {
+    const e = d.eintraege[l.nr];
+    if (!links.includes(l.nr) || !/^https:\/\//.test(l.quelle)) continue;
+    e.quelle = l.quelle;
+  }
+  // Was nach dem Ersetzen immer noch nicht erreichbar ist, wird sichtbar markiert
+  await Promise.all(links.map(async (i) => { const e = d.eintraege[i]; if (await linkKaputt(e.quelle)) e.empfehlung = `${t('⚠ Der Download-Link war nicht erreichbar – bitte die Seite des Herstellers selbst suchen.', '⚠ The download link could not be reached – please look up the maker’s website yourself.')} ${e.empfehlung}`; }));
+  for (const s of n.skills) {
+    const k = kandidaten[s.nr]?.[s.wahl - 1];
+    if (!k) continue;
+    Object.assign(d.eintraege[s.nr], {
+      aktion: 'installieren', status: 'fehlt', quelle: k.url,
+      empfehlung: `${t(`Fertiger Skill „${k.name}“ von ${k.autor} (über SkillsMP, ${k.sterne.toLocaleString('de-DE')} GitHub-Sterne). Claude kann ihn in der Umsetzung in deinen Skill-Ordner kopieren.`, `Ready-made skill "${k.name}" by ${k.autor} (via SkillsMP, ${k.sterne.toLocaleString('en-US')} GitHub stars). Claude can copy it into your skills folder during the build.`)} ${d.eintraege[s.nr].empfehlung}`,
+    });
+  }
 }
 
 // Ein Schritt weiter, je nachdem, worauf das Projekt gerade wartet. Zustand ändert sich erst nach erfolgreichem Claude-Aufruf.
@@ -773,4 +886,4 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER };

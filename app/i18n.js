@@ -38,7 +38,7 @@ const UI_EN = {
   'Idee lesen': 'Read the idea', 'Zielgruppe überlegen': 'Think about the audience', 'Lücken suchen': 'Look for gaps', 'Fragen formulieren': 'Write questions',
   'Antworten auswerten': 'Evaluate answers', 'Muss und Kann trennen': 'Separate must from could', 'Risiken abwägen': 'Weigh risks', 'Machbarkeit einschätzen': 'Assess feasibility',
   'Ziel in Phasen schneiden': 'Cut the goal into phases', 'Schritte ordnen': 'Order the steps', 'Aufwand schätzen': 'Estimate effort', 'Laufkarte zeichnen': 'Draw the roadmap',
-  'Rechner untersuchen': 'Inspect this computer', 'Plugins abgleichen': 'Match plugins', 'Offizielle Quellen suchen': 'Find official sources', 'Empfehlungen schreiben': 'Write recommendations',
+  'Rechner untersuchen': 'Inspect this computer', 'Plugins abgleichen': 'Match plugins', 'Offizielle Quellen suchen': 'Find official sources', 'Links und Skills prüfen': 'Check links and skills', 'Empfehlungen schreiben': 'Write recommendations',
   'Punkte anlegen': 'Create tasks', 'Dashboard bauen': 'Build dashboard', 'Fortschritt einrichten': 'Set up progress', 'Nachdenken': 'Thinking', 'Ordnen': 'Ordering', 'Formulieren': 'Writing',
   // Fehler
   'Das hat nicht geklappt': 'That did not work', 'Der Stand ist gespeichert. Du kannst es jetzt oder später erneut versuchen.': 'Your progress is saved. You can try again now or later.',

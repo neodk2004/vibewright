@@ -92,6 +92,13 @@ Steps are written in plain language – programs are installed from their offici
 
 Missing items are pre-checked. **Nothing gets installed** – checked items become tasks: installations go to the top of the matching phase, "own project skills" to the end. If Claude finds a contradiction (e.g. a tool that does not run on your Windows edition), it adjusts the plan and tells you at the top.
 
+**Where the suggestions come from**
+
+- **Your computer:** installed programs (checked by Vibewright itself), your Claude plugins and the skills inside them, your own skills (also those in the project's code folder) and MCP servers.
+- **Plugin catalogs:** every marketplace you have added to Claude Code (the official one first), plus the [claude-skills](https://github.com/alirezarezvani/claude-skills) catalog – even if you have not added it yet.
+- **[SkillsMP](https://skillsmp.com):** if nothing in the catalogs fits, Vibewright searches for a ready-made skill. Only skills from GitHub repositories with **at least 50,000 stars** that are **Claude-compatible** count (a valid `SKILL.md` in a repository that is a Claude plugin or keeps the skill in `.claude/skills`). Claude picks one only if it really fits.
+- **Download links** are checked: if one is dead, Claude replaces it with the maker's current page; if that fails too, the item is marked with ⚠.
+
 Click **Apply** – Vibewright writes all files and opens the cockpit.
 
 ## 8. The files Vibewright creates
@@ -191,7 +198,7 @@ The language is fixed **per project** when the project is created, so existing p
 
 **My screen is small.** Below about 720 px height Vibewright switches to a compact layout. Only the project list scrolls when you have many projects.
 
-**Does Vibewright send my data anywhere?** Vibewright itself sends no telemetry and no project data. Once per start it asks GitHub whether a new version exists (a green notice then appears at the bottom left). What you plan with Claude goes to Anthropic through Claude Code, exactly like any other Claude Code use. See *Privacy* in the [README](../README.md#privacy).
+**Does Vibewright send my data anywhere?** Vibewright itself sends no telemetry and no project data. Once per start it asks GitHub whether a new version exists (a green notice then appears at the bottom left). During the tool check it fetches the *claude-skills* catalog from GitHub, sends 1–3 English keywords per missing skill to the SkillsMP search (never your idea or plan) and opens suggested download pages once to check them. What you plan with Claude goes to Anthropic through Claude Code, exactly like any other Claude Code use. See *Privacy* in the [README](../README.md#privacy).
 
 **Where are my settings stored?** In `%APPDATA%\Vibewright\einstellungen.json` (older installations: `%APPDATA%\ki-projekthelper`). Planning sessions use `%USERPROFILE%\.vibewright\work`.
 
