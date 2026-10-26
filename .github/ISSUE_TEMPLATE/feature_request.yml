@@ -2,19 +2,23 @@ name: 💡 Feature request / Idee
 description: An idea that would make Vibewright better – eine Idee, die Vibewright besser macht
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your idea! **English or German is fine** – Deutsch oder Englisch, beides ist willkommen.
   - type: textarea
     id: problem
     attributes:
-      label: What would you like to do?
-      description: Describe the situation or problem – not only the solution.
+      label: What would you like to do? / Was möchtest du tun?
+      description: Describe the situation or problem – not only the solution. – Beschreibe die Situation oder das Problem, nicht nur die Lösung.
     validations:
       required: true
   - type: textarea
     id: idee
     attributes:
-      label: Your idea
-      description: How could Vibewright help? Sketches and screenshots welcome.
+      label: Your idea / Deine Idee
+      description: How could Vibewright help? Sketches and screenshots welcome. – Wie könnte Vibewright helfen? Skizzen und Bildschirmfotos sind willkommen.
   - type: textarea
     id: alternativen
     attributes:
-      label: Alternatives you considered
+      label: Alternatives you considered / Andere Wege, die du überlegt hast

@@ -58,10 +58,14 @@ jobs:
               } catch {}
             }
 
-            // Leeres Issue ohne Vorlage und mit wenig Text → nachfragen
-            if (!istFehler && !istIdee && body.trim().length < 40) {
+            // Zu wenig Inhalt → nachfragen. Formular: Hauptfeld unter 20 Zeichen; ohne Formular: ganzer Text unter 40 Zeichen
+            const formular = istFehler || istIdee;
+            const haupt = istFehler ? feld('What happened?') : istIdee ? feld('What would you like to do?') : body.trim();
+            if (haupt.length < (formular ? 20 : 40)) {
               labels.push(await label('needs-info'));
-              hinweise.push(`📝 Could you add a few details? What did you do, what happened, which version and system? The [bug report form](https://github.com/${owner}/${repo}/issues/new?template=bug_report.yml) asks for everything we need.\n*Magst du noch ein paar Details ergänzen? Was hast du gemacht, was ist passiert, welche Version und welches System?*`);
+              hinweise.push(formular
+                ? `📝 Could you describe it in a few more sentences? You can edit the issue (··· → Edit) – the more we know, the faster we can help.\n*Magst du es in ein paar Sätzen mehr beschreiben? Du kannst das Issue bearbeiten (··· → Edit) – je mehr wir wissen, desto schneller können wir helfen.*`
+                : `📝 Could you add a few details? What did you do, what happened, which version and system? The [bug report form](https://github.com/${owner}/${repo}/issues/new?template=bug_report.yml) asks for everything we need.\n*Magst du noch ein paar Details ergänzen? Was hast du gemacht, was ist passiert, welche Version und welches System?*`);
             }
 
             await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels });
