@@ -83,6 +83,7 @@ const UI_EN = {
   'So ist es sicher: Obsidian schließen, den Vault-Ordner an einen eigenen Platz verschieben (z. B. in': 'To be safe: close Obsidian, move the vault folder to a place of its own (e.g. into',
   'Dokumente': 'Documents', '), in Obsidian „Ordner als Vault öffnen“ wählen und hier „Ablage wechseln“.': '), choose "Open folder as vault" in Obsidian and click "Change storage" here.',
   '⚠ Programmordner – nicht sicher': '⚠ Program folder – not safe', 'Ein Update von Obsidian löscht diesen Ordner': 'An Obsidian update deletes this folder',
+  '⬆ Neue Version verfügbar:': '⬆ New version available:',
   '⚠ Ablage nicht gefunden': '⚠ Storage not found', 'Klicken für Details': 'Click for details',
   'Ablage wechseln': 'Change storage', 'Ordner öffnen': 'Open folder', 'Anleitung': 'User guide', 'Lizenzen & Quellen': 'Licenses & sources',
   'Git ist nicht installiert': 'Git is not installed', 'Name und E-Mail für Commits eingetragen': 'Name and email for commits are set', 'Name und E-Mail fehlen noch': 'Name and email are missing',

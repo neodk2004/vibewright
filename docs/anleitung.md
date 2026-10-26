@@ -123,10 +123,10 @@ Der Stand wird **nach jedem Schritt gespeichert**. Ist dein Claude-Limit erreich
 ## 15. Probleme & häufige Fragen
 
 - **SmartScreen-Warnung beim Installieren:** Der Installer ist noch nicht signiert → *Weitere Informationen → Trotzdem ausführen*.
-- **Ist der Installer echt?** Die SHA-256-Prüfsumme mit dem Wert in den Release-Notes (oder `SHA256SUMS.txt`) vergleichen. In PowerShell im Download-Ordner: `(Get-FileHash .\Vibewright.Setup.0.2.0.exe -Algorithm SHA256).Hash` – das Ergebnis muss übereinstimmen.
+- **Ist der Installer echt?** Die SHA-256-Prüfsumme mit dem Wert in den Release-Notes (oder `SHA256SUMS.txt`) vergleichen. In PowerShell im Download-Ordner: `(Get-FileHash .\Vibewright.Setup.0.2.1.exe -Algorithm SHA256).Hash` – das Ergebnis muss übereinstimmen.
 - **„Claude Code wurde nicht gefunden“:** Claude Code installieren und Vibewright neu starten.
 - **Keine Animationen:** In Windows sind die Animationseffekte ausgeschaltet (*Einstellungen → Barrierefreiheit → Visuelle Effekte*).
 - **Kleiner Bildschirm:** Unter ca. 720 px Höhe schaltet Vibewright in eine kompakte Ansicht.
-- **Werden Daten verschickt?** Vibewright selbst sendet nichts. Was du mit Claude planst, geht über Claude Code an Anthropic – wie bei jeder Claude-Code-Nutzung.
+- **Werden Daten verschickt?** Vibewright selbst sendet keine Projektdaten. Einmal pro Start fragt es bei GitHub nach, ob es eine neue Version gibt (dann erscheint unten links ein grüner Hinweis). Was du mit Claude planst, geht über Claude Code an Anthropic – wie bei jeder Claude-Code-Nutzung.
 - **Wo liegen die Einstellungen?** `%APPDATA%\Vibewright\einstellungen.json` (ältere Installationen: `%APPDATA%\ki-projekthelper`).
 - **Deinstallieren:** *Windows-Einstellungen → Apps → Vibewright*. Deine Projekte bleiben erhalten.

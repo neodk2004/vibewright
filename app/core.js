@@ -143,6 +143,14 @@ function projekte(info) {
     .sort((a, b) => (b.aktualisiert || '').localeCompare(a.aktualisiert || ''));
 }
 
+// „0.2.1“ neuer als „0.2.0“? Nur die Zahlen zählen, Endungen wie „-mac“ fallen weg
+function istNeuer(neu, alt) {
+  const z = (v) => String(v).replace(/^v/, '').split('-')[0].split('.').map(Number);
+  const [a, b] = [z(neu), z(alt)];
+  for (let i = 0; i < 3; i++) if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0);
+  return false;
+}
+
 // Liegt die Ablage in einem Installationsordner (z. B. Vault im Obsidian-Programmordner), löscht ein Update sie mit.
 // Erkennung: irgendein Ordner auf dem Weg nach oben enthält die Programmdatei bzw. einen Deinstaller oder ist ein .app-Paket.
 function imProgrammordner(p) {
@@ -765,4 +773,4 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer };

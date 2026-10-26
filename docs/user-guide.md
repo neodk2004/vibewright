@@ -183,7 +183,7 @@ The language is fixed **per project** when the project is created, so existing p
 
 **Windows shows a SmartScreen warning when installing.** The installer is not code-signed yet. Click *More info → Run anyway*.
 
-**How do I know the installer is genuine?** Compare its SHA-256 checksum with the value in the release notes (or `SHA256SUMS.txt`). In PowerShell, in your download folder: `(Get-FileHash .\Vibewright.Setup.0.2.0.exe -Algorithm SHA256).Hash` – the result must match.
+**How do I know the installer is genuine?** Compare its SHA-256 checksum with the value in the release notes (or `SHA256SUMS.txt`). In PowerShell, in your download folder: `(Get-FileHash .\Vibewright.Setup.0.2.1.exe -Algorithm SHA256).Hash` – the result must match.
 
 **"Claude Code was not found".** Install Claude Code and restart Vibewright. Both `claude.exe` (native installer) and npm installations are detected.
 
@@ -191,7 +191,7 @@ The language is fixed **per project** when the project is created, so existing p
 
 **My screen is small.** Below about 720 px height Vibewright switches to a compact layout. Only the project list scrolls when you have many projects.
 
-**Does Vibewright send my data anywhere?** Vibewright itself sends no telemetry. What you plan with Claude goes to Anthropic through Claude Code, exactly like any other Claude Code use. See *Privacy* in the [README](../README.md#privacy).
+**Does Vibewright send my data anywhere?** Vibewright itself sends no telemetry and no project data. Once per start it asks GitHub whether a new version exists (a green notice then appears at the bottom left). What you plan with Claude goes to Anthropic through Claude Code, exactly like any other Claude Code use. See *Privacy* in the [README](../README.md#privacy).
 
 **Where are my settings stored?** In `%APPDATA%\Vibewright\einstellungen.json` (older installations: `%APPDATA%\ki-projekthelper`). Planning sessions use `%USERPROFILE%\.vibewright\work`.
 

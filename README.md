@@ -102,12 +102,12 @@ Every release lists the **SHA-256 checksum** of the installer in its release not
 
 ```powershell
 # Windows (PowerShell)
-(Get-FileHash .\Vibewright.Setup.0.2.0.exe -Algorithm SHA256).Hash
+(Get-FileHash .\Vibewright.Setup.0.2.1.exe -Algorithm SHA256).Hash
 ```
 
 ```bash
 # macOS (Terminal)
-shasum -a 256 Vibewright-0.2.0-mac-arm64.dmg
+shasum -a 256 Vibewright-0.2.1-mac-arm64.dmg
 ```
 
 If the output matches the published value, your file is exactly the released one.
@@ -186,6 +186,7 @@ First public release (Windows).
 ## Privacy
 
 - Vibewright itself sends **no telemetry** and stores its settings only on your PC (`%APPDATA%`).
+- **Update check:** once per start, Vibewright asks the public GitHub API for the newest release (`api.github.com/repos/neodk2004/vibewright/releases/latest`). No project data is sent – GitHub only sees an ordinary web request.
 - What you plan with Claude (your idea, answers, plan, a list of installed Claude plugins/skills and your operating system for the tool check) is sent to Anthropic through Claude Code – exactly like any other Claude Code usage.
 - If you push a project to GitHub, the Git commits contain the name and email from your Git config. Use GitHub's `noreply` address if you don't want your email to be public.
 

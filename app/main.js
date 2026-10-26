@@ -33,6 +33,18 @@ handle('start', async () => {
   return { checks: await core.checks(), settings: s, vaults: core.obsidianVaults(), ablageFehlt: !!s.ablage && !fs.existsSync(s.ablage) };
 });
 handle('programmordner', (p) => core.imProgrammordner(p));
+// Neue Version auf GitHub? Einmal pro App-Start; ohne Netz oder bei Fehlern still nichts anzeigen.
+// Gesendet wird nur die übliche Anfrage an die GitHub-API (keine Projektdaten).
+let updateInfo;
+async function updatePruefen() {
+  try {
+    const r = await fetch('https://api.github.com/repos/neodk2004/vibewright/releases/latest', { headers: { 'User-Agent': 'Vibewright', Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return core.istNeuer(j.tag_name, app.getVersion()) && /^https:\/\//.test(j.html_url) ? { version: j.tag_name.replace(/^v/, ''), url: j.html_url } : null;
+  } catch { return null; }
+}
+handle('update', () => (updateInfo ??= updatePruefen()));
 core.setModell(lies().modell);
 core.setSprache(lies().sprache || 'de');
 

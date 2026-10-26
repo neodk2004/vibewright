@@ -187,6 +187,7 @@ async function start() {
     ${settings.ablage ? `${settings.modus === 'obsidian' ? 'Obsidian' : 'Lokal'} · ` : ''}<button id="einst-link">⚙ Einstellungen</button>
     <span class="sprachwahl"><button data-s="de" title="Deutsch" class="${uiSprache === 'de' ? 'on' : ''}">${FLAGGEN.de}</button><button data-s="en" title="English" class="${uiSprache === 'en' ? 'on' : ''}">${FLAGGEN.en}</button></span>`;
   $('#einst-link').onclick = einstellungen;
+  api.update().then((u) => { if (u?.version) $('#meta').insertAdjacentHTML('afterbegin', `<a href="#" class="update-hinweis" data-url="${esc(u.url)}">⬆ Neue Version verfügbar: <b>${esc(u.version)}</b></a>`); });
   $$('.sprachwahl button').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   if (!checks.claude || !checks.loggedIn) {
     return ansicht(null, `<div class="mitte"><div class="box"><h2>Willkommen bei Vibewright</h2>

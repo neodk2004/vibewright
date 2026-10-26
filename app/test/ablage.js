@@ -24,3 +24,12 @@ assert.strictEqual(core.imProgrammordner(path.join(prog, 'DHome')), prog);
 assert.strictEqual(core.imProgrammordner('/Applications/Obsidian.app/Contents/x'), path.resolve('/Applications/Obsidian.app'));
 fs.rmSync(basis, { recursive: true });
 console.log('ablage: ok');
+
+// Versionsvergleich für den Update-Hinweis
+assert.ok(core.istNeuer('v0.2.1', '0.2.0'));
+assert.ok(core.istNeuer('0.10.0', '0.9.9'));
+assert.ok(core.istNeuer('v1.0.0', '0.99.0'));
+assert.ok(!core.istNeuer('v0.2.0', '0.2.0'));
+assert.ok(!core.istNeuer('v0.1.0-mac', '0.2.0'));
+assert.ok(!core.istNeuer('v0.2.0-mac', '0.2.0'));
+console.log('versionen: ok');
