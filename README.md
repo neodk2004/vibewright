@@ -102,12 +102,12 @@ Every release lists the **SHA-256 checksum** of the installer in its release not
 
 ```powershell
 # Windows (PowerShell)
-(Get-FileHash .\Vibewright.Setup.0.2.2.exe -Algorithm SHA256).Hash
+(Get-FileHash .\Vibewright.Setup.0.2.3.exe -Algorithm SHA256).Hash
 ```
 
 ```bash
 # macOS (Terminal)
-shasum -a 256 Vibewright-0.2.2-mac-arm64.dmg
+shasum -a 256 Vibewright-0.2.3-mac-arm64.dmg
 ```
 
 If the output matches the published value, your file is exactly the released one.

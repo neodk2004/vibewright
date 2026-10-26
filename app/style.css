@@ -36,7 +36,7 @@ button,input,textarea{font:inherit;color:inherit}
 .side-foot button{all:unset;cursor:pointer;color:var(--accent)}
 
 /* Hauptbereich */
-#main{display:grid;grid-template-rows:auto 1fr auto;min-height:0;min-width:0}
+#main{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);min-height:0;min-width:0} /* sonst dehnt eine lange Idee (nowrap) die Spalte über das Fenster hinaus */
 #kopf{padding:20px 32px 0}
 #kopf:empty{padding:0}
 #kopf h1{font:600 20px/1.3 "Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;margin:0}
