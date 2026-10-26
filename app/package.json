@@ -12,8 +12,8 @@
     "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"
   },
   "devDependencies": {
-    "electron": "33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^42.11.18",
+    "electron-builder": "^26.18.0"
   },
   "dependencies": {
     "@lydell/node-pty": "^1.1.0",
