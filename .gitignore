@@ -8,3 +8,6 @@ app/dist/
 
 # Private Übergabenotiz
 /HANDOFF.md
+
+# Lokales Hilfsskript fürs GitHub-Wiki
+/build_wiki.py
