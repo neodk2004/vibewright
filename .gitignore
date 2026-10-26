@@ -14,3 +14,5 @@ app/dist/
 
 # Vorschaubilder der Installer-Grafiken (npx electron build/installer-bilder.js)
 app/build/*-vorschau.png
+
+.claude/handoffs/
