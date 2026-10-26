@@ -130,6 +130,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.3 – 2026-10-26
+
+#### Fixed
+- **Stuck at step 2 (needs analysis):** with a long project idea, the main area grew wider than the window, so the right column and the *Looks good* button were cut off. The idea in the header is now shortened with "…" and everything fits in the window again.
+
 ### [0.2.2](https://github.com/neodk2004/vibewright/releases/tag/v0.2.2) – 2026-10-26
 
 #### Added
@@ -155,14 +160,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Fixed
 - **Missing storage folder:** if the storage folder was moved, deleted or its drive is not connected, Vibewright now says so clearly (with "Choose another storage" and "Check again") instead of silently showing an empty project list.
 - One damaged project file no longer hides all other projects from the list.
-
-### [0.2.0](https://github.com/neodk2004/vibewright/releases/tag/v0.2.0) – 2026-10-12
-
-#### Added
-- **Archive projects:** packs a project into a ZIP file in the `Archiv` folder of your storage and removes it from the list. File names with umlauts stay intact on Windows and macOS.
-- **Delete projects:** shows a clear warning first; the next confirmation removes the project for good. Your own code folder is never touched.
-- Both actions are in the header of every project. Archiving or deleting also removes the project's line from the Obsidian kanban board and ends a running Claude session for that project.
-- Windows and macOS (Apple Silicon + Intel) now ship together in one release.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
