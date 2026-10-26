@@ -5,7 +5,7 @@ name: Issue intake
 
 on:
   issues:
-    types: [opened]
+    types: [opened, edited]
 
 permissions:
   issues: write
@@ -30,6 +30,23 @@ jobs:
             };
             const istFehler = issue.labels.some((l) => l.name === 'bug');
             const istIdee = issue.labels.some((l) => l.name === 'enhancement');
+            const formular = istFehler || istIdee;
+            // Selbst geschriebener Text: Freitext-Felder plus alles über der ersten Überschrift – ohne Auswahlfelder und „_No response_“
+            const FREITEXT = ['What happened?', 'Steps to reproduce', 'Screenshots', 'What would you like to do?', 'Your idea', 'Alternatives'];
+            const teile = body.split(/^### /m);
+            const eigenerText = (formular ? [teile[0], ...teile.slice(1).filter((t) => FREITEXT.some((f) => t.startsWith(f))).map((t) => t.split('\n').slice(1).join('\n'))] : [body])
+              .join(' ').replace(/_No response_/g, '').replace(/\s+/g, ' ').trim();
+            const genug = eigenerText.length >= (formular ? 20 : 40);
+
+            // Nach einer Bearbeitung durch die Person selbst: nur prüfen, ob die Nachfrage jetzt erledigt ist
+            if (context.payload.action === 'edited') {
+              const wartet = issue.labels.some((l) => l.name === 'needs-info');
+              if (!wartet || !genug || context.payload.sender.login !== issue.user.login) return;
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: 'needs-info' });
+              await github.rest.issues.createComment({ owner, repo, issue_number: issue.number,
+                body: '✅ Thanks for the details – that helps!\n\n*Danke für die Details – das hilft uns weiter!*' });
+              return;
+            }
 
             // Labels anlegen, falls es sie noch nicht gibt (422 = existiert schon)
             const FARBEN = { triage: 'fbca04', 'needs-info': 'd876e3', windows: '0078d4', macos: '555555' };
@@ -58,10 +75,8 @@ jobs:
               } catch {}
             }
 
-            // Zu wenig Inhalt → nachfragen. Formular: Hauptfeld unter 20 Zeichen; ohne Formular: ganzer Text unter 40 Zeichen
-            const formular = istFehler || istIdee;
-            const haupt = istFehler ? feld('What happened?') : istIdee ? feld('What would you like to do?') : body.trim();
-            if (haupt.length < (formular ? 20 : 40)) {
+            // Zu wenig selbst geschriebener Text → nachfragen (Formular: unter 20 Zeichen, ohne Formular: unter 40)
+            if (!genug) {
               labels.push(await label('needs-info'));
               hinweise.push(formular
                 ? `📝 Could you describe it in a few more sentences? You can edit the issue (··· → Edit) – the more we know, the faster we can help.\n*Magst du es in ein paar Sätzen mehr beschreiben? Du kannst das Issue bearbeiten (··· → Edit) – je mehr wir wissen, desto schneller können wir helfen.*`
