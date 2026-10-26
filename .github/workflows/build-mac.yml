@@ -117,13 +117,15 @@ jobs:
         run: |
           set -euo pipefail
           APP="$APPDIR/Vibewright.app/Contents/MacOS/Vibewright"   # Intel build runs via Rosetta 2
+          # Rosetta translates the whole Electron framework on the first Intel start – that alone can take 50–90 s on the runner
+          ZEIT=$([ "${{ matrix.arch }}" = x64 ] && echo 300 || echo 90)
           ls -la dist "$APPDIR"
           mkdir -p shots /tmp/kph/ablage
           echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"de"}' > /tmp/kph/einstellungen.json
           # Claude Code is not installed on the runner → the welcome/setup page must appear
-          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-de.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
+          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-de.png" SCREENSHOT_DELAY=8000 perl -e "alarm $ZEIT; exec @ARGV" "$APP"
           echo '{"modus":"lokal","ablage":"/tmp/kph/ablage","sprache":"en"}' > /tmp/kph/einstellungen.json
-          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-en.png" SCREENSHOT_DELAY=8000 perl -e 'alarm 90; exec @ARGV' "$APP"
+          KPH_USERDATA=/tmp/kph SCREENSHOT="$PWD/shots/start-en.png" SCREENSHOT_DELAY=8000 perl -e "alarm $ZEIT; exec @ARGV" "$APP"
           if [ "${{ matrix.arch }}" = arm64 ]; then perl -e 'alarm 60; exec @ARGV' npx electron test/splash-check.js "$PWD/shots/splash.png"; fi
           ls -la shots
           test -s shots/start-de.png && test -s shots/start-en.png

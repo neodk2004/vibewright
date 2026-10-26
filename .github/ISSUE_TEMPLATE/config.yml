@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 🔒 Report a security vulnerability
+  - name: 🔒 Report a security vulnerability / Sicherheitslücke melden
     url: https://github.com/neodk2004/vibewright/security/advisories/new
     about: Please report security problems privately, not as a public issue.
-  - name: 📘 User guide
-    url: https://github.com/neodk2004/vibewright/blob/main/docs/user-guide.md
-    about: Most questions are answered here (FAQ at the end).
+  - name: 📖 Manual / Handbuch
+    url: https://github.com/neodk2004/vibewright/wiki
+    about: Most questions are answered here (FAQ in the last chapter) – die meisten Fragen beantwortet das Handbuch.

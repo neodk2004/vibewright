@@ -1,0 +1,74 @@
+# Sorts every new issue: labels for platform and area, a friendly reply (EN + DE) with what happens next,
+# a note when the reported version is outdated, and a request for details when a blank issue says too little.
+# Uses only GitHub's own actions/github-script. The issue text is read from the event payload – never pasted into a shell.
+name: Issue intake
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  eingang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            const { owner, repo } = context.repo;
+            // Issue forms render as "### Label\n\nvalue"
+            const feld = (anfang) => {
+              const m = body.split(/^### /m).find((t) => t.startsWith(anfang));
+              const v = m?.split('\n').slice(1).join('\n').trim();
+              return v && v !== '_No response_' ? v : '';
+            };
+            const istFehler = issue.labels.some((l) => l.name === 'bug');
+            const istIdee = issue.labels.some((l) => l.name === 'enhancement');
+
+            // Labels anlegen, falls es sie noch nicht gibt (422 = existiert schon)
+            const FARBEN = { triage: 'fbca04', 'needs-info': 'd876e3', windows: '0078d4', macos: '555555' };
+            const label = async (name) => {
+              try { await github.rest.issues.createLabel({ owner, repo, name, color: FARBEN[name] || (name.startsWith('area: ') ? 'c5def5' : 'ededed') }); } catch (e) { if (e.status !== 422) throw e; }
+              return name;
+            };
+            const labels = [await label('triage')];
+
+            let hinweise = [];
+            if (istFehler) {
+              const system = feld('Operating system');
+              if (/^Windows/.test(system)) labels.push(await label('windows'));
+              if (/^macOS/.test(system)) labels.push(await label('macos'));
+              const bereich = feld('Where did it happen?').replace(/^"|"$/g, '');
+              if (bereich) labels.push(await label(`area: ${bereich.toLowerCase().replace(/ \(.*\)$/, '').slice(0, 40)}`));
+
+              // Veraltete Version? Dann zuerst ein Update empfehlen
+              const gemeldet = feld('Vibewright version').replace(/^v/i, '');
+              try {
+                const neueste = (await github.rest.repos.getLatestRelease({ owner, repo })).data.tag_name.replace(/^v/, '');
+                const z = (v) => v.split('-')[0].split('.').map(Number);
+                const [a, b] = [z(gemeldet), z(neueste)];
+                const aelter = a.length === 3 && !a.some(isNaN) && [0, 1, 2].map((i) => (a[i] || 0) - (b[i] || 0)).find((d) => d !== 0) < 0;
+                if (aelter) hinweise.push(`📦 You are on **${gemeldet}**, the newest version is **${neueste}** – maybe it is already fixed there: [download](https://github.com/${owner}/${repo}/releases/latest).\n*Du nutzt **${gemeldet}**, die neueste Version ist **${neueste}** – vielleicht ist der Fehler dort schon behoben.*`);
+              } catch {}
+            }
+
+            // Leeres Issue ohne Vorlage und mit wenig Text → nachfragen
+            if (!istFehler && !istIdee && body.trim().length < 40) {
+              labels.push(await label('needs-info'));
+              hinweise.push(`📝 Could you add a few details? What did you do, what happened, which version and system? The [bug report form](https://github.com/${owner}/${repo}/issues/new?template=bug_report.yml) asks for everything we need.\n*Magst du noch ein paar Details ergänzen? Was hast du gemacht, was ist passiert, welche Version und welches System?*`);
+            }
+
+            await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels });
+            const art = istIdee ? 'idea' : 'report';
+            await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: [
+              `👋 Thanks for your ${art}, @${issue.user.login}! We read every issue and will reply here – you get a notification on GitHub.`,
+              `*Danke für deine ${istIdee ? 'Idee' : 'Meldung'}! Wir lesen jedes Issue und antworten hier – GitHub benachrichtigt dich.*`,
+              ...hinweise,
+              `Please never post passwords, API keys or private data here. Security problems → [report privately](https://github.com/${owner}/${repo}/security/advisories/new).`,
+            ].join('\n\n') });

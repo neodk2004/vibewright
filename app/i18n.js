@@ -85,7 +85,7 @@ const UI_EN = {
   '⚠ Programmordner – nicht sicher': '⚠ Program folder – not safe', 'Ein Update von Obsidian löscht diesen Ordner': 'An Obsidian update deletes this folder',
   '⬆ Neue Version verfügbar:': '⬆ New version available:',
   '⚠ Ablage nicht gefunden': '⚠ Storage not found', 'Klicken für Details': 'Click for details',
-  'Ablage wechseln': 'Change storage', 'Ordner öffnen': 'Open folder', 'Anleitung': 'User guide', 'Lizenzen & Quellen': 'Licenses & sources',
+  'Ablage wechseln': 'Change storage', 'Fehler melden': 'Report a bug', 'Ordner öffnen': 'Open folder', 'Anleitung': 'User guide', 'Lizenzen & Quellen': 'Licenses & sources',
   'Git ist nicht installiert': 'Git is not installed', 'Name und E-Mail für Commits eingetragen': 'Name and email for commits are set', 'Name und E-Mail fehlen noch': 'Name and email are missing',
   'Dein Name': 'Your name', 'E-Mail': 'Email', 'Offizieller Download:': 'Official download:', 'Speichern': 'Save',
   'Code-Ordner automatisch als Git-Projekt anlegen': 'Automatically set up the code folder as a Git project',

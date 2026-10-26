@@ -1,22 +1,43 @@
-name: 🐞 Bug report
-description: Something does not work as expected
+name: 🐞 Bug report / Fehler melden
+description: Something does not work as expected – etwas funktioniert nicht wie erwartet
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting! English or German is fine. **Security problems** please report privately – see SECURITY.md.
+        Thanks for reporting! **English or German is fine** – Deutsch oder Englisch, beides ist willkommen.
+        Tip: In Vibewright, **Settings → Report a bug** (*Einstellungen → Fehler melden*) fills in version, system and storage for you.
+        **Security problems** please report privately – see [SECURITY.md](https://github.com/neodk2004/vibewright/blob/main/SECURITY.md).
   - type: textarea
     id: was
     attributes:
-      label: What happened?
-      description: What did you do, what did you expect, what happened instead?
+      label: What happened? / Was ist passiert?
+      description: What did you do, what did you expect, what happened instead? – Was hast du gemacht, was hast du erwartet, was ist stattdessen passiert?
+    validations:
+      required: true
+  - type: dropdown
+    id: schritt
+    attributes:
+      label: Where did it happen? / Wo ist es passiert?
+      options:
+        - Installation / update
+        - First start & setup
+        - Interview
+        - Needs analysis
+        - Plan
+        - Tool check
+        - Cockpit
+        - Building with Claude (terminal)
+        - '"I just had another idea"'
+        - Settings
+        - Archive / delete
+        - Other
     validations:
       required: true
   - type: textarea
     id: schritte
     attributes:
-      label: Steps to reproduce
+      label: Steps to reproduce / So passiert es wieder
       placeholder: |
         1. Create a new project …
         2. Click …
@@ -25,13 +46,14 @@ body:
     id: version
     attributes:
       label: Vibewright version
-      placeholder: e.g. 0.1.0
+      description: Filled in automatically when you use "Report a bug" in the app. Otherwise – Windows - Settings → Apps → Vibewright; Mac - Vibewright → About.
+      placeholder: e.g. 0.2.2
     validations:
       required: true
   - type: dropdown
     id: system
     attributes:
-      label: Operating system
+      label: Operating system / Betriebssystem
       options:
         - Windows 11
         - Windows 10
@@ -43,7 +65,7 @@ body:
   - type: dropdown
     id: ablage
     attributes:
-      label: Where are your projects stored?
+      label: Where are your projects stored? / Wo liegen deine Projekte?
       options:
         - Obsidian
         - Local folder (Markdown + HTML)
@@ -51,5 +73,5 @@ body:
   - type: textarea
     id: bilder
     attributes:
-      label: Screenshots or error messages
-      description: Drag images in here. Please hide personal data (email, names, paths).
+      label: Screenshots or error messages / Bildschirmfotos oder Fehlermeldungen
+      description: Drag images in here. Please hide personal data (email, names, paths). – Bilder einfach hineinziehen, persönliche Daten bitte schwärzen.

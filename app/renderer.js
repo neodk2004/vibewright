@@ -308,7 +308,8 @@ async function einstellungen() {
       <div class="unten">${g.installiert ? '<button class="btn" id="g-speichern">Speichern</button>' : ''}<span class="muted klein" id="g-info"></span></div>
     </div>
   </div>`, [{ text: 'Zurück', ghost: true, klick: start }, 'sp',
-    { text: 'Anleitung', ghost: true, klick: () => api.link(`https://github.com/neodk2004/vibewright/blob/main/docs/${uiSprache === 'en' ? 'user-guide' : 'anleitung'}.md`) },
+    { text: 'Anleitung', ghost: true, klick: () => api.link(`https://github.com/neodk2004/vibewright/wiki${uiSprache === 'en' ? '/Home-English' : ''}`) },
+    { text: 'Fehler melden', ghost: true, klick: () => api['fehler-melden']() },
     { text: 'Lizenzen & Quellen', ghost: true, klick: () => api.link('https://github.com/neodk2004/vibewright/blob/main/THIRD_PARTY_NOTICES.md') },
     { info: 'Vibewright 0.2.0 · © 2026 neodk2004 · MIT License' }]);
   $$('.seg button[data-m]').forEach((b) => (b.onclick = async () => { await api.einstellung('modell', b.dataset.m); einstellungen(); }));

@@ -8,9 +8,11 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 - **Tool check – more sources:** besides the official catalog, Vibewright now uses every plugin marketplace you have added to Claude Code and the [claude-skills](https://github.com/alirezarezvani/claude-skills) catalog (even if you have not added it yet).
 - **Tool check – ready-made skills from [SkillsMP](https://skillsmp.com):** if no catalog fits, Vibewright searches SkillsMP. Only Claude-compatible skills from GitHub repositories with at least 50,000 stars are considered, and Claude picks one only if it really fits. SkillsMP only receives 1–3 English keywords, never your idea or plan.
 - **Tool check – link check:** suggested download pages are opened once; dead links are replaced with the maker's current page or marked with ⚠.
+- **Report a bug from the app:** *Settings → Report a bug* opens the GitHub form with version, system and storage already filled in. New reports get a friendly reply and are sorted automatically; outdated versions get a hint to update first.
 - **Windows installer in the Vibewright look:** welcome page with the Vibewright sidebar, logo header on every page, German or English depending on your Windows language.
 
 ### Changed
+- *Settings → User guide* now opens the manual in the wiki.
 - The tool check now also counts skills inside installed plugins and skills in the project's code folder as available, and notices switched-off plugins.
 
 ## [0.2.1] – 2026-10-26

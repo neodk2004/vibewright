@@ -1,5 +1,5 @@
-name: 💡 Feature request
-description: An idea that would make Vibewright better
+name: 💡 Feature request / Idee
+description: An idea that would make Vibewright better – eine Idee, die Vibewright besser macht
 labels: [enhancement]
 body:
   - type: textarea

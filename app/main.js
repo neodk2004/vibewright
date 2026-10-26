@@ -192,6 +192,14 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
   pty.onExit(() => { if (sitzung?.pty === pty) { watcher.close(); sitzung = null; } senden('pty-ende', name); });
   return bereit;
 });
+// „Fehler melden“: GitHub-Formular mit Version, System und Ablage vorausgefüllt öffnen (Feld-IDs aus .github/ISSUE_TEMPLATE/bug_report.yml)
+handle('fehler-melden', () => {
+  const s = lies();
+  const system = WIN ? (Number(os.release().split('.')[2]) >= 22000 ? 'Windows 11' : 'Windows 10') : MAC ? (process.arch === 'arm64' ? 'macOS – Apple Silicon' : 'macOS – Intel') : 'Other';
+  const ablage = !s.ablage ? 'Not set up yet' : s.modus === 'obsidian' ? 'Obsidian' : 'Local folder (Markdown + HTML)';
+  const q = new URLSearchParams({ template: 'bug_report.yml', version: app.getVersion(), system, ablage });
+  shell.openExternal(`https://github.com/neodk2004/vibewright/issues/new?${q}`);
+});
 handle('link', (url) => /^https:\/\//.test(url) && shell.openExternal(url)); // nur https, keine Dateien/Programme
 handle('ordner', (p) => shell.openPath(p || info().ablage));
 
