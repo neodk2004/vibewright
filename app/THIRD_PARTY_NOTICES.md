@@ -11,13 +11,13 @@ This file is generated from the installed packages by `app/build/hinweise-bauen.
 | [@xterm/addon-fit](https://github.com/xtermjs/xterm.js/tree/master/addons/addon-fit) | 0.10.0 | MIT | Fits the terminal to the window size |
 | [@lydell/node-pty](https://github.com/lydell/node-pty) | 1.1.0 | MIT | Runs Claude Code in a pseudo terminal (fork of microsoft/node-pty with prebuilt binaries) |
 | [@lydell/node-pty-win32-x64](https://github.com/lydell/node-pty) | 1.1.0 | MIT | Prebuilt Windows x64 binaries for node-pty (same license as node-pty) |
-| [electron](https://github.com/electron/electron) | 33.2.0 | MIT | Desktop app runtime (includes Chromium and Node.js – their licenses ship as LICENSE.electron.txt and LICENSES.chromium.html in the install folder) |
+| [electron](https://github.com/electron/electron) | 42.11.18 | MIT | Desktop app runtime (includes Chromium and Node.js – their licenses ship as LICENSE.electron.txt and LICENSES.chromium.html in the install folder) |
 
 ## Build tools (not shipped with the app)
 
 | Package | Version | License | Used for |
 |---|---|---|---|
-| [electron-builder](https://github.com/electron-userland/electron-builder) | 25.1.8 | MIT | Builds the Windows installer |
+| [electron-builder](https://github.com/electron-userland/electron-builder) | 26.18.0 | MIT | Builds the Windows installer |
 
 During the build, electron-builder also downloads the Electron binaries and NSIS (the installer system, zlib/libpng license); NSIS is only used to create the setup file.
 
@@ -176,7 +176,7 @@ SOFTWARE.
 License: MIT – see https://github.com/lydell/node-pty (the package ships no separate LICENSE file; same license as @lydell/node-pty above).
 ```
 
-### electron 33.2.0 (MIT)
+### electron 42.11.18 (MIT)
 
 ```
 Copyright (c) Electron contributors
