@@ -143,6 +143,9 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - *Settings → User guide* now opens the manual in the wiki.
 - The tool check now also counts skills inside installed plugins and skills in the project's code folder as available, and notices switched-off plugins.
 
+#### Fixed
+- The settings page showed version 0.2.0 regardless of the installed version.
+
 ### [0.2.1](https://github.com/neodk2004/vibewright/releases/tag/v0.2.1) – 2026-10-26
 
 #### Added
