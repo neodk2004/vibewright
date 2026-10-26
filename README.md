@@ -59,7 +59,7 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 
 ## Documentation
 
-- 📖 [Wiki / Handbuch](https://github.com/neodk2004/vibewright/wiki) – the German manual, one page per chapter, with screenshots
+- 📖 [Wiki manual (English)](https://github.com/neodk2004/vibewright/wiki/Home-English) · [Handbuch (Deutsch)](https://github.com/neodk2004/vibewright/wiki) – one page per chapter, with screenshots
 - 📘 [User guide](docs/user-guide.md) – everything from the first start to a finished project
 - 📗 [Anleitung (Deutsch)](docs/anleitung.md)
 - 🛠️ [Developer guide](docs/developer-guide.md) – architecture, Claude calls, tests, building
