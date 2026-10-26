@@ -11,3 +11,6 @@ app/dist/
 
 # Lokales Hilfsskript fürs GitHub-Wiki
 /build_wiki.py
+
+# Vorschaubilder der Installer-Grafiken (npx electron build/installer-bilder.js)
+app/build/*-vorschau.png

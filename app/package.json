@@ -32,7 +32,11 @@
       "!test/**",
       "!build/icon-bauen.js",
       "!dist/**",
-      "!build/hinweise-bauen.js"
+      "!build/hinweise-bauen.js",
+      "!build/installer-bilder.js",
+      "!build/*.bmp",
+      "!build/*-vorschau.png",
+      "!build/installer.nsh"
     ],
     "asarUnpack": [
       "node_modules/@lydell/**"
@@ -55,7 +59,16 @@
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "createDesktopShortcut": true,
-      "license": "build/license.txt"
+      "license": "build/license.txt",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerLanguages": [
+        "de_DE",
+        "en_US"
+      ],
+      "multiLanguageInstaller": true,
+      "include": "build/installer.nsh"
     },
     "npmRebuild": false,
     "mac": {
