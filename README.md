@@ -130,6 +130,17 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+### [0.2.2](https://github.com/neodk2004/vibewright/releases/tag/v0.2.2) – 2026-10-26
+
+#### Added
+- **Tool check – more sources:** besides the official catalog, Vibewright now uses every plugin marketplace you have added to Claude Code and the [claude-skills](https://github.com/alirezarezvani/claude-skills) catalog (even if you have not added it yet).
+- **Tool check – ready-made skills from [SkillsMP](https://skillsmp.com):** if no catalog fits, Vibewright searches SkillsMP. Only Claude-compatible skills from GitHub repositories with at least 50,000 stars are considered, and Claude picks one only if it really fits. SkillsMP only receives 1–3 English keywords, never your idea or plan.
+- **Tool check – link check:** suggested download pages are opened once; dead links are replaced with the maker's current page or marked with ⚠.
+- **Windows installer in the Vibewright look:** welcome page with the Vibewright sidebar, logo header on every page, German or English depending on your Windows language.
+
+#### Changed
+- The tool check now also counts skills inside installed plugins and skills in the project's code folder as available, and notices switched-off plugins.
+
 ### [0.2.1](https://github.com/neodk2004/vibewright/releases/tag/v0.2.1) – 2026-10-26
 
 #### Added
@@ -147,15 +158,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - **Delete projects:** shows a clear warning first; the next confirmation removes the project for good. Your own code folder is never touched.
 - Both actions are in the header of every project. Archiving or deleting also removes the project's line from the Obsidian kanban board and ends a running Claude session for that project.
 - Windows and macOS (Apple Silicon + Intel) now ship together in one release.
-
-### [0.1.0-mac](https://github.com/neodk2004/vibewright/releases/tag/v0.1.0-mac) – 2026-10-11
-
-#### Added
-- macOS version for Apple Silicon (arm64) and Intel (x64), signed with an Apple Developer ID and notarized by Apple.
-- Public build workflow for macOS on GitHub Actions.
-
-#### Fixed
-- Splash screen: logo now shows immediately with "Reduce motion" enabled, and the animation keeps running on macOS.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
