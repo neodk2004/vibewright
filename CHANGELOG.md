@@ -2,6 +2,12 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.6] – 2026-11-06
+
+### Added
+- **Import from GitHub or Gitea:** *Settings → Git → GitHub / Gitea* connects your account (GitHub or your own Gitea server, optional access token for private repositories – stored encrypted on this computer). *New project → From GitHub / Gitea* lists your repositories; one click downloads the code into a folder of your choice and starts planning from there.
+- **Global rules:** *Settings → Claude → Global rules* shows and edits the central `CLAUDE.md` that Claude Code follows in every project. Building blocks add recurring steps with one click (commit, push, /graphify, /ponytail, security review, vulnerability check, secrets, tests). The previous file is kept as `CLAUDE.md.bak`.
+
 ## [0.2.5] – 2026-11-06
 
 ### Added

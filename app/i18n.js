@@ -31,6 +31,29 @@ const UI_EN = {
   'Aus Claude Code übernehmen': 'Import from Claude Code', 'Code-Ordner:': 'Code folder:',
   'Wähle einen Ordner, in dem du schon mit Claude Code gearbeitet hast. Vibewright plant von dort aus weiter.': 'Pick a folder you already worked on with Claude Code. Vibewright plans onward from there.',
   'Keine früheren Claude-Code-Sitzungen gefunden.': 'No earlier Claude Code sessions found.', 'Der Ordner wurde nicht gefunden.': 'The folder was not found.',
+  // GitHub / Gitea
+  'Aus GitHub / Gitea': 'From GitHub / Gitea', 'Aus GitHub übernehmen': 'Import from GitHub', 'Aus Gitea übernehmen': 'Import from Gitea',
+  'Wähle ein Repository. Vibewright lädt den Code in einen Ordner deiner Wahl und plant von dort aus weiter.': 'Pick a repository. Vibewright downloads the code into a folder of your choice and plans onward from there.',
+  'Keine Repositories gefunden.': 'No repositories found.', 'privat': 'private', 'Konto ändern': 'Change account',
+  'Repositories werden geladen …': 'Loading repositories …', 'Repository wird geladen …': 'Downloading repository …',
+  'GitHub / Gitea verbinden': 'Connect GitHub / Gitea', 'Konto für den Import von Projekten': 'Account for importing projects',
+  'Adresse deines Gitea-Servers, z. B. https://gitea.example.de': 'Address of your Gitea server, e.g. https://gitea.example.com', 'Benutzername': 'Username',
+  'Token ist gespeichert – leer lassen zum Behalten': 'Token is saved – leave empty to keep it', 'Zugriffs-Token (optional, für private Repositories)': 'Access token (optional, for private repositories)',
+  'Ohne Token siehst du nur öffentliche Repositories. Token mit Leserechten für Repositories anlegen:': 'Without a token you only see public repositories. Create a token with read access to repositories:',
+  'in Gitea unter Einstellungen → Anwendungen': 'in Gitea under Settings → Applications',
+  '. Er wird verschlüsselt auf diesem Rechner gespeichert.': '. It is stored encrypted on this computer.',
+  'Token entfernen': 'Remove token', 'Speichern & testen': 'Save & test',
+  'Bitte Benutzername oder Token eintragen.': 'Please enter a username or a token.', 'Anmeldung abgelehnt – bitte Token prüfen.': 'Sign-in rejected – please check the token.',
+  'Bitte die Adresse deines Gitea-Servers eintragen (z. B. https://gitea.example.de).': 'Please enter the address of your Gitea server (e.g. https://gitea.example.com).',
+  'Repository gehört nicht zum eingetragenen Server.': 'Repository does not belong to the configured server.', 'Unbekannter Dienst': 'Unknown service',
+  'Der Ordner ist nicht leer. Bitte einen leeren oder neuen Ordner wählen.': 'The folder is not empty. Please choose an empty or new folder.',
+  'Token kann auf diesem System nicht sicher gespeichert werden.': 'The token cannot be stored securely on this system.',
+  // Globale Regeln
+  'Globale Regeln': 'Global rules', 'Regeln, die Claude in jedem Projekt befolgt': 'Rules Claude follows in every project',
+  'Claude Code befolgt sie in jedem Projekt': 'Claude Code follows them in every project', 'Bausteine': 'Building blocks',
+  'Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.': 'No global rules yet. Click building blocks on the right or write your own.',
+  'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.': 'Before saving, the old file is backed up as CLAUDE.md.bak.',
+  '✓ Gespeichert': '✓ Saved', 'Schwachstellen': 'Vulnerabilities', 'Geheimnisse': 'Secrets',
   // Laden
   'Prüfe Claude Code …': 'Checking Claude Code …', 'Claude stellt die ersten Fragen zusammen …': 'Claude is preparing the first questions …',
   'Claude prüft, ob noch etwas fehlt …': 'Claude checks whether anything is missing …', 'Claude schreibt die Bedarfsanalyse …': 'Claude is writing the needs analysis …',
@@ -106,6 +129,8 @@ const UI_EN = {
   'Im Ordner zeigen': 'Show in folder', 'Projekt nicht gefunden.': 'Project not found.',
 };
 const UI_EN_MUSTER = [
+  [/^Server antwortet mit Fehler (\d+)\.$/, 'Server responded with error $1.'],
+  [/^Klonen fehlgeschlagen: (.*)$/s, 'Download failed: $1'],
   [/^Runde (\d+) · Frage (\d+) von (\d+)( · mehrere möglich)?$/, (_m, a, b, c, d) => `Round ${a} · Question ${b} of ${c}${d ? ' · multiple allowed' : ''}`],
   [/^(\d+) % · (\d+)\/(\d+) Schritte$/, '$1 % · $2/$3 steps'],
   [/^(\d+) % · Phase (\d+)$/, '$1 % · phase $2'],

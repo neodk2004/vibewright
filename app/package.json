@@ -1,12 +1,12 @@
 {
   "name": "vibewright",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Vibewright – You vibe. It builds. Aus einer Idee wird eine Laufkarte, umgesetzt mit Claude Code.",
   "main": "main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/e2e.js",
+    "test": "node test/forge.js && node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/e2e.js",
     "exe": "electron-builder --win nsis",
     "notices": "node build/hinweise-bauen.js",
     "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"

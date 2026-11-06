@@ -308,7 +308,7 @@ async function einstellungen() {
       <span class="label" style="margin-top:8px">Modell für die Planung</span>
       <div class="seg">${MODELLE.map(([m, n, d]) => `<button data-m="${m}" class="${e.modell === m ? 'on' : ''}">${n}<small>${d}</small></button>`).join('')}</div>
       <span class="muted klein">Gilt für Interview, Analyse, Plan und Ideen. Die Umsetzung im Terminal nutzt deine normale Claude-Code-Einstellung.</span>
-      <div class="unten" id="claude-unten">${c.claude ? `<button class="btn ${c.loggedIn ? '' : 'primary'}" id="anmelden">${c.loggedIn ? 'Neu anmelden' : 'Anmelden'}</button>` : '<a href="#" data-url="https://docs.claude.com/en/docs/claude-code/setup">Installationsanleitung</a>'}<button class="btn ghost" id="pruefen">Neu prüfen</button></div>
+      <div class="unten" id="claude-unten">${c.claude ? `<button class="btn ${c.loggedIn ? '' : 'primary'}" id="anmelden">${c.loggedIn ? 'Neu anmelden' : 'Anmelden'}</button>` : '<a href="#" data-url="https://docs.claude.com/en/docs/claude-code/setup">Installationsanleitung</a>'}<button class="btn ghost" id="pruefen">Neu prüfen</button><button class="btn" id="regeln" title="Regeln, die Claude in jedem Projekt befolgt">Globale Regeln</button></div>
     </div>
     <div class="karte" style="--ak:#4fb8c9"><span class="label">Ablage</span>
       ${punkt(true, a.modus === 'obsidian' ? 'Obsidian-Vault' : 'Lokal als .md + .html')}
@@ -325,7 +325,7 @@ async function einstellungen() {
         <input type="text" id="g-mail" placeholder="E-Mail" value="${esc(g.email)}">`
         : `<span class="muted klein">Offizieller Download: <a href="#" data-url="https://git-scm.com/download/${MAC ? 'mac' : 'win'}">git-scm.com/download/${MAC ? 'mac' : 'win'}</a></span>`}
       <label class="schalter"><input type="checkbox" id="g-auto" ${e.gitAuto ? 'checked' : ''}><span>Code-Ordner automatisch als Git-Projekt anlegen<small>Claude macht nach jedem erledigten Schritt einen Commit – so kannst du jederzeit zurück.</small></span></label>
-      <div class="unten">${g.installiert ? '<button class="btn" id="g-speichern">Speichern</button>' : ''}<span class="muted klein" id="g-info"></span></div>
+      <div class="unten">${g.installiert ? '<button class="btn" id="g-speichern">Speichern</button>' : ''}<button class="btn" id="g-forge" title="Konto für den Import von Projekten">GitHub / Gitea</button><span class="muted klein" id="g-info"></span></div>
     </div>
   </div>`, [{ text: 'Zurück', ghost: true, klick: start }, 'sp',
     { text: 'Anleitung', ghost: true, klick: () => api.link(`https://github.com/neodk2004/vibewright/wiki${uiSprache === 'en' ? '/Home-English' : ''}`) },
@@ -339,6 +339,8 @@ async function einstellungen() {
   $('#ablage').onclick = () => ablageWaehlen(e.vaults);
   $('#obs-inst')?.addEventListener('click', obsidianInstallieren);
   $('#ordner').onclick = () => api.ordner(a.ablage);
+  $('#regeln').onclick = regelnSeite;
+  $('#g-forge').onclick = () => forgeEinstellungen(einstellungen);
   $('#g-auto').onchange = (ev) => api.einstellung('gitAuto', ev.target.checked);
   $('#g-speichern')?.addEventListener('click', async () => {
     const r = await api['git-identitaet']($('#g-name').value, $('#g-mail').value);
@@ -358,7 +360,7 @@ function neuesProjekt(v = {}) {
     <textarea id="idee" rows="2" placeholder="Deine Idee in einem Satz">${esc(v.idee)}</textarea>
     ${importOrdner ? `<p class="muted klein pfad"><span>Code-Ordner:</span> ${esc(importOrdner)}</p>` : ''}
     <div class="ablauf"><span>Interview</span><span>Bedarfsanalyse</span><span>Plan</span><span>Werkzeug-Check</span><span>Umsetzung</span></div>
-    </div></div>`, [{ text: 'Aus Claude Code übernehmen', ghost: true, klick: claudeImport }, 'sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
+    </div></div>`, [{ text: 'Aus Claude Code übernehmen', ghost: true, klick: claudeImport }, { text: 'Aus GitHub / Gitea', ghost: true, klick: forgeImport }, 'sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
   $('#name').focus();
   $('#idee').addEventListener('keydown', (e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), anlegen()));
 }
@@ -374,6 +376,100 @@ async function claudeImport() {
     : '<p class="muted">Keine früheren Claude-Code-Sitzungen gefunden.</p>'}</div></div></div>`, [{ text: 'Zurück', ghost: true, klick: () => neuesProjekt() }]);
   $$('.import-liste .opt').forEach((b) => (b.onclick = () => neuesProjekt(liste[b.dataset.i])));
 }
+// GitHub / Gitea: Repository aussuchen, in einen Code-Ordner klonen, dann wie gewohnt planen
+async function forgeImport() {
+  const k = await api.forge();
+  if (!k.nutzer && !k.tokenGespeichert) return forgeEinstellungen(forgeImport);
+  laden(null, 'Repositories werden geladen …');
+  const l = await api['forge-repos']();
+  const liste = Array.isArray(l) ? l : [];
+  const fehler = l.fehler ? `<div class="fehler">${esc(l.fehler)}</div>` : '';
+  const datum = (iso) => (iso ? new Date(iso).toLocaleDateString(uiSprache, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
+  ansicht(null, `<div class="mitte"><div class="box"><h2>Aus ${k.typ === 'gitea' ? 'Gitea' : 'GitHub'} übernehmen</h2>
+    <p class="muted">Wähle ein Repository. Vibewright lädt den Code in einen Ordner deiner Wahl und plant von dort aus weiter.</p>${fehler}
+    <div class="import-liste">${liste.length ? liste.map((r, i) => `<button class="opt" data-i="${i}" title="${esc(r.url)}"><span class="imp"><span><b>${esc(r.voll)}</b> ${r.privat ? '<span class="chip">privat</span> ' : ''}<span class="muted klein">${datum(r.zeit)}</span></span><span class="muted klein">${esc(r.beschreibung || '–')}</span></span></button>`).join('')
+    : l.fehler ? '' : '<p class="muted">Keine Repositories gefunden.</p>'}</div></div></div>`,
+  [{ text: 'Zurück', ghost: true, klick: () => neuesProjekt() }, 'sp', { text: 'Konto ändern', ghost: true, klick: () => forgeEinstellungen(forgeImport) }]);
+  $$('.import-liste .opt').forEach((b) => (b.onclick = async () => {
+    laden(null, 'Repository wird geladen …');
+    const r = await api['forge-klonen'](liste[b.dataset.i]);
+    if (!r) return forgeImport(); // Ordnerauswahl abgebrochen
+    if (r.fehler) return ansicht(null, `<div class="mitte"><div class="box"><h2>Das hat nicht geklappt</h2><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: forgeImport }]);
+    neuesProjekt(r);
+  }));
+}
+// Konto für GitHub oder einen eigenen Gitea-Server; Token ist optional (nur für private Repositories nötig)
+async function forgeEinstellungen(zurueck) {
+  const k = await api.forge();
+  let typ = k.typ || 'github';
+  ansicht(null, `<div class="mitte"><div class="box"><h2>GitHub / Gitea verbinden</h2>
+    <div class="seg seg-klein">${[['github', 'GitHub'], ['gitea', 'Gitea']].map(([t, n]) => `<button data-t="${t}" class="${typ === t ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <input type="text" id="f-server" placeholder="Adresse deines Gitea-Servers, z. B. https://gitea.example.de" value="${esc(k.server)}">
+    <input type="text" id="f-nutzer" placeholder="Benutzername" value="${esc(k.nutzer)}">
+    <input type="password" id="f-token" placeholder="${k.tokenGespeichert ? 'Token ist gespeichert – leer lassen zum Behalten' : 'Zugriffs-Token (optional, für private Repositories)'}">
+    <p class="muted klein" id="f-hilfe"></p></div></div>`,
+  [{ text: 'Zurück', ghost: true, klick: zurueck }, ...(k.tokenGespeichert ? [{ text: 'Token entfernen', ghost: true, klick: () => speichern(true) }] : []), 'sp', { text: 'Speichern & testen', primary: true, klick: () => speichern(false) }]);
+  const zeigen = () => {
+    $$('.seg button[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === typ));
+    $('#f-server').hidden = typ !== 'gitea';
+    const tokenSeite = typ === 'github' ? 'https://github.com/settings/personal-access-tokens' : '';
+    $('#f-hilfe').innerHTML = `Ohne Token siehst du nur öffentliche Repositories. Token mit Leserechten für Repositories anlegen: ${tokenSeite ? `<a href="#" data-url="${tokenSeite}">github.com/settings</a>` : '<span>in Gitea unter Einstellungen → Anwendungen</span>'}<span>. Er wird verschlüsselt auf diesem Rechner gespeichert.</span>`;
+  };
+  $$('.seg button[data-t]').forEach((b) => (b.onclick = () => { typ = b.dataset.t; zeigen(); }));
+  zeigen();
+  async function speichern(tokenLoeschen) {
+    const r = await api['forge-speichern']({ typ, server: $('#f-server').value, nutzer: $('#f-nutzer').value, token: $('#f-token').value, tokenLoeschen });
+    $('.box .fehler')?.remove();
+    if (r.fehler) return $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(r.fehler)}</div>`);
+    zurueck();
+  }
+}
+
+// ---------- Globale Regeln: zentrale CLAUDE.md für alle Projekte ----------
+// Bausteine für Schritte, die sich in jedem Projekt wiederholen; ein Klick hängt sie an
+const BAUSTEINE = [
+  ['Commit', 'Nach jedem erledigten Schritt einen Git-Commit mit kurzer Beschreibung machen.', 'Make a Git commit with a short description after every finished step.'],
+  ['Push', 'Erst pushen, wenn ich es ausdrücklich sage. Vorher prüfen, dass keine persönlichen Daten oder Geheimnisse dabei sind.', 'Only push when I explicitly say so. Check beforehand that no personal data or secrets are included.'],
+  ['/graphify', 'Nach größeren Änderungen /graphify ausführen, damit der Wissensgraph aktuell bleibt.', 'Run /graphify after larger changes so the knowledge graph stays up to date.'],
+  ['/ponytail', 'Mit /ponytail arbeiten: einfachste Lösung, die funktioniert – keine unnötigen Abhängigkeiten oder Abstraktionen.', 'Work with /ponytail: simplest solution that works – no unnecessary dependencies or abstractions.'],
+  ['Security-Scan', 'Vor jedem Push /security-review ausführen und gefundene Probleme zuerst beheben.', 'Run /security-review before every push and fix any findings first.'],
+  ['Schwachstellen', 'Vor jedem Release Abhängigkeiten auf bekannte Schwachstellen prüfen (z. B. npm audit, pip-audit).', 'Before every release, check dependencies for known vulnerabilities (e.g. npm audit, pip-audit).'],
+  ['Geheimnisse', 'Nie Passwörter, Tokens oder API-Keys in Dateien schreiben oder committen.', 'Never write or commit passwords, tokens or API keys.'],
+  ['Tests', 'Nach jeder Änderung die Tests laufen lassen; schlagen sie fehl, das ehrlich sagen.', 'Run the tests after every change; if they fail, say so honestly.'],
+];
+async function regelnSeite() {
+  aktuell = null;
+  const r = await api.regeln();
+  if (r.fehler) return ansicht(null, `<div class="mitte"><div class="box"><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: einstellungen }]);
+  const en = uiSprache === 'en';
+  const titel = en ? '## Recurring steps' : '## Wiederkehrende Schritte';
+  ansicht(null, `<div class="einst-kopf"><h2>Globale Regeln</h2><span class="muted">Claude Code befolgt sie in jedem Projekt</span></div>
+    <div class="regeln"><textarea id="r-text" spellcheck="false" placeholder="Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.">${esc(r.text)}</textarea>
+      <div class="spalte"><span class="label">Bausteine</span><div class="bausteine">${BAUSTEINE.map(([n, de, e], i) => `<button class="opt" data-i="${i}" title="${esc(en ? e : de)}"><span class="imp"><b>${esc(n)}</b><span class="muted klein">${esc(en ? e : de)}</span></span></button>`).join('')}</div>
+      <span class="muted klein pfad">${esc(r.pfad)}</span></div></div>`,
+  [{ text: 'Zurück', ghost: true, klick: einstellungen }, { info: 'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.' }, 'sp', { text: 'Speichern', primary: true, id: 'r-speichern', klick: speichern }]);
+  const feld = $('#r-text');
+  // Bausteine, die schon in der Datei stehen, sind markiert
+  const markieren = () => $$('.bausteine .opt').forEach((b) => { const [, de, e] = BAUSTEINE[b.dataset.i]; b.classList.toggle('on', feld.value.includes(de) || feld.value.includes(e)); });
+  feld.oninput = markieren;
+  $$('.bausteine .opt').forEach((b) => (b.onclick = () => {
+    if (b.classList.contains('on')) return;
+    const zeile = `- ${BAUSTEINE[b.dataset.i][en ? 2 : 1]}`;
+    let t = feld.value.replace(/\s*$/, '');
+    const k = t.indexOf(titel);
+    if (k < 0) t = `${t ? `${t}\n\n` : ''}${titel}\n${zeile}`;
+    else { const m = /\n#{1,2} /.exec(t.slice(k + titel.length)), ende = m ? k + titel.length + m.index : -1; t = ende < 0 ? `${t}\n${zeile}` : `${t.slice(0, ende).replace(/\s*$/, '')}\n${zeile}\n${t.slice(ende)}`; }
+    feld.value = `${t}\n`;
+    markieren();
+  }));
+  markieren();
+  async function speichern() {
+    const s = await api['regeln-speichern'](feld.value);
+    $('#r-speichern').textContent = s?.fehler ? s.fehler : '✓ Gespeichert';
+    setTimeout(() => $('#r-speichern') && ($('#r-speichern').textContent = 'Speichern'), 1800);
+  }
+}
+
 async function anlegen() {
   const st = await api.neu($('#name').value, $('#idee').value, importOrdner);
   if (st.fehler) return ($('.box .fehler')?.remove(), $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(st.fehler)}</div>`));

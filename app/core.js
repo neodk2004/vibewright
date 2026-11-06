@@ -117,6 +117,26 @@ function claudeSitzungen() {
   return funde.sort((a, b) => b.zeit - a.zeit).slice(0, 30);
 }
 
+// GitHub / Gitea: Repositories eines Kontos. Mit Token auch private (/user/repos), ohne nur öffentliche des Nutzers.
+// konto = { typ: 'github' | 'gitea', server, nutzer }
+function forgeUrl(konto, token) {
+  if (konto.typ === 'github') return token ? 'https://api.github.com/user/repos?per_page=100&sort=updated' : `https://api.github.com/users/${encodeURIComponent(konto.nutzer)}/repos?per_page=100&sort=updated`;
+  const server = String(konto.server || '').replace(/\/+$/, '');
+  if (!/^https?:\/\/[^/\s]+/.test(server)) throw new Error('Bitte die Adresse deines Gitea-Servers eintragen (z. B. https://gitea.example.de).');
+  return token ? `${server}/api/v1/user/repos?limit=50` : `${server}/api/v1/users/${encodeURIComponent(konto.nutzer)}/repos?limit=50`;
+}
+async function forgeRepos(konto, token) {
+  if (!token && !konto.nutzer) throw new Error('Bitte Benutzername oder Token eintragen.');
+  const headers = { 'User-Agent': 'Vibewright', Accept: 'application/json', ...(token ? { Authorization: `${konto.typ === 'github' ? 'Bearer' : 'token'} ${token}` } : {}) };
+  const r = await fetch(forgeUrl(konto, token), { headers, signal: AbortSignal.timeout(10000) });
+  if (r.status === 401 || r.status === 403) throw new Error('Anmeldung abgelehnt – bitte Token prüfen.');
+  if (!r.ok) throw new Error(`Server antwortet mit Fehler ${r.status}.`);
+  const j = await r.json();
+  return (Array.isArray(j) ? j : []).filter((x) => /^https?:\/\//.test(x.clone_url || ''))
+    .map((x) => ({ name: x.name, voll: x.full_name, beschreibung: x.description || '', url: x.clone_url, privat: !!x.private, zeit: x.updated_at }))
+    .sort((a, b) => String(b.zeit).localeCompare(String(a.zeit)));
+}
+
 const WIN = process.platform === 'win32';
 const MAC = process.platform === 'darwin';
 // Obsidian merkt sich seine Vaults je nach System an anderer Stelle
@@ -946,4 +966,4 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR };

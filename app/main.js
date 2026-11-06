@@ -112,6 +112,54 @@ handle('obsidian-installieren', async () => {
 handle('projekte', () => core.projekte(info()));
 handle('neu', (name, idee, repo) => core.neu(info(), name, idee, repo));
 handle('claude-sitzungen', () => core.claudeSitzungen());
+
+// ---------- GitHub / Gitea: Konto in den Einstellungen, Import beim neuen Projekt ----------
+// Token liegt nur verschlüsselt (Windows-Anmeldung / macOS-Schlüsselbund) in den Einstellungen
+const { safeStorage } = require('electron');
+const forgeKonto = () => lies().forge || { typ: 'github', server: '', nutzer: '' };
+const forgeToken = () => { const t = lies().forge?.token; try { return t ? safeStorage.decryptString(Buffer.from(t, 'base64')) : ''; } catch { return ''; } };
+const forgeOrigin = (k) => (k.typ === 'github' ? 'https://github.com' : new URL(k.server).origin);
+handle('forge', () => { const { token, ...k } = forgeKonto(); return { ...k, tokenGespeichert: !!token }; });
+handle('forge-speichern', async ({ typ, server, nutzer, token, tokenLoeschen }) => {
+  if (!['github', 'gitea'].includes(typ)) throw new Error('Unbekannter Dienst');
+  const k = { typ, server: typ === 'gitea' ? String(server || '').trim().replace(/\/+$/, '') : '', nutzer: String(nutzer || '').trim() };
+  const neuToken = tokenLoeschen ? '' : String(token || '').trim() || forgeToken();
+  const repos = await core.forgeRepos(k, neuToken); // Verbindung prüfen, bevor gespeichert wird
+  if (neuToken && !safeStorage.isEncryptionAvailable()) throw new Error('Token kann auf diesem System nicht sicher gespeichert werden.');
+  speichereEinstellung({ forge: { ...k, ...(neuToken ? { token: safeStorage.encryptString(neuToken).toString('base64') } : {}) } });
+  return { anzahl: repos.length };
+});
+handle('forge-repos', () => core.forgeRepos(forgeKonto(), forgeToken()));
+handle('forge-klonen', async (repo) => {
+  const k = forgeKonto(), token = forgeToken();
+  if (new URL(repo.url).origin !== forgeOrigin(k)) throw new Error('Repository gehört nicht zum eingetragenen Server.'); // Token nie an fremde Server
+  const s = lies();
+  const r = await dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), {
+    title: s.sprache === 'en' ? `Folder for the code of "${repo.name}"` : `Ordner für den Code von „${repo.name}“`, defaultPath: path.join(s.codeOrdner || DOKUMENTE, repo.name),
+    properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+  });
+  if (r.canceled || !r.filePaths[0]) return null;
+  const ziel = r.filePaths[0];
+  // Schon geklont → einfach übernehmen; fremder, nicht leerer Ordner wird nie überschrieben
+  if (!fs.existsSync(path.join(ziel, '.git'))) {
+    if (fs.existsSync(ziel) && fs.readdirSync(ziel).length) throw new Error('Der Ordner ist nicht leer. Bitte einen leeren oder neuen Ordner wählen.');
+    // Token nur für diesen einen Aufruf als Header – landet nicht in .git/config
+    const auth = token ? ['-c', `http.extraHeader=Authorization: Basic ${Buffer.from(`${k.nutzer || 'x-access-token'}:${token}`).toString('base64')}`] : [];
+    const g = await core.run('git', [...auth, 'clone', '--', repo.url, ziel], { env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+    if (g.code !== 0) throw new Error(`Klonen fehlgeschlagen: ${(g.err || g.out).trim().split('\n').pop()}`);
+  }
+  speichereEinstellung({ codeOrdner: path.dirname(ziel) });
+  return { ordner: ziel, name: repo.name, idee: repo.beschreibung || `Weiterentwicklung von ${repo.voll}` };
+});
+
+// ---------- Globale Regeln: die zentrale CLAUDE.md, die Claude Code in jedem Projekt liest ----------
+const REGELN = path.join(core.CLAUDE_DIR, 'CLAUDE.md');
+handle('regeln', () => ({ pfad: REGELN, text: fs.existsSync(REGELN) ? fs.readFileSync(REGELN, 'utf8') : '' }));
+handle('regeln-speichern', (text) => {
+  fs.mkdirSync(path.dirname(REGELN), { recursive: true });
+  if (fs.existsSync(REGELN)) fs.copyFileSync(REGELN, `${REGELN}.bak`); // letzter Stand bleibt als Sicherung
+  fs.writeFileSync(REGELN, String(text), 'utf8');
+});
 handle('limits', () => core.claudeLimits());
 handle('laden', (name) => core.laden(info(), name));
 handle('weiter', (name, eingabe) => core.weiter(info(), core.laden(info(), name), eingabe));
