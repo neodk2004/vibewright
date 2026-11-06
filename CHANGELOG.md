@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.7] – 2026-11-06
 
 ### Security
 - **GitHub / Gitea token stays with its server:** after switching between GitHub and Gitea or to another Gitea server, a saved token is no longer reused – you have to enter a new one. Before, a GitHub token could be sent to the newly entered server.
