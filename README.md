@@ -130,6 +130,12 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.7 – 2026-11-06
+
+#### Security
+- **GitHub / Gitea token stays with its server:** after switching between GitHub and Gitea or to another Gitea server, a saved token is no longer reused – you have to enter a new one. Before, a GitHub token could be sent to the newly entered server.
+- **Token no longer visible in the process list:** when downloading a repository, the token is passed to Git through its environment instead of the command line.
+
 #### 0.2.6 – 2026-11-06
 
 #### Added
@@ -144,12 +150,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Tool check on small windows:** with many entries the list was cut off and could not be scrolled. Each column now scrolls on its own and the *Apply* button stays visible.
-
-#### 0.2.4 – 2026-10-26
-
-#### Security
-- **Electron 42:** updated from Electron 33 to 42.11.18. This closes more than 40 known security issues in Electron (sandbox and context-isolation bypasses, use-after-free bugs, compromised eMudhra certificates and more).
-- **Installer tools updated:** electron-builder 26.18 with fixed versions of `tar`, `app-builder-lib` and `builder-util-runtime`.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
