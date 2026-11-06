@@ -130,6 +130,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.8 – 2026-11-06
+
+#### Fixed
+- **Update notice did not appear in some networks:** if the GitHub API does not answer (for example because its limit of 60 requests per hour is used up on a shared network), Vibewright now checks the normal release page instead.
+
 #### 0.2.7 – 2026-11-06
 
 #### Security
@@ -141,15 +146,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Added
 - **Import from GitHub or Gitea:** *Settings → Git → GitHub / Gitea* connects your account (GitHub or your own Gitea server, optional access token for private repositories – stored encrypted on this computer). *New project → From GitHub / Gitea* lists your repositories; one click downloads the code into a folder of your choice and starts planning from there.
 - **Global rules:** *Settings → Claude → Global rules* shows and edits the central `CLAUDE.md` that Claude Code follows in every project. Building blocks add recurring steps with one click (commit, push, /graphify, /ponytail, security review, vulnerability check, secrets, tests). The previous file is kept as `CLAUDE.md.bak`.
-
-#### 0.2.5 – 2026-11-06
-
-#### Added
-- **Import from Claude Code:** *New project → Import from Claude Code* lists the folders you already worked on with Claude Code. One click fills in name and idea and uses that folder as the code folder; the interview then also asks about the current state.
-- **Claude limits at a glance:** bottom left, two small rings show how much of your 5-hour and weekly Claude limit is used. Hover for the time it resets. Stays empty when signed in with an API key or offline.
-
-#### Fixed
-- **Tool check on small windows:** with many entries the list was cut off and could not be scrolled. Each column now scrolls on its own and the *Apply* button stays visible.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
