@@ -118,12 +118,14 @@ handle('claude-sitzungen', () => core.claudeSitzungen());
 const { safeStorage } = require('electron');
 const forgeKonto = () => lies().forge || { typ: 'github', server: '', nutzer: '' };
 const forgeToken = () => { const t = lies().forge?.token; try { return t ? safeStorage.decryptString(Buffer.from(t, 'base64')) : ''; } catch { return ''; } };
-const forgeOrigin = (k) => (k.typ === 'github' ? 'https://github.com' : new URL(k.server).origin);
+const forgeOrigin = (k) => { try { return k.typ === 'github' ? 'https://github.com' : new URL(k.server).origin; } catch { return ''; } };
 handle('forge', () => { const { token, ...k } = forgeKonto(); return { ...k, tokenGespeichert: !!token }; });
 handle('forge-speichern', async ({ typ, server, nutzer, token, tokenLoeschen }) => {
   if (!['github', 'gitea'].includes(typ)) throw new Error('Unbekannter Dienst');
   const k = { typ, server: typ === 'gitea' ? String(server || '').trim().replace(/\/+$/, '') : '', nutzer: String(nutzer || '').trim() };
-  const neuToken = tokenLoeschen ? '' : String(token || '').trim() || forgeToken();
+  // Gespeichertes Token nur für denselben Server weiterverwenden – nach einem Wechsel nie an den neuen Server schicken
+  const alt = forgeKonto(), gleicherServer = alt.typ === k.typ && forgeOrigin(alt) === forgeOrigin(k);
+  const neuToken = tokenLoeschen ? '' : String(token || '').trim() || (gleicherServer ? forgeToken() : '');
   const repos = await core.forgeRepos(k, neuToken); // Verbindung prüfen, bevor gespeichert wird
   if (neuToken && !safeStorage.isEncryptionAvailable()) throw new Error('Token kann auf diesem System nicht sicher gespeichert werden.');
   speichereEinstellung({ forge: { ...k, ...(neuToken ? { token: safeStorage.encryptString(neuToken).toString('base64') } : {}) } });
@@ -143,9 +145,9 @@ handle('forge-klonen', async (repo) => {
   // Schon geklont → einfach übernehmen; fremder, nicht leerer Ordner wird nie überschrieben
   if (!fs.existsSync(path.join(ziel, '.git'))) {
     if (fs.existsSync(ziel) && fs.readdirSync(ziel).length) throw new Error('Der Ordner ist nicht leer. Bitte einen leeren oder neuen Ordner wählen.');
-    // Token nur für diesen einen Aufruf als Header – landet nicht in .git/config
-    const auth = token ? ['-c', `http.extraHeader=Authorization: Basic ${Buffer.from(`${k.nutzer || 'x-access-token'}:${token}`).toString('base64')}`] : [];
-    const g = await core.run('git', [...auth, 'clone', '--', repo.url, ziel], { env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+    // Token nur für diesen einen Aufruf als Header – per Umgebung statt Befehlszeile (nicht in der Prozessliste), nicht in .git/config
+    const auth = token ? { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'http.extraHeader', GIT_CONFIG_VALUE_0: `Authorization: Basic ${Buffer.from(`${k.nutzer || 'x-access-token'}:${token}`).toString('base64')}` } : {};
+    const g = await core.run('git', ['clone', '--', repo.url, ziel], { env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...auth } });
     if (g.code !== 0) throw new Error(`Klonen fehlgeschlagen: ${(g.err || g.out).trim().split('\n').pop()}`);
   }
   speichereEinstellung({ codeOrdner: path.dirname(ziel) });

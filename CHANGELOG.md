@@ -2,6 +2,12 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+- **GitHub / Gitea token stays with its server:** after switching between GitHub and Gitea or to another Gitea server, a saved token is no longer reused – you have to enter a new one. Before, a GitHub token could be sent to the newly entered server.
+- **Token no longer visible in the process list:** when downloading a repository, the token is passed to Git through its environment instead of the command line.
+
 ## [0.2.6] – 2026-11-06
 
 ### Added

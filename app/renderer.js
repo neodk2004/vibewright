@@ -412,6 +412,9 @@ async function forgeEinstellungen(zurueck) {
   const zeigen = () => {
     $$('.seg button[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === typ));
     $('#f-server').hidden = typ !== 'gitea';
+    // Gespeichertes Token gilt nur für den bisherigen Dienst; nach einem Wechsel muss ein neues her
+    const ph = k.tokenGespeichert && typ === k.typ ? 'Token ist gespeichert – leer lassen zum Behalten' : 'Zugriffs-Token (optional, für private Repositories)';
+    $('#f-token').placeholder = uiSprache === 'en' ? trText(ph) : ph; // Attribut-Änderungen übersetzt i18n.js nicht von selbst
     const tokenSeite = typ === 'github' ? 'https://github.com/settings/personal-access-tokens' : '';
     $('#f-hilfe').innerHTML = `Ohne Token siehst du nur öffentliche Repositories. Token mit Leserechten für Repositories anlegen: ${tokenSeite ? `<a href="#" data-url="${tokenSeite}">github.com/settings</a>` : '<span>in Gitea unter Einstellungen → Anwendungen</span>'}<span>. Er wird verschlüsselt auf diesem Rechner gespeichert.</span>`;
   };
