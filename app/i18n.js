@@ -28,6 +28,9 @@ const UI_EN = {
   // Neues Projekt
   'Projektname': 'Project name', 'Deine Idee in einem Satz': 'Your idea in one sentence', "Los geht's": "Let's go", 'Werkzeug-Check': 'Tool check',
   'Name und Idee sind nötig.': 'Name and idea are required.',
+  'Aus Claude Code übernehmen': 'Import from Claude Code', 'Code-Ordner:': 'Code folder:',
+  'Wähle einen Ordner, in dem du schon mit Claude Code gearbeitet hast. Vibewright plant von dort aus weiter.': 'Pick a folder you already worked on with Claude Code. Vibewright plans onward from there.',
+  'Keine früheren Claude-Code-Sitzungen gefunden.': 'No earlier Claude Code sessions found.', 'Der Ordner wurde nicht gefunden.': 'The folder was not found.',
   // Laden
   'Prüfe Claude Code …': 'Checking Claude Code …', 'Claude stellt die ersten Fragen zusammen …': 'Claude is preparing the first questions …',
   'Claude prüft, ob noch etwas fehlt …': 'Claude checks whether anything is missing …', 'Claude schreibt die Bedarfsanalyse …': 'Claude is writing the needs analysis …',

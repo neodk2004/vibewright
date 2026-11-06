@@ -183,10 +183,11 @@ async function start() {
   settings = r.settings;
   // Gespeicherte Sprache weicht ab (z. B. erster Start nach Umschalten auf anderem Weg) → einmal neu laden
   if ((settings.sprache || 'de') !== uiSprache) { spracheSetzen(settings.sprache || 'de'); return location.reload(); }
-  $('#meta').innerHTML = `${checks.claude ? `Claude Code ${esc(checks.version.split(' ')[0])} · ${esc(checks.abo || '–')}<br>` : ''}
+  $('#meta').innerHTML = `<div id="limits"></div>${checks.claude ? `Claude Code ${esc(checks.version.split(' ')[0])} · ${esc(checks.abo || '–')}<br>` : ''}
     ${settings.ablage ? `${settings.modus === 'obsidian' ? 'Obsidian' : 'Lokal'} · ` : ''}<button id="einst-link">⚙ Einstellungen</button>
     <span class="sprachwahl"><button data-s="de" title="Deutsch" class="${uiSprache === 'de' ? 'on' : ''}">${FLAGGEN.de}</button><button data-s="en" title="English" class="${uiSprache === 'en' ? 'on' : ''}">${FLAGGEN.en}</button></span>`;
   $('#einst-link').onclick = einstellungen;
+  limitsZeigen();
   api.update().then((u) => { if (u?.version) $('#meta').insertAdjacentHTML('afterbegin', `<a href="#" class="update-hinweis" data-url="${esc(u.url)}">⬆ Neue Version verfügbar: <b>${esc(u.version)}</b></a>`); });
   $$('.sprachwahl button').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   if (!checks.claude || !checks.loggedIn) {
@@ -205,6 +206,25 @@ async function start() {
   await seitenleiste();
   aktuell ? zeige(await api.laden(aktuell.name)) : neuesProjekt();
 }
+
+// Abo-Limits unten links: je ein Ring für das 5-Stunden-Fenster und die Woche, Details im Tooltip.
+// Ohne Abo-Anmeldung (API-Key) oder ohne Netz bleibt die Zeile leer.
+async function limitsZeigen() {
+  const l = await api.limits();
+  const el = $('#limits');
+  if (!el) return;
+  if (!l || l.fehler) return (el.innerHTML = '');
+  const en = uiSprache === 'en';
+  const zeit = (iso) => new Date(iso).toLocaleString(uiSprache, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  const teil = (t, name) => {
+    if (!t) return '';
+    const farbe = t.prozent >= 90 ? 'var(--bad)' : t.prozent >= 70 ? 'var(--warn)' : 'var(--accent)';
+    const tipp = `Claude-Limit ${name}: ${t.prozent} % ${en ? 'used' : 'verbraucht'}${t.reset ? ` · ${en ? 'resets' : 'wieder frei'} ${zeit(t.reset)}` : ''}`;
+    return `<span class="lim" title="${esc(tipp)}"><span class="ring" style="--p:${t.prozent};--c:${farbe}"></span>${name} ${t.prozent} %</span>`;
+  };
+  el.innerHTML = teil(l.fuenf, en ? '5 h' : '5 Std.') + teil(l.woche, en ? 'Week' : 'Woche');
+}
+setInterval(limitsZeigen, 5 * 60 * 1000);
 
 // Ablage-Ordner fehlt (verschoben, gelöscht, Laufwerk nicht verbunden) – deutlich sagen statt eine leere Liste zu zeigen
 function ablageFehlt(vaults) {
@@ -328,19 +348,34 @@ async function einstellungen() {
 }
 
 // ---------- Neues Projekt ----------
-function neuesProjekt() {
+let importOrdner = null; // Code-Ordner einer übernommenen Claude-Code-Sitzung
+function neuesProjekt(v = {}) {
   aktuell = null;
+  importOrdner = v.ordner || null;
   seitenleiste();
   ansicht(null, `<div class="mitte"><div class="box"><h2>Neues Projekt</h2>
-    <input type="text" id="name" placeholder="Projektname">
-    <textarea id="idee" rows="2" placeholder="Deine Idee in einem Satz"></textarea>
+    <input type="text" id="name" placeholder="Projektname" value="${esc(v.name)}">
+    <textarea id="idee" rows="2" placeholder="Deine Idee in einem Satz">${esc(v.idee)}</textarea>
+    ${importOrdner ? `<p class="muted klein pfad"><span>Code-Ordner:</span> ${esc(importOrdner)}</p>` : ''}
     <div class="ablauf"><span>Interview</span><span>Bedarfsanalyse</span><span>Plan</span><span>Werkzeug-Check</span><span>Umsetzung</span></div>
-    </div></div>`, ['sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
+    </div></div>`, [{ text: 'Aus Claude Code übernehmen', ghost: true, klick: claudeImport }, 'sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
   $('#name').focus();
   $('#idee').addEventListener('keydown', (e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), anlegen()));
 }
+// Ordner, in denen schon mit Claude Code gearbeitet wurde: Name, Idee (erste Nachricht) und Code-Ordner übernehmen
+async function claudeImport() {
+  const l = await api['claude-sitzungen']();
+  const fehler = l.fehler ? `<div class="fehler">${esc(l.fehler)}</div>` : '';
+  const liste = Array.isArray(l) ? l : [];
+  const datum = (ms) => new Date(ms).toLocaleDateString(uiSprache, { day: '2-digit', month: '2-digit', year: 'numeric' });
+  ansicht(null, `<div class="mitte"><div class="box"><h2>Aus Claude Code übernehmen</h2>
+    <p class="muted">Wähle einen Ordner, in dem du schon mit Claude Code gearbeitet hast. Vibewright plant von dort aus weiter.</p>${fehler}
+    <div class="import-liste">${liste.length ? liste.map((s, i) => `<button class="opt" data-i="${i}" title="${esc(s.ordner)}"><span class="imp"><span><b>${esc(s.name)}</b> <span class="muted klein">${datum(s.zeit)}</span></span><span class="muted klein">${esc(s.idee || s.ordner)}</span></span></button>`).join('')
+    : '<p class="muted">Keine früheren Claude-Code-Sitzungen gefunden.</p>'}</div></div></div>`, [{ text: 'Zurück', ghost: true, klick: () => neuesProjekt() }]);
+  $$('.import-liste .opt').forEach((b) => (b.onclick = () => neuesProjekt(liste[b.dataset.i])));
+}
 async function anlegen() {
-  const st = await api.neu($('#name').value, $('#idee').value);
+  const st = await api.neu($('#name').value, $('#idee').value, importOrdner);
   if (st.fehler) return ($('.box .fehler')?.remove(), $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(st.fehler)}</div>`));
   aktuell = st;
   seitenleiste();
@@ -621,6 +656,7 @@ api.on('pty-ende', (name) => {
   if (aktuell?.name === name && $('#arbeit-seite')) setAktionen(arbeitAktionen(aktuell));
   if (aktuell?.name === name) setKopf(aktuell); // Orb verschwindet mit der Sitzung
   seitenleiste();
+  limitsZeigen();
 });
 api.on('punkte-geaendert', async (name) => {
   if (aktuell?.name !== name) return;

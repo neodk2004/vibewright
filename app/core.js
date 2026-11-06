@@ -62,6 +62,61 @@ async function checks() {
   return { claude: true, version: v.out.trim(), loggedIn: !!auth.loggedIn, abo: auth.subscriptionType || '', apiKey: !!auth.loggedIn && auth.authMethod !== 'claude.ai' };
 }
 
+// Abo-Limits (5-Stunden-Fenster und Woche) – derselbe Abruf, den Claude Code für /usage nutzt.
+// Token nur lesen, nie erneuern: Ist er abgelaufen, frischt Claude Code ihn beim nächsten Lauf selbst auf.
+const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+async function claudeLimits() {
+  let roh;
+  try {
+    roh = MAC ? require('child_process').execFileSync('security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { timeout: 4000 }).toString()
+      : fs.readFileSync(path.join(CLAUDE_DIR, '.credentials.json'), 'utf8');
+  } catch { return null; }
+  const o = JSON.parse(roh).claudeAiOauth;
+  if (!o?.accessToken || o.expiresAt < Date.now()) return null;
+  try {
+    const r = await fetch('https://api.anthropic.com/api/oauth/usage', { headers: { Authorization: `Bearer ${o.accessToken}`, 'anthropic-beta': 'oauth-2025-04-20', 'User-Agent': 'Vibewright' }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const teil = (x) => x && { prozent: Math.round(x.utilization), reset: x.resets_at };
+    return j.five_hour || j.seven_day ? { fuenf: teil(j.five_hour), woche: teil(j.seven_day) } : null;
+  } catch { return null; }
+}
+
+// Bestehende Claude-Code-Projekte (~/.claude/projects): je Ordner die jüngste Sitzung mit Arbeitsordner und erster Nachricht
+function claudeSitzungen() {
+  const basis = path.join(CLAUDE_DIR, 'projects');
+  const weg = [os.tmpdir(), path.dirname(WORKDIR)].map((p) => path.resolve(p).toLowerCase());
+  const funde = [];
+  for (const d of unterordner(basis)) {
+    let neueste;
+    try {
+      neueste = fs.readdirSync(path.join(basis, d)).filter((f) => f.endsWith('.jsonl'))
+        .map((f) => ({ f: path.join(basis, d, f), zeit: fs.statSync(path.join(basis, d, f)).mtimeMs })).sort((a, b) => b.zeit - a.zeit)[0];
+    } catch {}
+    if (!neueste) continue;
+    // Nur den Anfang lesen – Sitzungsdateien können sehr groß werden
+    const puffer = Buffer.alloc(256 * 1024);
+    const fd = fs.openSync(neueste.f, 'r');
+    const n = fs.readSync(fd, puffer, 0, puffer.length, 0);
+    fs.closeSync(fd);
+    let ordner = '', idee = '';
+    for (const zeile of puffer.toString('utf8', 0, n).split('\n')) {
+      let j; try { j = JSON.parse(zeile); } catch { continue; }
+      ordner ||= j.cwd || '';
+      if (j.type !== 'user' || j.isMeta || idee) continue;
+      const c = j.message?.content;
+      const text = (typeof c === 'string' ? c : Array.isArray(c) ? c.find((x) => x.type === 'text')?.text : '') || '';
+      if (text.trim() && !text.trim().startsWith('<')) idee = text.trim().replace(/\s+/g, ' ').slice(0, 300);
+      if (ordner && idee) break;
+    }
+    const klein = path.resolve(ordner || '/').toLowerCase();
+    if (idee.startsWith('Lies CLAUDE.md und beginne')) continue; // von Vibewright selbst gestartet – ist schon ein Projekt
+    if (!ordner || !fs.existsSync(ordner) || weg.some((w) => klein.startsWith(w)) || path.dirname(ordner) === ordner) continue;
+    funde.push({ ordner, name: path.basename(ordner), idee, session: path.basename(neueste.f, '.jsonl'), zeit: neueste.zeit });
+  }
+  return funde.sort((a, b) => b.zeit - a.zeit).slice(0, 30);
+}
+
 const WIN = process.platform === 'win32';
 const MAC = process.platform === 'darwin';
 // Obsidian merkt sich seine Vaults je nach System an anderer Stelle
@@ -165,12 +220,17 @@ function laden(info, name) {
   return JSON.parse(fs.readFileSync(path.join(info.ablage, name, STATE), 'utf8'));
 }
 
-function neu(info, name, idee) {
+function neu(info, name, idee, repo) {
   name = sauber(name);
   if (!name || !idee.trim()) throw new Error('Name und Idee sind nötig.');
   const vorhanden = fs.readdirSync(info.ablage).some((d) => d.toLowerCase() === name.toLowerCase());
   if (vorhanden) throw new Error(`„${name}“ gibt es in der Ablage schon. Bitte einen anderen Namen wählen – vorhandene Projekte werden nie überschrieben.`);
   const st = { name, idee: idee.trim(), erstellt: heute(), runden: [], session: null, offen: null, sprache: SPRACHE };
+  // Aus Claude Code übernommen: der vorhandene Arbeitsordner ist gleich der Code-Ordner
+  if (repo) {
+    if (!fs.statSync(repo, { throwIfNoEntry: false })?.isDirectory()) throw new Error('Der Ordner wurde nicht gefunden.');
+    Object.assign(st, { repo, projekttyp: 'code' });
+  }
   fs.mkdirSync(path.join(info.ablage, name, punkteOrdner(st)), { recursive: true });
   speichern(info, st);
   return st;
@@ -285,10 +345,10 @@ async function ask(st, prompt, schema) {
 async function fragenRunde(st) {
   const nr = st.runden.length + 1;
   const prompt = nr === 1
-    ? `Projektname: ${st.name}\nIdee: ${st.idee}\n\nSchritt: Interview, Runde 1 von höchstens 2. Stelle bis zu 4 Multiple-Choice-Fragen (je 2–4 kurze Optionen) für eine Bedarfsanalyse. Pflicht-Themen über beide Runden: Zielgruppe, Kernnutzen/Muss-Umfang, Plattform/Technik, Erfahrungsstand, Zeitbudget pro Woche, Abgrenzung (was ausdrücklich nicht). mehrfach=true, wenn mehrere Antworten sinnvoll sind. projekttyp: code (es entsteht Software/Firmware), sonstiges oder unklar.`
+    ? `Projektname: ${st.name}\nIdee: ${st.idee}\n${st.repo ? 'Das Projekt ist schon begonnen (bestehender Code-Ordner aus einer früheren Claude-Code-Sitzung). Frag auch nach dem aktuellen Stand und was als Nächstes kommen soll.\n' : ''}\nSchritt: Interview, Runde 1 von höchstens 2. Stelle bis zu 4 Multiple-Choice-Fragen (je 2–4 kurze Optionen) für eine Bedarfsanalyse. Pflicht-Themen über beide Runden: Zielgruppe, Kernnutzen/Muss-Umfang, Plattform/Technik, Erfahrungsstand, Zeitbudget pro Woche, Abgrenzung (was ausdrücklich nicht). mehrfach=true, wenn mehrere Antworten sinnvoll sind. projekttyp: code (es entsteht Software/Firmware), sonstiges oder unklar.`
     : `Antworten Runde ${nr - 1}:\n${antwortenText(st.runden.at(-1))}\n\nSchritt: Interview, Runde ${nr} (letzte). Frage nur noch offene Pflicht-Themen oder neue Lücken (bis zu 4 Fragen). Ist nichts Wichtiges offen: fertig=true, fragen=[]. Lege projekttyp fest (code oder sonstiges).`;
   const d = await ask(st, prompt, S_FRAGEN);
-  if (d.projekttyp !== 'unklar') st.projekttyp = d.projekttyp;
+  if (d.projekttyp !== 'unklar' && !st.repo) st.projekttyp = d.projekttyp;
   if (d.fertig || !d.fragen.length) return analyse(st);
   st.runden.push({ fragen: d.fragen, antworten: [] });
   st.offen = { typ: 'fragen', fragen: d.fragen };
@@ -885,5 +945,5 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 <div class="grid">${phasen}</div><p class="m">Vibewright · Stand ${heute()}</p></main></body></html>`;
 }
 
-module.exports = { checks, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
+module.exports = { checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
   aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER };

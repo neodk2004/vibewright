@@ -110,7 +110,9 @@ handle('obsidian-installieren', async () => {
   return { vault, download };
 });
 handle('projekte', () => core.projekte(info()));
-handle('neu', (name, idee) => core.neu(info(), name, idee));
+handle('neu', (name, idee, repo) => core.neu(info(), name, idee, repo));
+handle('claude-sitzungen', () => core.claudeSitzungen());
+handle('limits', () => core.claudeLimits());
 handle('laden', (name) => core.laden(info(), name));
 handle('weiter', (name, eingabe) => core.weiter(info(), core.laden(info(), name), eingabe));
 handle('oeffnen', (datei) => (info().modus === 'obsidian'

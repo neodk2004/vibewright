@@ -2,6 +2,15 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.5] – 2026-11-06
+
+### Added
+- **Import from Claude Code:** *New project → Import from Claude Code* lists the folders you already worked on with Claude Code. One click fills in name and idea and uses that folder as the code folder; the interview then also asks about the current state.
+- **Claude limits at a glance:** bottom left, two small rings show how much of your 5-hour and weekly Claude limit is used. Hover for the time it resets. Stays empty when signed in with an API key or offline.
+
+### Fixed
+- **Tool check on small windows:** with many entries the list was cut off and could not be scrolled. Each column now scrolls on its own and the *Apply* button stays visible.
+
 ## [0.2.4] – 2026-10-26
 
 ### Security
