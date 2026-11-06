@@ -130,6 +130,12 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.6 – 2026-11-06
+
+#### Added
+- **Import from GitHub or Gitea:** *Settings → Git → GitHub / Gitea* connects your account (GitHub or your own Gitea server, optional access token for private repositories – stored encrypted on this computer). *New project → From GitHub / Gitea* lists your repositories; one click downloads the code into a folder of your choice and starts planning from there.
+- **Global rules:** *Settings → Claude → Global rules* shows and edits the central `CLAUDE.md` that Claude Code follows in every project. Building blocks add recurring steps with one click (commit, push, /graphify, /ponytail, security review, vulnerability check, secrets, tests). The previous file is kept as `CLAUDE.md.bak`.
+
 #### 0.2.5 – 2026-11-06
 
 #### Added
@@ -144,11 +150,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Security
 - **Electron 42:** updated from Electron 33 to 42.11.18. This closes more than 40 known security issues in Electron (sandbox and context-isolation bypasses, use-after-free bugs, compromised eMudhra certificates and more).
 - **Installer tools updated:** electron-builder 26.18 with fixed versions of `tar`, `app-builder-lib` and `builder-util-runtime`.
-
-#### 0.2.3 – 2026-10-26
-
-#### Fixed
-- **Stuck at step 2 (needs analysis):** with a long project idea, the main area grew wider than the window, so the right column and the *Looks good* button were cut off. The idea in the header is now shortened with "…" and everything fits in the window again.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
