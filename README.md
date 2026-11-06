@@ -130,6 +130,15 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.5 – 2026-11-06
+
+#### Added
+- **Import from Claude Code:** *New project → Import from Claude Code* lists the folders you already worked on with Claude Code. One click fills in name and idea and uses that folder as the code folder; the interview then also asks about the current state.
+- **Claude limits at a glance:** bottom left, two small rings show how much of your 5-hour and weekly Claude limit is used. Hover for the time it resets. Stays empty when signed in with an API key or offline.
+
+#### Fixed
+- **Tool check on small windows:** with many entries the list was cut off and could not be scrolled. Each column now scrolls on its own and the *Apply* button stays visible.
+
 #### 0.2.4 – 2026-10-26
 
 #### Security
@@ -140,22 +149,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Stuck at step 2 (needs analysis):** with a long project idea, the main area grew wider than the window, so the right column and the *Looks good* button were cut off. The idea in the header is now shortened with "…" and everything fits in the window again.
-
-### [0.2.2](https://github.com/neodk2004/vibewright/releases/tag/v0.2.2) – 2026-10-26
-
-#### Added
-- **Tool check – more sources:** besides the official catalog, Vibewright now uses every plugin marketplace you have added to Claude Code and the [claude-skills](https://github.com/alirezarezvani/claude-skills) catalog (even if you have not added it yet).
-- **Tool check – ready-made skills from [SkillsMP](https://skillsmp.com):** if no catalog fits, Vibewright searches SkillsMP. Only Claude-compatible skills from GitHub repositories with at least 50,000 stars are considered, and Claude picks one only if it really fits. SkillsMP only receives 1–3 English keywords, never your idea or plan.
-- **Tool check – link check:** suggested download pages are opened once; dead links are replaced with the maker's current page or marked with ⚠.
-- **Report a bug from the app:** *Settings → Report a bug* opens the GitHub form with version, system and storage already filled in. New reports get a friendly reply and are sorted automatically; outdated versions get a hint to update first.
-- **Windows installer in the Vibewright look:** welcome page with the Vibewright sidebar, logo header on every page, German or English depending on your Windows language.
-
-#### Changed
-- *Settings → User guide* now opens the manual in the wiki.
-- The tool check now also counts skills inside installed plugins and skills in the project's code folder as available, and notices switched-off plugins.
-
-#### Fixed
-- The settings page showed version 0.2.0 regardless of the installed version.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
