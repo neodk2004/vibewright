@@ -36,13 +36,24 @@ handle('programmordner', (p) => core.imProgrammordner(p));
 // Neue Version auf GitHub? Einmal pro App-Start; ohne Netz oder bei Fehlern still nichts anzeigen.
 // Gesendet wird nur die übliche Anfrage an die GitHub-API (keine Projektdaten).
 let updateInfo;
-async function updatePruefen() {
+async function neuestesRelease() {
+  const opt = { headers: { 'User-Agent': 'Vibewright' }, signal: AbortSignal.timeout(8000) };
   try {
-    const r = await fetch('https://api.github.com/repos/neodk2004/vibewright/releases/latest', { headers: { 'User-Agent': 'Vibewright', Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(8000) });
-    if (!r.ok) return null;
-    const j = await r.json();
-    return core.istNeuer(j.tag_name, app.getVersion()) && /^https:\/\//.test(j.html_url) ? { version: j.tag_name.replace(/^v/, ''), url: j.html_url } : null;
-  } catch { return null; }
+    const r = await fetch('https://api.github.com/repos/neodk2004/vibewright/releases/latest', { ...opt, headers: { ...opt.headers, Accept: 'application/vnd.github+json' } });
+    if (r.ok) { const j = await r.json(); if (j.tag_name) return { tag: j.tag_name, url: j.html_url }; }
+  } catch {}
+  // Fallback, wenn die API nicht antwortet (z. B. Limit von 60 Anfragen/Stunde in Netzen mit gemeinsamer IP aufgebraucht):
+  // die normale Release-Seite leitet auf …/releases/tag/vX.Y.Z weiter und hat dieses Limit nicht
+  try {
+    const r = await fetch('https://github.com/neodk2004/vibewright/releases/latest', { ...opt, method: 'HEAD' });
+    const tag = /^https:\/\/github\.com\/neodk2004\/vibewright\/releases\/tag\/([^/?#]+)$/.exec(r.url)?.[1];
+    if (tag) return { tag: decodeURIComponent(tag), url: r.url };
+  } catch {}
+  return null;
+}
+async function updatePruefen() {
+  const n = await neuestesRelease();
+  return n && core.istNeuer(n.tag, app.getVersion()) && /^https:\/\//.test(n.url) ? { version: n.tag.replace(/^v/, ''), url: n.url } : null;
 }
 handle('update', () => (updateInfo ??= updatePruefen()));
 core.setModell(lies().modell);
