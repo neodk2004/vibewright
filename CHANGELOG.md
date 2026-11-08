@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.9] – 2026-11-08
 
 ### Added
 - **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
