@@ -137,6 +137,45 @@ async function forgeRepos(konto, token) {
     .sort((a, b) => String(b.zeit).localeCompare(String(a.zeit)));
 }
 
+// Pflege-Modus: Issues des Projekt-Repos lesen und anlegen. ziel = { owner, repo } aus der origin-Adresse des Code-Ordners.
+// Gibt null zurück, wenn origin nicht auf dem eingetragenen Server liegt – der Token geht nie an fremde Server.
+function forgeZiel(konto, origin) {
+  const m = /^(?:https:\/\/(?:[^@/]+@)?([^/]+)\/|git@([^:]+):)([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(String(origin).trim());
+  if (!m) return null;
+  let host;
+  try { host = konto.typ === 'github' ? 'github.com' : new URL(konto.server).host; } catch { return null; }
+  return (m[1] || m[2]).toLowerCase() === host.toLowerCase() ? { owner: m[3], repo: m[4] } : null;
+}
+function issuesUrl(konto, ziel) {
+  const r = `${encodeURIComponent(ziel.owner)}/${encodeURIComponent(ziel.repo)}`;
+  return konto.typ === 'github' ? `https://api.github.com/repos/${r}/issues` : `${String(konto.server).replace(/\/+$/, '')}/api/v1/repos/${r}/issues`;
+}
+async function forgeAnfrage(konto, token, url, body) {
+  const headers = { 'User-Agent': 'Vibewright', Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}),
+    ...(token ? { Authorization: `${konto.typ === 'github' ? 'Bearer' : 'token'} ${token}` } : {}) };
+  const r = await fetch(url, { method: body ? 'POST' : 'GET', headers, body: body && JSON.stringify(body), signal: AbortSignal.timeout(10000) });
+  if (r.status === 401 || r.status === 403) throw new Error('Anmeldung abgelehnt – bitte Token prüfen.');
+  if (r.status === 404) throw new Error('Repository nicht gefunden – bei privaten Repos ist ein Token nötig.');
+  if (!r.ok) throw new Error(`Server antwortet mit Fehler ${r.status}.`);
+  return r.json();
+}
+async function forgeIssues(konto, token, ziel) {
+  const j = await forgeAnfrage(konto, token, `${issuesUrl(konto, ziel)}?state=open&${konto.typ === 'github' ? 'per_page=50' : 'type=issues&limit=50'}`);
+  return (Array.isArray(j) ? j : []).filter((x) => !x.pull_request).map((x) => ({
+    nr: x.number, titel: String(x.title || ''), text: String(x.body || '').slice(0, 1500), von: x.user?.login || '',
+    art: (x.labels || []).some((l) => /bug|fehler/i.test(l.name)) ? 'fehler' : 'wunsch', url: /^https:\/\//.test(x.html_url) ? x.html_url : '',
+  }));
+}
+async function forgeIssueAnlegen(konto, token, ziel, art, text) {
+  if (!token) throw new Error('Für neue Issues braucht Vibewright einen Token (Einstellungen → Git → GitHub / Gitea).');
+  const titel = text.split('\n')[0].slice(0, 80);
+  // Gitea will Label-IDs statt Namen – dort steht die Art im Titel
+  const j = await forgeAnfrage(konto, token, issuesUrl(konto, ziel), konto.typ === 'github'
+    ? { title: titel, body: text, labels: [art === 'fehler' ? 'bug' : 'enhancement'] }
+    : { title: `${art === 'fehler' ? '[Bug]' : '[Feature]'} ${titel}`, body: text });
+  return { nr: j.number, url: j.html_url };
+}
+
 const WIN = process.platform === 'win32';
 const MAC = process.platform === 'darwin';
 // Obsidian merkt sich seine Vaults je nach System an anderer Stelle
@@ -877,7 +916,8 @@ Nächster offener Schritt: ${naechster}` : 'Alle Phasen sind erledigt. Frag den 
 - Der Nutzer ist Entscheider, kein Profi: erkläre kurz und einfach, frag vor größeren Entscheidungen.
 - Ist ein Schritt erledigt, setze in der Phasen-Datei oben \`- [ ]\` auf \`- [x]\`. Die App liest das und aktualisiert Fortschritt und Dashboard.
 - Installiere nichts ohne ausdrückliches Ja des Nutzers. Nur offizielle Quellen.${fs.existsSync(path.join(arbeitsordner(info, st) || '', '.git')) ? `
-- Dieser Ordner ist ein Git-Projekt: Mach nach jedem erledigten Schritt einen Commit mit kurzer deutscher Beschreibung (z. B. „Schritt erledigt: …“). So kann der Nutzer jederzeit zurück. Pushe nur, wenn der Nutzer es möchte.` : ''}
+- Dieser Ordner ist ein Git-Projekt: Mach nach jedem erledigten Schritt einen Commit mit kurzer deutscher Beschreibung (z. B. „Schritt erledigt: …“). So kann der Nutzer jederzeit zurück. Pushe nur, wenn der Nutzer es möchte.
+- Steht in einem Schritt „GitHub-Issue #Nummer“, schreib „Fixes #Nummer“ in die Commit-Nachricht – nach dem Push schließt sich das Issue dann von selbst.` : ''}
 ${MARKE_E}
 `;
 }
@@ -966,4 +1006,5 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 }
 
 module.exports = { checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR };
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  forgeZiel, forgeIssues, forgeIssueAnlegen };

@@ -24,5 +24,33 @@ assert.throws(() => core.forgeUrl({ typ: 'gitea', server: 'git.example.de' }), /
   global.fetch = async () => ({ ok: false, status: 401 });
   await assert.rejects(core.forgeRepos({ typ: 'github' }, 'falsch'), /Token prüfen/);
   await assert.rejects(core.forgeRepos({ typ: 'github' }), /Benutzername oder Token/);
+
+  // Pflege-Modus: Repo aus der origin-Adresse – nur auf dem eingetragenen Server (der Token geht nie woandershin)
+  const gh = { typ: 'github' }, gt = { typ: 'gitea', server: 'https://git.example.de' };
+  assert.deepStrictEqual(core.forgeZiel(gh, 'https://github.com/neo/app.git\n'), { owner: 'neo', repo: 'app' });
+  assert.deepStrictEqual(core.forgeZiel(gh, 'git@github.com:neo/app.git'), { owner: 'neo', repo: 'app' });
+  assert.deepStrictEqual(core.forgeZiel(gh, 'https://user@github.com/neo/app'), { owner: 'neo', repo: 'app' });
+  assert.deepStrictEqual(core.forgeZiel(gt, 'https://git.example.de/neo/app.git'), { owner: 'neo', repo: 'app' });
+  assert.strictEqual(core.forgeZiel(gh, 'https://github.com.boese.de/neo/app.git'), null);
+  assert.strictEqual(core.forgeZiel(gh, 'https://git.example.de/neo/app.git'), null);
+  assert.strictEqual(core.forgeZiel(gt, 'https://github.com/neo/app.git'), null);
+  assert.strictEqual(core.forgeZiel(gh, 'http://github.com/neo/app.git'), null, 'kein Klartext-http');
+  assert.strictEqual(core.forgeZiel(gh, 'C:/code/app'), null);
+  // Issues lesen: Pull Requests raus, Art aus den Labels; anlegen nur mit Token, GitHub mit Label
+  global.fetch = async (url, o) => { gesehen = { url, o }; return { ok: true, json: async () => (o.method === 'POST' ? { number: 7, html_url: 'https://github.com/neo/app/issues/7' } : [
+    { number: 1, title: 'Absturz', body: 'x', labels: [{ name: 'bug' }], user: { login: 'a' }, html_url: 'https://github.com/neo/app/issues/1' },
+    { number: 2, title: 'Dark Mode', labels: [], user: { login: 'b' } },
+    { number: 3, title: 'PR', pull_request: {} },
+  ]) }; };
+  const is = await core.forgeIssues(gh, '', { owner: 'neo', repo: 'app' });
+  assert.strictEqual(gesehen.url, 'https://api.github.com/repos/neo/app/issues?state=open&per_page=50');
+  assert.deepStrictEqual(is.map((x) => [x.nr, x.art]), [[1, 'fehler'], [2, 'wunsch']]);
+  await assert.rejects(core.forgeIssueAnlegen(gh, '', { owner: 'neo', repo: 'app' }, 'fehler', 'x'), /Token/);
+  const neu = await core.forgeIssueAnlegen(gh, 'T', { owner: 'neo', repo: 'app' }, 'wunsch', 'Export als PDF\nBitte mit Logo');
+  assert.strictEqual(neu.nr, 7);
+  assert.deepStrictEqual(JSON.parse(gesehen.o.body), { title: 'Export als PDF', body: 'Export als PDF\nBitte mit Logo', labels: ['enhancement'] });
+  await core.forgeIssueAnlegen(gt, 'T', { owner: 'neo', repo: 'app' }, 'fehler', 'Absturz');
+  assert.strictEqual(gesehen.url, 'https://git.example.de/api/v1/repos/neo/app/issues');
+  assert.strictEqual(JSON.parse(gesehen.o.body).title, '[Bug] Absturz');
   console.log('forge ok');
 })();

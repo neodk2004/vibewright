@@ -198,10 +198,54 @@ ipcMain.on('pty-eingabe', (_e, name, d) => sitzungen.get(name)?.pty.write(d));
 ipcMain.on('pty-groesse', (_e, name, cols, rows) => { try { sitzungen.get(name)?.pty.resize(Math.max(cols, 20), Math.max(rows, 5)); } catch {} });
 handle('sitzung', () => [...sitzungen.keys()]);
 // Idee merken; ohne laufende Claude-Sitzung sofort einarbeiten, sonst nach dem nächsten erledigten Schritt
-handle('idee', async (name, text) => {
+const ideeAufnehmen = (name, text) => {
   const st = core.ideeMerken(info(), name, text);
   return sitzungen.has(name) ? st : core.ideenVerarbeiten(info(), name);
+};
+handle('idee', ideeAufnehmen);
+// ---------- Pflege-Modus: alle Phasen erledigt → Fehler und Wünsche laufen über die Issues des Projekt-Repos ----------
+async function pflegeZiel(st) {
+  if (!st.repo || !fs.existsSync(path.join(st.repo, '.git'))) return null;
+  const r = await core.run('git', ['remote', 'get-url', 'origin'], { cwd: st.repo });
+  return r.code === 0 ? core.forgeZiel(forgeKonto(), r.out) : null;
+}
+const ART = { fehler: 'Fehler', wunsch: 'Feature-Wunsch' };
+const issueIdee = (nr, art, titel, text) => `GitHub-Issue #${nr} (${ART[art]}): ${titel}${text && text !== titel ? `\n${text}` : ''}\nNenne „GitHub-Issue #${nr}“ in jedem Schritt.`;
+function issueErledigt(name, nr) {
+  const st = core.laden(info(), name);
+  st.issuesErledigt = [...new Set([...(st.issuesErledigt || []), nr])];
+  st.issuesNeu = (st.issuesNeu || []).filter((x) => x.nr !== nr);
+  core.speichern(info(), st);
+  return st;
+}
+handle('pflege-pruefen', async (name) => {
+  const st = core.laden(info(), name);
+  const ziel = await pflegeZiel(st);
+  st.pflegeRepo = ziel ? `${ziel.owner}/${ziel.repo}` : null;
+  try {
+    st.issuesNeu = ziel ? (await core.forgeIssues(forgeKonto(), forgeToken(), ziel)).filter((x) => !(st.issuesErledigt || []).includes(x.nr)) : [];
+    st.pflegeFehler = null;
+  } catch (e) { st.pflegeFehler = e.message; }
+  core.speichern(info(), st);
+  return st;
 });
+handle('pflege-melden', async (name, art, text) => {
+  text = String(text || '').trim();
+  if (!ART[art] || !text) throw new Error('Bitte erst beschreiben, worum es geht.');
+  const ziel = await pflegeZiel(core.laden(info(), name));
+  if (!ziel) return ideeAufnehmen(name, `${ART[art]}: ${text}`); // ohne Repo: nur in den Plan
+  const { nr } = await core.forgeIssueAnlegen(forgeKonto(), forgeToken(), ziel, art, text);
+  issueErledigt(name, nr);
+  return ideeAufnehmen(name, issueIdee(nr, art, text.split('\n')[0], text));
+});
+// Fremde Issues kommen nie von selbst in den Plan – erst nach Klick auf „Übernehmen“
+handle('pflege-uebernehmen', (name, nr) => {
+  const x = (core.laden(info(), name).issuesNeu || []).find((i) => i.nr === nr);
+  if (!x) throw new Error('Dieses Issue gibt es nicht mehr.');
+  issueErledigt(name, nr);
+  return ideeAufnehmen(name, issueIdee(nr, x.art, x.titel, x.text));
+});
+handle('pflege-ignorieren', (name, nr) => issueErledigt(name, nr));
 handle('sitzung-beenden', (name) => sitzungBeenden(name));
 // Läuft gerade Claude in diesem Projekt: erst beenden, sonst sperrt Windows den Ordner
 handle('archivieren', (name) => (sitzungBeenden(name), core.archivieren(info(), name)));

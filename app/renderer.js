@@ -98,7 +98,7 @@ async function seitenleiste() {
   }
   $('#liste').innerHTML = liste.length ? liste.map((p) => {
     const s = laeuft.has(p.name) ? '<span class="live">●</span> Claude arbeitet'
-      : p.offen?.typ === 'fertig' ? `${p.stand?.fortschritt ?? 0} % · Phase ${(p.stand?.aktiv ?? 0) + 1}` : SCHRITTE[schrittNr(p)];
+      : p.offen?.typ === 'fertig' ? ((p.stand?.aktiv ?? 0) < 0 ? 'Fertig · Pflege' : `${p.stand?.fortschritt ?? 0} % · Phase ${(p.stand?.aktiv ?? 0) + 1}`) : SCHRITTE[schrittNr(p)];
     const f = p.offen?.typ === 'fertig' ? `<span class="mini"><i style="width:${p.stand?.fortschritt ?? 0}%"></i></span>` : '';
     return `<button data-name="${esc(p.name)}" class="karte-p ${aktuell?.name === p.name ? 'aktiv' : ''}" style="--pf:${projektFarbe(p.name)}"><span class="n">${esc(p.name)}</span><span class="s">${p.fehler ? 'unterbrochen' : s}</span>${f}</button>`;
   }).join('') : '<span class="muted" style="padding:6px">Noch keine Projekte.</span>';
@@ -666,6 +666,7 @@ function cockpit(st) {
   const p = st.plan.phasen[gewaehlt];
   const naechstIdx = gewaehlt === s.aktiv ? p.done.indexOf(false) : -1;
   const alt = fortschrittMerken(st);
+  const pflege = s.aktiv < 0 && st.projekttyp === 'code'; // fertig gebaut → Pflege: Fehler und Wünsche über Issues
   ansicht(st, `<div class="fort"><div class="bar"><i style="width:${alt}%" data-ziel="${s.fortschritt}"></i></div><span class="num muted">${s.fortschritt} % · ${s.erledigt ?? 0}/${s.gesamt ?? 0} Schritte</span></div>
     <div class="cockpit">
       <div class="spalte">
@@ -678,7 +679,7 @@ function cockpit(st) {
       </div>
       <div class="spalte"><span class="label">Phasen</span><div class="zeit">${st.plan.phasen.map((ph, i) => `<button class="${ph.status} ${i === gewaehlt ? 'on' : ''}" data-i="${i}" style="--ak:${phasenFarbe(i)}">
           <span class="nr">${String(i + 1).padStart(2, '0')}</span><span class="tt">${esc(ph.titel)}</span><span class="muted num">${ph.done.filter(Boolean).length}/${ph.checkliste.length}</span></button>`).join('')}</div>
-        ${ideeKachel(st)}</div>
+        ${pflege ? pflegeKachel(st) : ideeKachel(st)}</div>
     </div>`,
   [{ text: 'Dashboard öffnen', klick: () => api.oeffnen(st.offen.dashboard) }, { text: 'Ordner', ghost: true, klick: () => api.ordner(st.offen.dashboard.replace(/[\\/][^\\/]+$/, '')) },
     'sp', laeuft.has(st.name)
@@ -690,8 +691,54 @@ function cockpit(st) {
     cockpit(await api.abhaken(st.name, gewaehlt, Number(cb.dataset.j), cb.checked));
   }));
   $$('.zeit button').forEach((b) => (b.onclick = () => { gewaehlt = Number(b.dataset.i); cockpit(st); }));
-  ideeBinden(st, cockpit);
+  if (pflege) { pflegeBinden(st); pflegePruefen(st); } else ideeBinden(st, cockpit);
 }
+
+// ---------- Pflege-Kachel: neue Issues aus dem Repo + Fehler/Wunsch melden ----------
+const PFLEGE_TAKT = 30 * 60 * 1000;
+const pflegeGeprueft = new Map(); // name → Zeitpunkt der letzten Prüfung
+function pflegeKachel(st) {
+  const neu = st.issuesNeu || [];
+  const w = st.ideenWarten?.length || 0;
+  const info = st.pflegeFehler ? `<span class="fehltext">${esc(st.pflegeFehler)}</span>`
+    : st.ideeFehler ? `<span class="fehltext">Konnte nicht eingeordnet werden: ${esc(st.ideeFehler)}</span>`
+    : w ? `${w} ${w > 1 ? 'Meldungen warten' : 'Meldung wartet'} auf das Ende des aktuellen Schritts`
+    : !st.pflegeRepo ? 'Kein GitHub-Repo verknüpft – Meldungen landen direkt im Plan.'
+    : st.letzteIdee ? `✓ ${esc(st.letzteIdee)}` : 'Wird als Issue angelegt und von Claude eingeplant.';
+  return `<div class="karte idee pflege" style="--ak:var(--accent)"><span class="label">Pflege<span>${st.pflegeRepo ? ` · ${esc(st.pflegeRepo)}` : ''}</span></span>
+    ${neu.slice(0, 3).map((x) => `<div class="issue"><span title="${esc(`#${x.nr} ${x.titel}${x.text ? `\n\n${x.text.slice(0, 400)}` : ''}`)}">${x.art === 'fehler' ? '🐞' : '✨'} #${x.nr} ${esc(x.titel)}${x.von ? ` <i class="muted">@${esc(x.von)}</i>` : ''}</span>
+      <button class="btn" data-ueb="${x.nr}">Übernehmen</button><button class="btn ghost" data-ign="${x.nr}" title="Ignorieren">✕</button></div>`).join('')}
+    ${neu.length > 3 ? `<span class="muted klein">+ ${neu.length - 3} weitere neue Issues</span>` : ''}
+    <textarea id="idee-text" rows="2" placeholder="Fehler oder Wunsch beschreiben …">${esc(ideeEntwurf)}</textarea>
+    <div class="idee-fuss"><span class="muted" id="idee-info" title="${esc(st.letzteIdee || '')}">${info}</span>
+      <button class="btn" data-art="fehler">🐞 Fehler</button><button class="btn" data-art="wunsch">✨ Wunsch</button></div></div>`;
+}
+function pflegeBinden(st) {
+  const feld = $('#idee-text');
+  feld.oninput = () => (ideeEntwurf = feld.value); // Entwurf überlebt das Neuzeichnen
+  const los = async (aufruf, warte) => {
+    $$('.pflege button').forEach((b) => (b.disabled = true));
+    $('#idee-info').innerHTML = `<span class="spin klein"></span> ${warte}`;
+    const r = await aufruf();
+    if (r.fehler) { $$('.pflege button').forEach((b) => (b.disabled = false)); $('#idee-info').textContent = r.fehler; return; }
+    if (aktuell?.name === st.name) cockpit(r);
+  };
+  $$('.pflege [data-art]').forEach((b) => (b.onclick = () => {
+    if (!feld.value.trim()) return feld.focus();
+    const text = feld.value;
+    los(async () => { const r = await api['pflege-melden'](st.name, b.dataset.art, text); if (!r.fehler) ideeEntwurf = ''; return r; }, 'Wird gemeldet und eingeplant …');
+  }));
+  $$('.pflege [data-ueb]').forEach((b) => (b.onclick = () => los(() => api['pflege-uebernehmen'](st.name, Number(b.dataset.ueb)), 'Claude plant das Issue ein …')));
+  $$('.pflege [data-ign]').forEach((b) => (b.onclick = () => los(() => api['pflege-ignorieren'](st.name, Number(b.dataset.ign)), '…')));
+}
+// Beim Öffnen und danach alle 30 Minuten; neu gezeichnet wird nur, wenn gerade nichts eingetippt ist oder läuft
+async function pflegePruefen(st) {
+  if (Date.now() - (pflegeGeprueft.get(st.name) || 0) < PFLEGE_TAKT) return;
+  pflegeGeprueft.set(st.name, Date.now());
+  const r = await api['pflege-pruefen'](st.name);
+  if (!r.fehler && aktuell?.name === st.name && $('.pflege') && !ideeEntwurf.trim() && !$('.pflege button:disabled')) cockpit(r);
+}
+setInterval(() => { if ($('.pflege')) cockpitNeu(); }, PFLEGE_TAKT + 1000);
 
 // Kachel „Mir ist noch was eingefallen“: Claude ordnet den Gedanken in die passende Phase ein, danach ist die Kachel wieder leer
 let ideeEntwurf = '';

@@ -2,6 +2,15 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Maintenance mode for finished code projects:** once all phases are done, the cockpit shows a *Maintenance* tile. If the code folder belongs to a GitHub or Gitea repository (Settings → Git), Vibewright checks it for new issues when you open the project and every 30 minutes. Each new issue appears with *Apply* (Claude adds it to the plan) or ✕ (ignore) – nothing from other people goes into the plan without your click.
+- **Report bugs and wishes separately:** the tile has its own field with *🐞 Bug* and *✨ Feature*. With a token, Vibewright creates a matching issue (label `bug` or `enhancement`) and Claude plans it right away; without a repository it goes straight into the plan. Claude mentions the issue number in its commits, so the issue closes itself after the push.
+
+### Fixed
+- The sidebar showed "100 % · Phase 0" for finished projects; it now says "Done · Maintenance".
+
 ## [0.2.9] – 2026-11-08
 
 ### Added
