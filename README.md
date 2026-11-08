@@ -130,6 +130,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.2.9 – 2026-11-08
+
+#### Added
+- **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
+
 #### 0.2.8 – 2026-11-06
 
 #### Fixed
@@ -140,12 +145,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Security
 - **GitHub / Gitea token stays with its server:** after switching between GitHub and Gitea or to another Gitea server, a saved token is no longer reused – you have to enter a new one. Before, a GitHub token could be sent to the newly entered server.
 - **Token no longer visible in the process list:** when downloading a repository, the token is passed to Git through its environment instead of the command line.
-
-#### 0.2.6 – 2026-11-06
-
-#### Added
-- **Import from GitHub or Gitea:** *Settings → Git → GitHub / Gitea* connects your account (GitHub or your own Gitea server, optional access token for private repositories – stored encrypted on this computer). *New project → From GitHub / Gitea* lists your repositories; one click downloads the code into a folder of your choice and starts planning from there.
-- **Global rules:** *Settings → Claude → Global rules* shows and edits the central `CLAUDE.md` that Claude Code follows in every project. Building blocks add recurring steps with one click (commit, push, /graphify, /ponytail, security review, vulnerability check, secrets, tests). The previous file is kept as `CLAUDE.md.bak`.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
