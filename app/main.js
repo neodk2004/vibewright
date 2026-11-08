@@ -182,31 +182,31 @@ handle('oeffnen', (datei) => (info().modus === 'obsidian'
 handle('aktualisieren', (name) => core.aktualisieren(info(), name));
 handle('abhaken', (name, phase, idx, wert) => core.abhaken(info(), name, phase, idx, wert));
 // ---------- Eingebettetes Terminal: Claude Code läuft interaktiv in der App ----------
-// ponytail: eine Sitzung gleichzeitig; mehrere parallele Sitzungen erst, wenn jemand sie braucht
-let sitzung = null; // { pty, name, watcher }
+// Mehrere Projekte dürfen gleichzeitig laufen – höchstens eine Sitzung pro Projekt
+const sitzungen = new Map(); // name → { pty, watcher, erledigt, ideeLaeuft }
 // Wird die App aus einer Claude-Sitzung heraus gestartet, dürfen deren Variablen nicht an die neue Sitzung vererbt werden
 const sauberesEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(CLAUDECODE|CLAUDE_CODE_|CLAUDE_PID$|CLAUDE_EFFORT$)/i.test(k)));
 const senden = (kanal, ...a) => BrowserWindow.getAllWindows()[0]?.webContents.send(kanal, ...a);
-function sitzungBeenden() {
-  if (!sitzung) return;
-  sitzung.watcher?.close();
-  try { sitzung.pty.kill(); } catch {}
-  sitzung = null;
+function sitzungBeenden(name) {
+  const s = sitzungen.get(name);
+  if (!s) return;
+  sitzungen.delete(name);
+  s.watcher?.close();
+  try { s.pty.kill(); } catch {}
 }
-ipcMain.on('pty-eingabe', (_e, d) => sitzung?.pty.write(d));
-ipcMain.on('pty-groesse', (_e, cols, rows) => { try { sitzung?.pty.resize(Math.max(cols, 20), Math.max(rows, 5)); } catch {} });
-handle('sitzung', () => sitzung?.name || null);
+ipcMain.on('pty-eingabe', (_e, name, d) => sitzungen.get(name)?.pty.write(d));
+ipcMain.on('pty-groesse', (_e, name, cols, rows) => { try { sitzungen.get(name)?.pty.resize(Math.max(cols, 20), Math.max(rows, 5)); } catch {} });
+handle('sitzung', () => [...sitzungen.keys()]);
 // Idee merken; ohne laufende Claude-Sitzung sofort einarbeiten, sonst nach dem nächsten erledigten Schritt
 handle('idee', async (name, text) => {
   const st = core.ideeMerken(info(), name, text);
-  return sitzung?.name === name ? st : core.ideenVerarbeiten(info(), name);
+  return sitzungen.has(name) ? st : core.ideenVerarbeiten(info(), name);
 });
-handle('sitzung-beenden', () => sitzungBeenden());
+handle('sitzung-beenden', (name) => sitzungBeenden(name));
 // Läuft gerade Claude in diesem Projekt: erst beenden, sonst sperrt Windows den Ordner
-const ohneSitzung = (name) => { if (sitzung?.name === name) sitzungBeenden(); };
-handle('archivieren', (name) => (ohneSitzung(name), core.archivieren(info(), name)));
-handle('loeschen', (name) => (ohneSitzung(name), core.loeschen(info(), name)));
-app.on('before-quit', sitzungBeenden);
+handle('archivieren', (name) => (sitzungBeenden(name), core.archivieren(info(), name)));
+handle('loeschen', (name) => (sitzungBeenden(name), core.loeschen(info(), name)));
+app.on('before-quit', () => [...sitzungen.keys()].forEach(sitzungBeenden));
 
 handle('claude-starten', async (name, cols = 100, rows = 30) => {
   const i = info();
@@ -227,7 +227,7 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
   const vorher = core.laden(i, name);
   if (vorher.projekttyp === 'code' && vorher.repo) await gitAnlegen(vorher.repo);
   const { st: bereit, ordner } = core.claudeVorbereiten(i, name);
-  sitzungBeenden();
+  sitzungBeenden(name); // nur dieses Projekt neu starten, andere laufen weiter
   const b = core.claudeBefehl();
   if (!b) throw new Error('Claude Code wurde nicht gefunden. Bitte installieren und die App neu starten.');
   const pty = require('@lydell/node-pty').spawn(b.datei, [...b.vorne, 'Lies CLAUDE.md und beginne mit dem aktuellen Auftrag.'],
@@ -237,8 +237,8 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
   let t;
   const watcher = fs.watch(path.join(i.ablage, name, core.punkteOrdner(vorher)), () => { clearTimeout(t); t = setTimeout(nachAenderung, 300); });
   async function nachAenderung() {
-    const s = sitzung;
-    if (s?.name !== name) return senden('punkte-geaendert', name);
+    const s = sitzungen.get(name);
+    if (s?.pty !== pty) return senden('punkte-geaendert', name);
     const st = core.aktualisieren(info(), name);
     const erledigt = st.stand?.erledigt ?? 0;
     if (erledigt > s.erledigt && st.ideenWarten?.length && !s.ideeLaeuft) {
@@ -250,9 +250,14 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
     s.erledigt = Math.max(s.erledigt, erledigt);
     senden('punkte-geaendert', name);
   }
-  sitzung = { pty, name, watcher, erledigt: bereit.stand?.erledigt ?? 0, ideeLaeuft: false };
-  pty.onData((d) => senden('pty-daten', d));
-  pty.onExit(() => { if (sitzung?.pty === pty) { watcher.close(); sitzung = null; } senden('pty-ende', name); });
+  sitzungen.set(name, { pty, watcher, erledigt: bereit.stand?.erledigt ?? 0, ideeLaeuft: false });
+  pty.onData((d) => senden('pty-daten', name, d));
+  pty.onExit(() => {
+    const s = sitzungen.get(name);
+    if (s && s.pty !== pty) return; // alte Sitzung nach Neustart: die neue läuft weiter
+    if (s) { watcher.close(); sitzungen.delete(name); }
+    senden('pty-ende', name);
+  });
   return bereit;
 });
 // „Fehler melden“: GitHub-Formular mit Version, System und Ablage vorausgefüllt öffnen (Feld-IDs aus .github/ISSUE_TEMPLATE/bug_report.yml)

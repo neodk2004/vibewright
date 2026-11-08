@@ -32,18 +32,19 @@ function setKopf(st) {
   kopf.innerHTML = `<div class="kopf-zeile"><h1>${esc(st.name)}</h1><span class="kopf-akt">
     <button class="btn ghost" id="k-archiv" title="Alles als ZIP-Datei aufheben">Archivieren</button><button class="btn ghost" id="k-loeschen">Löschen</button></span></div><div class="idee">${esc(st.plan?.einzeiler || st.idee)}</div>
     <div class="steps">${SCHRITTE.map((s, i) => `${i ? '<span class="ln"></span>' : ''}<span class="st ${i < n ? 'done' : i === n ? 'now' : ''}"><i>${i < n ? '✓' : i + 1}</i>${s}</span>`).join('')}
-    ${n === 4 && typeof sitzungName !== 'undefined' && sitzungName === st.name ? '<span class="kopf-orb" id="kopf-orb"><span class="mini-orb"><i></i><i></i><i></i></span><span class="was"></span></span>' : ''}</div>`;
+    ${n === 4 && laeuft.has(st.name) ? '<span class="kopf-orb" id="kopf-orb"><span class="mini-orb"><i></i><i></i><i></i></span><span class="was"></span></span>' : ''}</div>`;
   $('#k-archiv').onclick = () => archivieren(st);
   $('#k-loeschen').onclick = () => loeschenFragen(st);
   orbAktualisieren();
 }
 
 // Orb neben „Umsetzung“: kreist, solange im Terminal Ausgaben fließen (Claude arbeitet), ruht, wenn Claude auf dich wartet
-let letzteAusgabe = 0;
+const laeuft = new Set(); // Projekte, in denen gerade eine Claude-Sitzung läuft
+const letzteAusgabe = new Map(); // name → Zeitpunkt der letzten Terminal-Ausgabe
 function orbAktualisieren() {
   const o = $('#kopf-orb');
   if (!o) return;
-  const aktiv = Date.now() - letzteAusgabe < 1500;
+  const aktiv = Date.now() - (letzteAusgabe.get(aktuell?.name) || 0) < 1500;
   o.classList.toggle('aktiv', aktiv);
   o.querySelector('.was').textContent = aktiv ? 'Claude arbeitet …' : 'wartet auf dich';
 }
@@ -96,7 +97,7 @@ async function seitenleiste() {
     return;
   }
   $('#liste').innerHTML = liste.length ? liste.map((p) => {
-    const s = sitzungName === p.name ? '<span class="live">●</span> Claude arbeitet'
+    const s = laeuft.has(p.name) ? '<span class="live">●</span> Claude arbeitet'
       : p.offen?.typ === 'fertig' ? `${p.stand?.fortschritt ?? 0} % · Phase ${(p.stand?.aktiv ?? 0) + 1}` : SCHRITTE[schrittNr(p)];
     const f = p.offen?.typ === 'fertig' ? `<span class="mini"><i style="width:${p.stand?.fortschritt ?? 0}%"></i></span>` : '';
     return `<button data-name="${esc(p.name)}" class="karte-p ${aktuell?.name === p.name ? 'aktiv' : ''}" style="--pf:${projektFarbe(p.name)}"><span class="n">${esc(p.name)}</span><span class="s">${p.fehler ? 'unterbrochen' : s}</span>${f}</button>`;
@@ -680,7 +681,7 @@ function cockpit(st) {
         ${ideeKachel(st)}</div>
     </div>`,
   [{ text: 'Dashboard öffnen', klick: () => api.oeffnen(st.offen.dashboard) }, { text: 'Ordner', ghost: true, klick: () => api.ordner(st.offen.dashboard.replace(/[\\/][^\\/]+$/, '')) },
-    'sp', sitzungName === st.name
+    'sp', laeuft.has(st.name)
       ? { text: 'Zur laufenden Claude-Sitzung', primary: true, klick: () => arbeit(st) }
       : { text: st.projekttyp === 'code' && !st.repo ? 'Code-Ordner wählen & mit Claude umsetzen' : 'Mit Claude umsetzen', primary: true, klick: () => claudeStarten(st) }]);
   frisch = '';
@@ -728,30 +729,34 @@ function ideeBinden(st, neuZeichnen) {
 }
 
 // ---------- Claude-Sitzung im eingebetteten Terminal ----------
-// Das Terminal-Element bleibt erhalten, auch wenn man zwischendurch andere Ansichten öffnet
-let term = null, fit = null, sitzungName = null;
-const termBox = document.createElement('div');
-termBox.className = 'term';
-function terminalAnzeigen(ziel) {
-  ziel.appendChild(termBox);
-  if (!term) {
-    term = new Terminal({
-      fontFamily: '"Cascadia Mono", Consolas, "SF Mono", Menlo, monospace', fontSize: 13, cursorBlink: true, scrollback: 5000,
-      theme: { background: '#0e0f11', foreground: '#e6e6e8', cursor: '#9d8cff', selectionBackground: '#9d8cff55' },
-    });
-    fit = new FitAddon.FitAddon();
-    term.loadAddon(fit);
-    term.open(termBox);
-    term.onData((d) => api.senden('pty-eingabe', d));
-    new ResizeObserver(() => { if (termBox.isConnected && termBox.clientWidth) { fit.fit(); api.senden('pty-groesse', term.cols, term.rows); } }).observe(termBox);
-  }
-  requestAnimationFrame(() => { fit.fit(); api.senden('pty-groesse', term.cols, term.rows); term.focus(); });
+// Jedes Projekt hat sein eigenes Terminal; es bleibt erhalten, auch wenn man zwischendurch andere Ansichten öffnet
+const terms = new Map(); // name → { term, fit, box }
+function terminalFuer(name) {
+  if (terms.has(name)) return terms.get(name);
+  const box = document.createElement('div');
+  box.className = 'term';
+  const term = new Terminal({
+    fontFamily: '"Cascadia Mono", Consolas, "SF Mono", Menlo, monospace', fontSize: 13, cursorBlink: true, scrollback: 5000,
+    theme: { background: '#0e0f11', foreground: '#e6e6e8', cursor: '#9d8cff', selectionBackground: '#9d8cff55' },
+  });
+  const fit = new FitAddon.FitAddon();
+  term.loadAddon(fit);
+  term.onData((d) => api.senden('pty-eingabe', name, d));
+  new ResizeObserver(() => { if (box.isConnected && box.clientWidth) { fit.fit(); api.senden('pty-groesse', name, term.cols, term.rows); } }).observe(box);
+  const t = { term, fit, box };
+  terms.set(name, t);
+  return t;
 }
-api.on('pty-daten', (d) => { term?.write(d); letzteAusgabe = Date.now(); });
+function terminalAnzeigen(ziel, name) {
+  const { term, fit, box } = terminalFuer(name);
+  ziel.appendChild(box);
+  if (!term.element) term.open(box);
+  requestAnimationFrame(() => { fit.fit(); api.senden('pty-groesse', name, term.cols, term.rows); term.focus(); });
+}
+api.on('pty-daten', (name, d) => { terminalFuer(name).term.write(d); letzteAusgabe.set(name, Date.now()); });
 api.on('pty-ende', (name) => {
-  if (sitzungName !== name) return;
-  sitzungName = null;
-  term?.write('\r\n\x1b[90m— Sitzung beendet —\x1b[0m\r\n');
+  if (!laeuft.delete(name)) return;
+  terms.get(name)?.term.write('\r\n\x1b[90m— Sitzung beendet —\x1b[0m\r\n');
   if (aktuell?.name === name && $('#arbeit-seite')) setAktionen(arbeitAktionen(aktuell));
   if (aktuell?.name === name) setKopf(aktuell); // Orb verschwindet mit der Sitzung
   seitenleiste();
@@ -773,24 +778,24 @@ async function claudeStarten(st) {
   const r = await api['claude-starten'](st.name, 100, 30);
   if (r.fehler) return $('.next')?.insertAdjacentHTML('afterend', `<div class="fehler">${esc(r.fehler)}</div>`);
   if (!r.repo && r.projekttyp === 'code') return cockpit(r); // Ordnerauswahl abgebrochen
-  term?.reset();
-  sitzungName = r.name;
+  terms.get(r.name)?.term.reset();
+  laeuft.add(r.name);
   arbeit(r);
 }
 
 const arbeitAktionen = (st) => [
   { text: 'Zum Cockpit', ghost: true, klick: () => cockpit(aktuell) },
-  { info: sitzungName === st.name ? 'Claude arbeitet im Terminal – du entscheidest dort per Tastatur, Häkchen erscheinen rechts automatisch.' : 'Die Sitzung ist beendet.' },
+  { info: laeuft.has(st.name) ? 'Claude arbeitet im Terminal – du entscheidest dort per Tastatur, Häkchen erscheinen rechts automatisch.' : 'Die Sitzung ist beendet.' },
   'sp',
-  sitzungName === st.name
-    ? { text: 'Sitzung beenden', klick: async () => { await api['sitzung-beenden'](); } }
+  laeuft.has(st.name)
+    ? { text: 'Sitzung beenden', klick: async () => { await api['sitzung-beenden'](st.name); } }
     : { text: 'Neue Sitzung starten', primary: true, klick: () => claudeStarten(aktuell) },
 ];
 
 function arbeit(st) {
   aktuell = st;
   ansicht(st, `<div class="arbeit"><div class="term-rahmen" id="term-ziel"></div><div class="spalte" id="arbeit-seite"></div></div>`, arbeitAktionen(st));
-  terminalAnzeigen($('#term-ziel'));
+  terminalAnzeigen($('#term-ziel'), st.name);
   arbeitSeite(st);
   seitenleiste();
 }
@@ -818,4 +823,4 @@ function arbeitSeite(st) {
   ideeBinden(st, (r) => { arbeitSeite(r); seitenleiste(); });
 }
 
-(async () => { sitzungName = await api.sitzung(); start(); })();
+(async () => { (await api.sitzung()).forEach((n) => laeuft.add(n)); start(); })();
