@@ -1,6 +1,6 @@
 {
   "name": "vibewright",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Vibewright – You vibe. It builds. Aus einer Idee wird eine Laufkarte, umgesetzt mit Claude Code.",
   "main": "main.js",
   "private": true,
