@@ -130,6 +130,15 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.3.0 – 2026-11-09
+
+#### Added
+- **Maintenance mode for finished code projects:** once all phases are done, the cockpit shows a *Maintenance* tile. If the code folder belongs to a GitHub or Gitea repository (Settings → Git), Vibewright checks it for new issues when you open the project and every 30 minutes. Each new issue appears with *Apply* (Claude adds it to the plan) or ✕ (ignore) – nothing from other people goes into the plan without your click.
+- **Report bugs and wishes separately:** the tile has its own field with *🐞 Bug* and *✨ Feature*. With a token, Vibewright creates a matching issue (label `bug` or `enhancement`) and Claude plans it right away; without a repository it goes straight into the plan. Claude mentions the issue number in its commits, so the issue closes itself after the push.
+
+#### Fixed
+- The sidebar showed "100 % · Phase 0" for finished projects; it now says "Done · Maintenance".
+
 #### 0.2.9 – 2026-11-08
 
 #### Added
@@ -139,12 +148,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Update notice did not appear in some networks:** if the GitHub API does not answer (for example because its limit of 60 requests per hour is used up on a shared network), Vibewright now checks the normal release page instead.
-
-#### 0.2.7 – 2026-11-06
-
-#### Security
-- **GitHub / Gitea token stays with its server:** after switching between GitHub and Gitea or to another Gitea server, a saved token is no longer reused – you have to enter a new one. Before, a GitHub token could be sent to the newly entered server.
-- **Token no longer visible in the process list:** when downloading a repository, the token is passed to Git through its environment instead of the command line.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
