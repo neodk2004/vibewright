@@ -52,5 +52,20 @@ assert.throws(() => core.forgeUrl({ typ: 'gitea', server: 'git.example.de' }), /
   await core.forgeIssueAnlegen(gt, 'T', { owner: 'neo', repo: 'app' }, 'fehler', 'Absturz');
   assert.strictEqual(gesehen.url, 'https://git.example.de/api/v1/repos/neo/app/issues');
   assert.strictEqual(JSON.parse(gesehen.o.body).title, '[Bug] Absturz');
+
+  // Importierter Code-Ordner: Steckbrief für die Prüfung „Interview nötig?“ und Interview.md ohne Fragen
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-steckbrief-'));
+  fs.writeFileSync(path.join(ordner, 'README.md'), '# Wetterstation\nZeigt Temperatur auf einem Display.');
+  fs.writeFileSync(path.join(ordner, 'platformio.ini'), '[env:esp32]');
+  fs.mkdirSync(path.join(ordner, '.git'));
+  const sb = await core.repoSteckbrief(ordner);
+  assert.match(sb, /Dateien im Hauptordner: platformio\.ini, README\.md/);
+  assert.match(sb, /--- README\.md ---\n# Wetterstation/);
+  assert.match(sb, /--- platformio\.ini ---/);
+  assert.ok(!sb.includes('.git'), sb);
+  assert.strictEqual(await core.repoSteckbrief(path.join(ordner, 'gibt-es-nicht')), '');
+  assert.match(core.interviewMd({ name: 'W', idee: 'x', runden: [], repo: ordner }), /Kein Interview nötig/);
+  fs.rmSync(ordner, { recursive: true });
   console.log('forge ok');
 })();
