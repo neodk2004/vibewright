@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/forge.js && node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/e2e.js",
+    "test": "node test/dmg.js && node test/forge.js && node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/e2e.js",
     "exe": "electron-builder --win nsis",
     "notices": "node build/hinweise-bauen.js",
     "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"
@@ -35,6 +35,7 @@
       "!build/hinweise-bauen.js",
       "!build/installer-bilder.js",
       "!build/*.bmp",
+      "!build/background*.png",
       "!build/*-vorschau.png",
       "!build/installer.nsh"
     ],
@@ -92,7 +93,25 @@
       ]
     },
     "dmg": {
-      "title": "Vibewright ${version}"
+      "title": "Vibewright ${version}",
+      "background": "build/background.png",
+      "iconSize": 88,
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 205
+        },
+        {
+          "x": 400,
+          "y": 205,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "afterPack": "build/adhoc-signieren.js"
   },

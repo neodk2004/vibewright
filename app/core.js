@@ -1005,6 +1005,14 @@ ul{padding-left:16px;margin:8px 0}li{margin:2px 0}li.x{text-decoration:line-thro
 <div class="grid">${phasen}</div><p class="m">Vibewright · Stand ${heute()}</p></main></body></html>`;
 }
 
-module.exports = { checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
+// macOS: welche Vibewright-.dmg sind eingehängt? Liest die Textausgabe von `hdiutil info` → [{ datei, laufwerk }]
+function vibewrightDmgs(hdiutilText) {
+  return hdiutilText.split(/^=+$/m).map((block) => ({
+    datei: /^image-path\s*:\s*(.+\.dmg)$/im.exec(block)?.[1].trim(),
+    laufwerk: /\t(\/Volumes\/[^\t\n]+)$/m.exec(block)?.[1].trim(),
+  })).filter((d) => d.datei && /^Vibewright[^/]*\.dmg$/i.test(path.basename(d.datei)));
+}
+
+module.exports = { vibewrightDmgs, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
   aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };

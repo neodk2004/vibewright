@@ -322,6 +322,31 @@ function fenstergroesse() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   return { width: Math.min(1200, Math.round(width * 0.92)), height: Math.min(780, Math.round(height * 0.92)) };
 }
+// macOS: Nach der Installation aus der .dmg einmal pro Version anbieten, das Abbild auszuwerfen und in den Papierkorb zu legen.
+// Läuft die App noch direkt aus der .dmg (/Volumes/…), wird nichts gefragt.
+async function dmgAufraeumen(win) {
+  if (!MAC || process.env.SCREENSHOT || app.getAppPath().startsWith('/Volumes/') || lies().dmgGefragt === app.getVersion()) return;
+  const cp = require('child_process');
+  const eingehaengt = (() => { try { return core.vibewrightDmgs(cp.execFileSync('hdiutil', ['info'], { timeout: 5000 }).toString()); } catch { return []; } })();
+  // Schon ausgeworfen? Dann liegt die .dmg meist noch in „Downloads“
+  const downloads = app.getPath('downloads');
+  const liegend = (() => { try { return fs.readdirSync(downloads).filter((f) => /^Vibewright[^/]*\.dmg$/i.test(f)).map((f) => ({ datei: path.join(downloads, f) })); } catch { return []; } })();
+  const dmgs = [...eingehaengt, ...liegend.filter((l) => !eingehaengt.some((e) => e.datei === l.datei))].filter((d) => fs.existsSync(d.datei));
+  if (!dmgs.length) return;
+  const en = lies().sprache === 'en';
+  const { response } = await dialog.showMessageBox(win, {
+    type: 'question', buttons: en ? ['Move to Trash', 'Keep'] : ['In den Papierkorb', 'Behalten'], defaultId: 0, cancelId: 1,
+    message: en ? 'Vibewright is installed' : 'Vibewright ist installiert',
+    detail: (en ? 'The installer file is no longer needed:\n' : 'Die Installationsdatei wird nicht mehr gebraucht:\n') + dmgs.map((d) => path.basename(d.datei)).join('\n')
+      + (en ? '\n\nEject it and move it to the Trash?' : '\n\nAuswerfen und in den Papierkorb legen?'),
+  });
+  speichereEinstellung({ dmgGefragt: app.getVersion() });
+  if (response !== 0) return;
+  for (const d of dmgs) {
+    if (d.laufwerk) try { cp.execFileSync('hdiutil', ['detach', d.laufwerk], { timeout: 15000 }); } catch {}
+    await shell.trashItem(d.datei).catch(() => {});
+  }
+}
 if (WIN) app.setAppUserModelId('de.vibewright.app'); // eigenes Taskleisten-Icon statt Electron-Standard
 // macOS braucht ein App-Menü – ohne „Bearbeiten“-Menü gehen ⌘C/⌘V/⌘A in Eingabefeldern nicht
 if (MAC) app.whenReady().then(() => require('electron').Menu.setApplicationMenu(require('electron').Menu.buildFromTemplate(
@@ -347,7 +372,7 @@ app.whenReady().then(() => {
   if (splash) win.once('ready-to-show', async () => {
     await splashSichtbar;
     await splash.webContents.executeJavaScript('document.body.classList.add("weg")').catch(() => {});
-    setTimeout(() => { win.show(); splash.destroy(); }, 300);
+    setTimeout(() => { win.show(); splash.destroy(); setTimeout(() => dmgAufraeumen(win), 800); }, 300);
   });
   // Für Tests: SCREENSHOT=pfad.png speichert nach dem Laden ein Bild und beendet die App
   if (process.env.SCREENSHOT) win.webContents.on('console-message', (_e, _l, msg, line, src) => console.log(`[ui] ${msg} (${src}:${line})`));

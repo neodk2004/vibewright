@@ -2,6 +2,12 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **macOS: tidy installer window:** the .dmg opens with a Vibewright background that shows where to drag the app ("Drag Vibewright to Applications").
+- **macOS: clean up after installing:** on the first start of a new version, Vibewright offers to eject the .dmg and move it to the Trash (asks once; nothing happens if you click *Keep*).
+
 ## [0.3.0] – 2026-11-09
 
 ### Added
