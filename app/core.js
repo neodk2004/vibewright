@@ -448,7 +448,7 @@ async function analyse(st, wunsch) {
 async function plan(st, wunsch) {
   const prompt = wunsch
     ? `Änderungswunsch zum Plan: ${wunsch}\nGib den vollständigen überarbeiteten Plan zurück.`
-    : `Die Bedarfsanalyse ist freigegeben. Schritt: Plan mit 3–6 Phasen. Phase 1 = kleinster lauffähiger Stand. Pro Phase: titel (kurz, ohne Doppelpunkt), bereich (ein Wort), aufwand, ziel (1 Satz), fertig_wenn (prüfbar), checkliste (3–8 konkrete Schritte). Schreibe alles auf Laien-Niveau passend zum Erfahrungsstand aus dem Interview: keine Befehle, Paketnamen oder Fachbegriffe ohne kurze Erklärung in Klammern; Programme werden über ihre offizielle Download-Seite installiert, nicht über winget oder die Kommandozeile. Dazu einzeiler: das Projekt in einem Satz (höchstens 120 Zeichen).`;
+    : `Die Bedarfsanalyse ist freigegeben. Schritt: Plan mit 3–6 Phasen. Phase 1 = kleinster lauffähiger Stand. Pro Phase: titel (kurz, ohne Doppelpunkt), bereich (ein Wort in der Sprache des Nutzers, z. B. Software oder Hardware), aufwand, ziel (1 Satz), fertig_wenn (prüfbar), checkliste (3–8 konkrete Schritte). Schreibe alles auf Laien-Niveau passend zum Erfahrungsstand aus dem Interview: keine Befehle, Paketnamen oder Fachbegriffe ohne kurze Erklärung in Klammern; Programme werden über ihre offizielle Download-Seite installiert, nicht über winget oder die Kommandozeile. Dazu einzeiler: das Projekt in einem Satz (höchstens 120 Zeichen).`;
   const d = await ask(st, prompt, S_PLAN);
   d.phasen.forEach((p) => (p.titel = sauber(p.titel)));
   st.plan = d;

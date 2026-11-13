@@ -11,6 +11,10 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 - **Multiple-choice questions are easier to spot:** when several answers are allowed, every answer shows a checkbox and a highlighted badge "Multiple answers allowed" appears below the question.
 - **macOS: clean up after installing:** on the first start of a new version, Vibewright offers to eject the .dmg and move it to the Trash (asks once; nothing happens if you click *Keep*).
 
+### Fixed
+- English interface: the phase details showed the effort in German ("Effort mittel"), and Claude sometimes named the area of a phase in German.
+- Fresh screenshots in the README.
+
 ## [0.3.0] – 2026-11-09
 
 ### Added

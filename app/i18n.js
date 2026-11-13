@@ -131,11 +131,11 @@ const UI_EN = {
 const UI_EN_MUSTER = [
   [/^Server antwortet mit Fehler (\d+)\.$/, 'Server responded with error $1.'],
   [/^Klonen fehlgeschlagen: (.*)$/s, 'Download failed: $1'],
-  [/^Runde (\d+) · Frage (\d+) von (\d+)( · mehrere möglich)?$/, (_m, a, b, c, d) => `Round ${a} · Question ${b} of ${c}${d ? ' · multiple allowed' : ''}`],
+  [/^Runde (\d+) · Frage (\d+) von (\d+)$/, 'Round $1 · Question $2 of $3'],
   [/^(\d+) % · (\d+)\/(\d+) Schritte$/, '$1 % · $2/$3 steps'],
   [/^(\d+) % · Phase (\d+)$/, '$1 % · phase $2'],
   [/^Nächster Schritt · Phase (\d+)$/, 'Next step · phase $1'],
-  [/^Phase (\d+) · (.*) · Aufwand (.*)$/, 'Phase $1 · $2 · effort $3'],
+  [/^Phase (\d+) · (.*) · Aufwand (.*)$/, (_m, a, b, c) => `Phase ${a} · ${b} · effort ${UI_EN[c] || c}`],
   [/^Claude Code installiert \((.*)\)$/, 'Claude Code installed ($1)'],
   [/^Angemeldet · (.*)$/, 'Signed in · $1'],
   [/^(\d+) Idee wartet auf das Ende des aktuellen Schritts$/, '$1 idea waits for the current step to finish'],
