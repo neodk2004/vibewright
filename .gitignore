@@ -16,3 +16,4 @@ app/dist/
 app/build/*-vorschau.png
 
 .claude/handoffs/
+graphify-out/
