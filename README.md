@@ -16,7 +16,9 @@ Turn a one-line idea into a complete project roadmap – and build it with Claud
 
 <p align="center"><a href="https://ko-fi.com/E8R028M0YO"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a></p>
 
-<p align="center"><img src="docs/screenshots/cockpit.png" alt="Vibewright cockpit" width="860"></p>
+<p align="center"><b><a href="https://neodk2004.github.io/vibewright/">🌐 Website</a></b> · <a href="https://github.com/neodk2004/vibewright/releases/latest">⬇️ Download</a></p>
+
+<p align="center"><img src="docs/media/demo.gif" alt="Vibewright demo: interview, needs analysis, plan, tool check, cockpit and Claude Code inside the app" width="860"></p>
 
 ---
 
