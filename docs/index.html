@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibewright – You vibe. It builds.</title>
+<meta name="description" content="Vibewright is a free desktop app for Windows and macOS that turns a one-line idea into a complete project roadmap and builds it with Claude Code, right inside the app. Notes in Obsidian or Markdown.">
+<link rel="canonical" href="https://neodk2004.github.io/vibewright/">
+<link rel="icon" type="image/png" href="icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vibewright – You vibe. It builds.">
+<meta property="og:description" content="Turn a one-line idea into a complete project roadmap – and build it with Claude Code, right inside the app.">
+<meta property="og:url" content="https://neodk2004.github.io/vibewright/">
+<meta property="og:image" content="https://neodk2004.github.io/vibewright/screenshots/cockpit.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vibewright","applicationCategory":"DeveloperApplication","operatingSystem":"Windows 10, Windows 11, macOS 11+","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://opensource.org/licenses/MIT","url":"https://neodk2004.github.io/vibewright/","downloadUrl":"https://github.com/neodk2004/vibewright/releases/latest","codeRepository":"https://github.com/neodk2004/vibewright","description":"Desktop app that turns a one-line idea into a project roadmap (interview, needs analysis, plan, tool check) and builds it with Claude Code inside the app."}
+</script>
+<style>
+:root{--bg:#0f0e17;--card:#1a1830;--text:#ecebf5;--muted:#a9a6c4;--accent:#6a55e8;--accent2:#9d8cff;--cyan:#5fd0e0;--line:#2c2950}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent2)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{text-align:center;padding:64px 0 32px}
+header img.logo{width:88px;height:88px}
+h1{font-size:clamp(2.2rem,6vw,3.4rem);margin:.3em 0 0;letter-spacing:-.02em}
+.tag{font-size:1.3rem;font-weight:700;background:linear-gradient(90deg,var(--accent2),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;margin:.2em 0 .6em}
+.lead{color:var(--muted);max-width:640px;margin:0 auto 28px}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;text-decoration:none;color:#fff;background:var(--accent);transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.shot{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 20px 60px #0008;margin:40px 0}
+.flow{text-align:center;color:var(--muted);font-size:.95rem;margin:0 0 48px}
+.flow b{color:var(--text)}
+h2{font-size:1.6rem;margin:48px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:1.05rem}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.gallery figure{margin:0}
+.gallery img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
+.gallery figcaption{color:var(--muted);font-size:.9rem;margin-top:4px}
+ul.req{padding-left:1.2em;color:var(--muted)}
+ul.req b{color:var(--text)}
+footer{border-top:1px solid var(--line);margin-top:64px;padding:24px 0 40px;color:var(--muted);font-size:.9rem;text-align:center}
+@media (prefers-reduced-motion:no-preference){header,.shot{animation:up .6s ease both}.shot{animation-delay:.15s}@keyframes up{from{opacity:0;transform:translateY(16px)}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img class="logo" src="icon.png" alt="Vibewright logo" width="88" height="88">
+  <h1>Vibewright</h1>
+  <p class="tag">You vibe. It builds.</p>
+  <p class="lead">A free desktop app for Windows and macOS. Type one sentence – Vibewright interviews you, writes a needs analysis, plans the phases, checks your tools and then builds it step by step with <b>Claude Code running inside the app</b>.</p>
+  <div class="btns">
+    <a class="btn" href="https://github.com/neodk2004/vibewright/releases/latest">Download for Windows &amp; macOS</a>
+    <a class="btn ghost" href="https://github.com/neodk2004/vibewright">View on GitHub</a>
+  </div>
+</header>
+
+<img class="shot" src="screenshots/cockpit.png" alt="Vibewright cockpit with the current phase, checklist and progress" width="1184" height="741">
+<p class="flow"><b>Idea</b> → Interview → Needs analysis → Plan → Tool check → <b>Build with Claude Code</b></p>
+
+<h2>What it does</h2>
+<div class="grid">
+  <div class="card"><h3>Guided interview</h3><p>One multiple-choice question per screen, your own answer always possible. Follow-ups only where something is missing.</p></div>
+  <div class="card"><h3>Needs analysis</h3><p>Goal, scope, must-have and non-goals, risks you didn't think of and a feasibility traffic light.</p></div>
+  <div class="card"><h3>Plan as a roadmap</h3><p>3–6 phases with clear "done when" criteria and concrete steps in plain language.</p></div>
+  <div class="card"><h3>Tool check</h3><p>Checks your PC and Claude setup (plugins, skills, MCP servers) and recommends only what a phase really needs.</p></div>
+  <div class="card"><h3>Claude Code in the app</h3><p>An embedded terminal runs Claude Code with a generated CLAUDE.md. Finished steps are ticked off live.</p></div>
+  <div class="card"><h3>Obsidian or Markdown</h3><p>Everything lands as Markdown in your Obsidian vault (Dataview, Kanban) or as .md files plus an HTML dashboard.</p></div>
+  <div class="card"><h3>Git safety net</h3><p>Optional: Claude commits after every finished step, so you can always go back.</p></div>
+  <div class="card"><h3>Maintenance mode</h3><p>Finished code projects pick up new GitHub or Gitea issues – nothing enters the plan without your click.</p></div>
+  <div class="card"><h3>English &amp; Deutsch</h3><p>UI, Claude's texts and the generated files in both languages.</p></div>
+</div>
+
+<h2>Screenshots</h2>
+<div class="gallery">
+  <figure><img src="screenshots/interview.png" alt="Interview screen" loading="lazy"><figcaption>Interview</figcaption></figure>
+  <figure><img src="screenshots/needs-analysis.png" alt="Needs analysis" loading="lazy"><figcaption>Needs analysis</figcaption></figure>
+  <figure><img src="screenshots/plan.png" alt="Plan with phases" loading="lazy"><figcaption>Plan</figcaption></figure>
+  <figure><img src="screenshots/tool-check.png" alt="Tool check" loading="lazy"><figcaption>Tool check</figcaption></figure>
+  <figure><img src="screenshots/session.png" alt="Claude Code running inside the app" loading="lazy"><figcaption>Claude Code inside the app</figcaption></figure>
+  <figure><img src="screenshots/cockpit-light.png" alt="Cockpit in light mode" loading="lazy"><figcaption>Light mode</figcaption></figure>
+</div>
+
+<h2>Requirements</h2>
+<ul class="req">
+  <li><b>Windows 10/11 (64-bit)</b> or <b>macOS 11+</b> (Apple Silicon and Intel; signed and notarized)</li>
+  <li><b>Claude Code</b>, installed and signed in – <a href="https://docs.claude.com/en/docs/claude-code/setup">setup guide</a></li>
+  <li><b>Claude subscription</b> (Pro or Max recommended)</li>
+  <li>Optional: <a href="https://obsidian.md">Obsidian</a> and <a href="https://git-scm.com/downloads">Git</a></li>
+</ul>
+
+<h2>Documentation</h2>
+<ul class="req">
+  <li><a href="https://github.com/neodk2004/vibewright/wiki/Home-English">Manual (English)</a> · <a href="https://github.com/neodk2004/vibewright/wiki">Handbuch (Deutsch)</a></li>
+  <li><a href="https://github.com/neodk2004/vibewright/blob/main/docs/user-guide.md">User guide</a> · <a href="https://github.com/neodk2004/vibewright/blob/main/docs/anleitung.md">Anleitung</a> · <a href="https://github.com/neodk2004/vibewright/blob/main/docs/developer-guide.md">Developer guide</a></li>
+  <li><a href="https://github.com/neodk2004/vibewright/blob/main/CHANGELOG.md">Changelog</a></li>
+</ul>
+
+<footer>Vibewright is open source under the <a href="https://github.com/neodk2004/vibewright/blob/main/LICENSE">MIT license</a> · © 2026 neodk2004 · Not affiliated with Anthropic or Obsidian.</footer>
+</div>
+</body>
+</html>
