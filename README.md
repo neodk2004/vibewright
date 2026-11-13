@@ -12,6 +12,7 @@ Turn a one-line idea into a complete project roadmap – and build it with Claud
   <img src="https://img.shields.io/badge/powered%20by-Claude%20Code-9d8cff" alt="Claude Code">
   <img src="https://img.shields.io/badge/language-English%20%7C%20Deutsch-555" alt="English | Deutsch">
   <a href="https://github.com/neodk2004/vibewright/releases/latest"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fneodk2004%2Fvibewright%2Fmain%2F.github%2Fbadges%2Fvirustotal.json" alt="VirusTotal scan"></a>
+  <a href="https://dev.to/neodk/i-built-a-desktop-app-that-turns-a-one-line-idea-into-a-plan-and-lets-claude-code-build-it-6g4"><img src="https://img.shields.io/badge/dev.to-read%20the%20article-0A0A0A?logo=devdotto&logoColor=white" alt="Read the article on dev.to"></a>
 </p>
 
 <p align="center"><a href="https://ko-fi.com/E8R028M0YO"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a></p>
