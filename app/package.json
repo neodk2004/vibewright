@@ -33,6 +33,7 @@
       "!build/icon-bauen.js",
       "!dist/**",
       "!build/hinweise-bauen.js",
+      "!build/website-de-bauen.js",
       "!build/installer-bilder.js",
       "!build/*.bmp",
       "!build/background*.png",
