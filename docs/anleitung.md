@@ -101,7 +101,7 @@ Oben der **nächste Schritt**, in der Mitte die aktuelle **Phase** mit Checklist
 3. Vibewright schreibt eine **`CLAUDE.md`** mit Projekt, Unterlagen, aktueller Phase, nächstem Schritt und Regeln. Eigene Inhalte einer vorhandenen `CLAUDE.md` bleiben erhalten.
 4. **Claude Code startet im Terminal in der App.** Beim ersten Mal fragt Claude, ob du dem Ordner vertraust (Pfeiltasten + Enter).
 
-Während Claude arbeitet: Rückfragen und Freigaben beantwortest du **im Terminal per Tastatur**. Neben **Umsetzung** kreist ein Orb, solange Claude arbeitet, und zeigt **„wartet auf dich“**, wenn du dran bist. Erledigte Schritte hakt Claude ab, die Checkliste rechts zieht live mit. **Zum Cockpit** lässt Claude weiterlaufen, **Sitzung beenden** stoppt ihn. Es läuft immer eine Sitzung gleichzeitig.
+Während Claude arbeitet: Rückfragen und Freigaben beantwortest du **im Terminal per Tastatur**. Neben **Umsetzung** kreist ein Orb, solange Claude arbeitet, und zeigt **„wartet auf dich“**, wenn du dran bist. Erledigte Schritte hakt Claude ab, die Checkliste rechts zieht live mit. **Zum Cockpit** lässt Claude weiterlaufen, **Sitzung beenden** stoppt ihn. Mehrere Projekte können gleichzeitig eine Sitzung haben, jede in ihrem eigenen Terminal.
 
 ## 11. „Mir ist noch was eingefallen“
 

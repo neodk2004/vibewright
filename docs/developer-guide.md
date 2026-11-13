@@ -104,9 +104,9 @@ Claude gets an inventory (Windows version, installed plugins from `~/.claude/plu
 
 - `claude-starten`: asks once for a code folder (code projects), optionally `git init` + first commit, writes the marked block in `CLAUDE.md` (`<!-- projekthelper:start/ende -->`, user content stays), then spawns Claude with node-pty.
 - The environment is cleaned of `CLAUDECODE` / `CLAUDE_CODE_*` variables so a session started from inside another Claude Code session behaves normally.
-- IPC: `pty-daten` (main → UI), `pty-eingabe`, `pty-groesse` (UI → main, fire-and-forget).
+- IPC: `pty-daten`, `pty-ende` (main → UI), `pty-eingabe`, `pty-groesse` (UI → main, fire-and-forget) – every message carries the project name as its first argument.
 - `fs.watch` on the task folder pushes `punkte-geaendert`; queued ideas are processed once the number of finished steps increases.
-- One session at a time – a deliberate simplification, marked in the code; parallel sessions can be added when needed.
+- Several sessions at once (since 0.2.9): `sitzungen` in `main.js` is a `Map` of project name → `{ pty, watcher, … }`, the UI keeps one xterm per project (`terms`). `sitzung` lists the running ones, `sitzung-beenden` stops one. Test with a dummy instead of real Claude: `npx electron test/parallel.js <finished project from test/e2e.js>`.
 - The "working" orb in the UI is driven by terminal output: data within the last 1.5 s = working.
 
 ### Settings

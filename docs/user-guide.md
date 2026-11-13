@@ -151,7 +151,7 @@ While Claude works:
 - When Claude finishes a step, it ticks it in the task file – the checklist on the right updates live.
 - **To the cockpit** or switching projects keeps Claude running (the project shows "● Claude is working"); **Back to the Claude session** returns. **End session** stops Claude.
 
-One Claude session can run at a time.
+Several projects can each run a Claude session at the same time, each in its own terminal.
 
 ## 11. "I just had another idea"
 
