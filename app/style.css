@@ -191,7 +191,8 @@ a[data-url]:hover{text-decoration:underline}
 /* Claude-Sitzung im eingebetteten Terminal */
 .arbeit{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;flex:1 !important;min-height:0}
 .term-rahmen{background:#0e0f11;border:1px solid var(--line);border-radius:var(--r);padding:10px 4px 4px 12px;min-height:0;min-width:0;display:flex}
-.term{flex:1;min-height:0;min-width:0}
+.term{flex:1;min-height:0;min-width:0;border-radius:6px;transition:box-shadow .2s}
+.term.drop{box-shadow:0 0 0 2px #9d8cff,0 0 24px #9d8cff55}
 .term .xterm{height:100%}
 .term .xterm-viewport::-webkit-scrollbar-thumb{background:#2a2c31}
 #arbeit-seite .fort{margin:0}

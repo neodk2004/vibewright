@@ -587,6 +587,8 @@ const gateAktionen = (st, ok, naechst) => [
 
 // Text mit anklickbaren https-Links (öffnen im Browser)
 const verlinke = (s) => esc(s).replace(/https:\/\/[^\s<)]+[^\s<).,;:]/g, (u) => `<a href="#" data-url="${u}">${u.replace(/^https:\/\/(www\.)?/, '')}</a>`);
+// Daneben fallengelassene Dateien nicht öffnen (sonst ersetzt Electron die App durch die Datei)
+['dragover', 'drop'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault()));
 document.addEventListener('click', (e) => { const a = e.target.closest('a[data-url]'); if (a) { e.preventDefault(); e.stopPropagation(); api.link(a.dataset.url); } });
 const phasenFarbe = (i) => FARBEN[(i * 3 + 3) % FARBEN.length]; // feste Farbe je Phase, gut unterscheidbar
 
@@ -789,6 +791,14 @@ function terminalFuer(name) {
   const fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
   term.onData((d) => api.senden('pty-eingabe', name, d));
+  // Dateien (z. B. Screenshots bei der Fehlersuche) hineinziehen: Pfad einfügen wie in Windows Terminal – Claude Code hängt Bilder dann an
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drop'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drop'));
+  box.addEventListener('drop', (e) => {
+    e.preventDefault(); box.classList.remove('drop');
+    const pfade = [...e.dataTransfer.files].map((f) => api.dateiPfad(f)).filter(Boolean).map((p) => (/\s/.test(p) ? `"${p}"` : p));
+    if (pfade.length) { term.paste(pfade.join(' ') + ' '); term.focus(); }
+  });
   new ResizeObserver(() => { if (box.isConnected && box.clientWidth) { fit.fit(); api.senden('pty-groesse', name, term.cols, term.rows); } }).observe(box);
   const t = { term, fit, box };
   terms.set(name, t);

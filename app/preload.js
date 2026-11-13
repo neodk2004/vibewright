@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const kanaele = ['start', 'ablage', 'obsidian-installieren', 'projekte', 'neu', 'laden', 'weiter', 'oeffnen', 'ordner',
   'aktualisieren', 'abhaken', 'claude-starten', 'link', 'sitzung', 'sitzung-beenden', 'idee', 'einstellungen', 'einstellung', 'git-identitaet', 'claude-anmelden', 'archivieren', 'loeschen', 'programmordner', 'update', 'fehler-melden', 'claude-sitzungen', 'limits', 'forge', 'forge-speichern', 'forge-repos', 'forge-klonen', 'regeln', 'regeln-speichern', 'pflege-pruefen', 'pflege-melden', 'pflege-uebernehmen', 'pflege-ignorieren'];
 const ereignisse = ['pty-daten', 'pty-ende', 'punkte-geaendert']; // Main → Oberfläche
@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('api', {
   on: (k, cb) => ereignisse.includes(k) && ipcRenderer.on(k, (_e, ...a) => cb(...a)),
   senden: (k, ...a) => senden.includes(k) && ipcRenderer.send(k, ...a),
   plattform: process.platform,
+  dateiPfad: (f) => webUtils.getPathForFile(f), // für Drag & Drop ins Terminal
 });

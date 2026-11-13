@@ -7,6 +7,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 ### Added
 - **macOS: tidy installer window:** the .dmg opens with a Vibewright background that shows where to drag the app ("Drag Vibewright to Applications").
 - **Imported projects skip unnecessary interviews:** for projects from GitHub, Gitea or Claude Code, Vibewright first reads the code folder (README, CLAUDE.md, project files, recent commits). If that already says enough, it goes straight to the needs analysis; otherwise Claude asks only what is missing, in a single round.
+- **Drag images into the Claude terminal:** drop a screenshot (or any file) onto the terminal, e.g. while hunting a bug – its path is inserted and Claude Code attaches the image. Files dropped elsewhere no longer replace the app window.
 - **macOS: clean up after installing:** on the first start of a new version, Vibewright offers to eject the .dmg and move it to the Trash (asks once; nothing happens if you click *Keep*).
 
 ## [0.3.0] – 2026-11-09
