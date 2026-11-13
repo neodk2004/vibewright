@@ -130,6 +130,19 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Added
+- **macOS: tidy installer window:** the .dmg opens with a Vibewright background that shows where to drag the app ("Drag Vibewright to Applications").
+- **Imported projects skip unnecessary interviews:** for projects from GitHub, Gitea or Claude Code, Vibewright first reads the code folder (README, CLAUDE.md, project files, recent commits). If that already says enough, it goes straight to the needs analysis; otherwise Claude asks only what is missing, in a single round.
+- **Drag images into the Claude terminal:** drop a screenshot (or any file) onto the terminal, e.g. while hunting a bug – its path is inserted and Claude Code attaches the image. Files dropped elsewhere no longer replace the app window.
+- **Multiple-choice questions are easier to spot:** when several answers are allowed, every answer shows a checkbox and a highlighted badge "Multiple answers allowed" appears below the question.
+- **macOS: clean up after installing:** on the first start of a new version, Vibewright offers to eject the .dmg and move it to the Trash (asks once; nothing happens if you click *Keep*).
+
+#### Fixed
+- English interface: the phase details showed the effort in German ("Effort mittel"), and Claude sometimes named the area of a phase in German.
+- Fresh screenshots in the README.
+
 #### 0.3.0 – 2026-11-09
 
 #### Added
@@ -143,11 +156,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Added
 - **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
-
-#### 0.2.8 – 2026-11-06
-
-#### Fixed
-- **Update notice did not appear in some networks:** if the GitHub API does not answer (for example because its limit of 60 requests per hour is used up on a shared network), Vibewright now checks the normal release page instead.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
