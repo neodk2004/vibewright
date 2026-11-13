@@ -70,7 +70,7 @@ const UI_EN = {
   'Das hat nicht geklappt': 'That did not work', 'Der Stand ist gespeichert. Du kannst es jetzt oder später erneut versuchen.': 'Your progress is saved. You can try again now or later.',
   'Erneut versuchen': 'Try again',
   // Interview
-  'Oder eigene Antwort eintippen …': 'Or type your own answer …',
+  'Oder eigene Antwort eintippen …': 'Or type your own answer …', 'Mehrere Antworten möglich': 'Multiple answers allowed',
   // Freigaben
   'Was soll anders sein?': 'What should be different?', 'Ändern lassen': 'Request changes', 'Passt so': 'Looks good', 'Plan freigeben': 'Approve plan',
   'Ziel': 'Goal', 'Machbarkeit': 'Feasibility', 'Rahmen': 'Scope', 'Muss': 'Must-have', 'Kann später': 'Later', 'Nicht-Ziele': 'Non-goals', 'Risiken': 'Risks',

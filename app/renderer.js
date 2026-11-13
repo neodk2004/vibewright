@@ -544,10 +544,11 @@ function fragen(st) {
     const f = fr[i], a = ant[i];
     ansicht(st, `<div class="frage">
       <div class="row" style="display:flex;justify-content:space-between;align-items:center">
-        <span class="label">Runde ${runde} · Frage ${i + 1} von ${fr.length}${f.mehrfach ? ' · mehrere möglich' : ''}</span>
+        <span class="label">Runde ${runde} · Frage ${i + 1} von ${fr.length}</span>
         <span class="punkte">${fr.map((_x, j) => `<i class="${j === i ? 'on' : j < i ? 'done' : ''}"></i>`).join('')}</span></div>
       <div class="q">${esc(f.frage)}</div>
-      <div class="opts">${f.optionen.map((op, j) => `<button class="opt ${a.wahl.includes(op) ? 'on' : ''}" data-j="${j}"><kbd>${j + 1}</kbd><span>${esc(op)}</span></button>`).join('')}</div>
+      ${f.mehrfach ? '<span class="mehr-tag">Mehrere Antworten möglich</span>' : ''}
+      <div class="opts${f.mehrfach ? ' mehr' : ''}">${f.optionen.map((op, j) => `<button class="opt ${a.wahl.includes(op) ? 'on' : ''}" data-j="${j}"><kbd>${j + 1}</kbd><span>${esc(op)}</span></button>`).join('')}</div>
       <input type="text" id="eigen" placeholder="Oder eigene Antwort eintippen …" value="${esc(a.eigen)}">
     </div>`, [
       { text: 'Zurück', ghost: true, klick: () => (i > 0 ? (i--, male()) : null) },

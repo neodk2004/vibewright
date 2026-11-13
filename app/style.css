@@ -94,6 +94,11 @@ kbd{font:11px/1 ui-monospace,Consolas,monospace;border:1px solid var(--line);bor
 .opt:hover{border-color:var(--faint)}
 .opt.on{border-color:var(--accent);background:var(--accent-soft)}
 .opt kbd{flex:none}
+/* Mehrfachauswahl: Kästchen zum Abhaken + Abzeichen, damit man es nicht übersieht */
+.mehr-tag{align-self:flex-start;margin-top:-8px;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font:600 12.5px/1 "Segoe UI",system-ui,sans-serif;animation:ring 1.2s .4s 2}
+.mehr-tag::before{content:"☑ "}
+.opts.mehr .opt::before{content:"";flex:none;width:18px;height:18px;border:2px solid var(--faint);border-radius:5px;box-sizing:border-box;display:grid;place-items:center;font:700 12px/1 system-ui;transition:background .15s,border-color .15s}
+.opts.mehr .opt.on::before{content:"✓";background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .punkte{display:flex;gap:6px}
 .punkte i{width:22px;height:3px;border-radius:2px;background:var(--line)}
 .punkte i.on{background:var(--accent)} .punkte i.done{background:var(--muted)}
