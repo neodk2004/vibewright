@@ -939,6 +939,7 @@ Nächster offener Schritt: ${naechster}` : 'Alle Phasen sind erledigt. Frag den 
 - Arbeite die Checkliste der aktuellen Phase Schritt für Schritt ab, beginnend beim nächsten offenen Schritt.
 - Der Nutzer ist Entscheider, kein Profi: erkläre kurz und einfach, frag vor größeren Entscheidungen.
 - Ist ein Schritt erledigt, setze in der Phasen-Datei oben \`- [ ]\` auf \`- [x]\`. Die App liest das und aktualisiert Fortschritt und Dashboard.
+- Hake einen Schritt erst ab, wenn du ihn geprüft hast (bei Code: Tests oder Programm laufen lassen; sonst: Datei bzw. Ergebnis ist wirklich da). Nenne dem Nutzer kurz den Beweis. Klappt die Prüfung nicht, bleibt der Schritt offen und du sagst das ehrlich.
 - Installiere nichts ohne ausdrückliches Ja des Nutzers. Nur offizielle Quellen.${fs.existsSync(path.join(arbeitsordner(info, st) || '', '.git')) ? `
 - Dieser Ordner ist ein Git-Projekt: Mach nach jedem erledigten Schritt einen Commit mit kurzer deutscher Beschreibung (z. B. „Schritt erledigt: …“). So kann der Nutzer jederzeit zurück. Pushe nur, wenn der Nutzer es möchte.
 - Steht in einem Schritt „GitHub-Issue #Nummer“, schreib „Fixes #Nummer“ in die Commit-Nachricht – nach dem Push schließt sich das Issue dann von selbst.` : ''}
