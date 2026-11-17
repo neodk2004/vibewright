@@ -134,13 +134,20 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
-#### Unreleased
+#### 0.3.1 – 2026-11-17
+
+#### Added
+- **Import a project from your own folder:** *New project → From a folder* takes any existing code folder – on this computer, an external drive, a USB stick, a NAS or a network drive. Vibewright reads it before the interview and plans from there; nothing is copied, and deleting the project in Vibewright never touches the folder.
+
+#### Changed
+- **Larger window at startup:** Vibewright now opens 15 % larger (up to 1380×897), but never larger than the screen.
 
 #### Fixed
 - **Content was cut off in small windows** (#3): cards in the needs analysis and in Settings now scroll when the window is too small, so every entry and button stays reachable (e.g. the "Scope" card, the 7th must-have, *GitHub / Gitea*).
 - **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.
 - **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
 - **File list of imported code folders depended on the operating system** (#8): the overview Claude reads before the interview now lists files alphabetically (case-insensitive) on every OS, so the same first 40 files are chosen everywhere; `npm test` is green on macOS again.
+- **Settings footer links wrapped onto two lines in small windows** (#5): the buttons in the bottom bar now always stay on one line; only the info text wraps.
 
 #### 0.3.0 – 2026-11-13
 
