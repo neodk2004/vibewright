@@ -9,6 +9,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 - **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.
 - **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
 - **File list of imported code folders depended on the operating system** (#8): the overview Claude reads before the interview now lists files alphabetically (case-insensitive) on every OS, so the same first 40 files are chosen everywhere; `npm test` is green on macOS again.
+- **Settings footer links wrapped onto two lines in small windows** (#5): the buttons in the bottom bar now always stay on one line; only the info text wraps.
 
 ## [0.3.0] – 2026-11-13
 
