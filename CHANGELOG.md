@@ -2,6 +2,13 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Content was cut off in small windows** (#3): cards in the needs analysis and in Settings now scroll when the window is too small, so every entry and button stays reachable (e.g. the "Scope" card, the 7th must-have, *GitHub / Gitea*).
+- **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.
+- **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
+
 ## [0.3.0] – 2026-11-13
 
 ### Added
