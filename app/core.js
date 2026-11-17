@@ -405,7 +405,7 @@ async function ask(st, prompt, schema) {
 async function repoSteckbrief(ordner) {
   const lese = (f, max) => { try { return fs.readFileSync(path.join(ordner, f), 'utf8').slice(0, max).trim(); } catch { return ''; } };
   let dateien;
-  try { dateien = fs.readdirSync(ordner).filter((f) => !f.startsWith('.') || f === '.github'); } catch { return ''; }
+  try { dateien = fs.readdirSync(ordner).filter((f) => !f.startsWith('.') || f === '.github').sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })); } catch { return ''; } // sortiert: readdir-Reihenfolge ist je System anders (#8)
   const teile = [`Dateien im Hauptordner: ${dateien.slice(0, 40).join(', ')}${dateien.length > 40 ? ' …' : ''}`];
   const readme = dateien.find((f) => /^readme(\.|$)/i.test(f));
   const manifeste = ['package.json', 'pyproject.toml', 'requirements.txt', 'Cargo.toml', 'go.mod', 'platformio.ini', 'composer.json', 'pom.xml', 'build.gradle'];
