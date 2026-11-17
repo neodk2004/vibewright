@@ -176,12 +176,12 @@ ul.liste li::before{content:"";width:5px;height:5px;border-radius:50%;background
 .hinweis-tag{display:inline-block;vertical-align:middle;margin-left:8px;font:600 11px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.02em;
   color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:99px;padding:4px 9px}
 /* Karten mit Farbstreifen (Feedback Bild 04–08) */
-.karte{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--ak,var(--line));border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-height:0}
+.karte{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--ak,var(--line));border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden auto} /* scrollt, wenn das Fenster zu klein ist (#3) */
 .karte.voll{flex:1}
 .karte p{margin:0}
 .zwei .spalte,.cockpit .spalte{gap:12px}
 .karte .tabs{margin:-4px -4px 0}
-.karte #tab{overflow:hidden;min-height:0}
+.karte #tab{overflow-y:auto;min-height:0}
 .phase{border-top:3px solid var(--ak)}
 .phase .nr{color:var(--ak)}
 .wz-liste{display:flex;flex-direction:column;gap:8px}
