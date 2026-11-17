@@ -328,7 +328,7 @@ if (process.env.KPH_THEME) nativeTheme.themeSource = process.env.KPH_THEME; // T
 function fenstergroesse() {
   if (process.env.KPH_GROESSE) { const [width, height] = process.env.KPH_GROESSE.split('x').map(Number); return { width, height }; }
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  return { width: Math.min(1200, Math.round(width * 0.92)), height: Math.min(780, Math.round(height * 0.92)) };
+  return { width: Math.min(1380, Math.round(width * 0.92)), height: Math.min(897, Math.round(height * 0.92)) }; // 1200×780 + 15 %, nie größer als der Bildschirm
 }
 // macOS: Nach der Installation aus der .dmg einmal pro Version anbieten, das Abbild auszuwerfen und in den Papierkorb zu legen.
 // Läuft die App noch direkt aus der .dmg (/Volumes/…), wird nichts gefragt.
