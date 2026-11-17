@@ -361,7 +361,7 @@ function neuesProjekt(v = {}) {
     <textarea id="idee" rows="2" placeholder="Deine Idee in einem Satz">${esc(v.idee)}</textarea>
     ${importOrdner ? `<p class="muted klein pfad"><span>Code-Ordner:</span> ${esc(importOrdner)}</p>` : ''}
     <div class="ablauf"><span>Interview</span><span>Bedarfsanalyse</span><span>Plan</span><span>Werkzeug-Check</span><span>Umsetzung</span></div>
-    </div></div>`, [{ text: 'Aus Claude Code übernehmen', ghost: true, klick: claudeImport }, { text: 'Aus GitHub / Gitea', ghost: true, klick: forgeImport }, 'sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
+    </div></div>`, [{ text: 'Aus Claude Code übernehmen', ghost: true, klick: claudeImport }, { text: 'Aus GitHub / Gitea', ghost: true, klick: forgeImport }, { text: 'Aus eigenem Ordner', ghost: true, klick: ordnerImport }, 'sp', { text: 'Los geht\'s', primary: true, klick: anlegen }]);
   $('#name').focus();
   $('#idee').addEventListener('keydown', (e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), anlegen()));
 }
@@ -376,6 +376,11 @@ async function claudeImport() {
     <div class="import-liste">${liste.length ? liste.map((s, i) => `<button class="opt" data-i="${i}" title="${esc(s.ordner)}"><span class="imp"><span><b>${esc(s.name)}</b> <span class="muted klein">${datum(s.zeit)}</span></span><span class="muted klein">${esc(s.idee || s.ordner)}</span></span></button>`).join('')
     : '<p class="muted">Keine früheren Claude-Code-Sitzungen gefunden.</p>'}</div></div></div>`, [{ text: 'Zurück', ghost: true, klick: () => neuesProjekt() }]);
   $$('.import-liste .opt').forEach((b) => (b.onclick = () => neuesProjekt(liste[b.dataset.i])));
+}
+// Eigener Ordner (Festplatte, USB, NAS): Name aus dem Ordner, Idee vorbelegt – beides vor „Los geht's“ änderbar
+async function ordnerImport() {
+  const r = await api['ordner-importieren']();
+  if (r && !r.fehler) neuesProjekt(r);
 }
 // GitHub / Gitea: Repository aussuchen, in einen Code-Ordner klonen, dann wie gewohnt planen
 async function forgeImport() {

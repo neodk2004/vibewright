@@ -32,7 +32,7 @@ const UI_EN = {
   'Wähle einen Ordner, in dem du schon mit Claude Code gearbeitet hast. Vibewright plant von dort aus weiter.': 'Pick a folder you already worked on with Claude Code. Vibewright plans onward from there.',
   'Keine früheren Claude-Code-Sitzungen gefunden.': 'No earlier Claude Code sessions found.', 'Der Ordner wurde nicht gefunden.': 'The folder was not found.',
   // GitHub / Gitea
-  'Aus GitHub / Gitea': 'From GitHub / Gitea', 'Aus GitHub übernehmen': 'Import from GitHub', 'Aus Gitea übernehmen': 'Import from Gitea',
+  'Aus GitHub / Gitea': 'From GitHub / Gitea', 'Aus eigenem Ordner': 'From a folder','Aus GitHub übernehmen': 'Import from GitHub', 'Aus Gitea übernehmen': 'Import from Gitea',
   'Wähle ein Repository. Vibewright lädt den Code in einen Ordner deiner Wahl und plant von dort aus weiter.': 'Pick a repository. Vibewright downloads the code into a folder of your choice and plans onward from there.',
   'Keine Repositories gefunden.': 'No repositories found.', 'privat': 'private', 'Konto ändern': 'Change account',
   'Repositories werden geladen …': 'Loading repositories …', 'Repository wird geladen …': 'Downloading repository …',

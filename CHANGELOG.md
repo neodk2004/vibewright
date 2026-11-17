@@ -4,6 +4,9 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- **Import a project from your own folder:** *New project → From a folder* takes any existing code folder – on this computer, an external drive, a USB stick, a NAS or a network drive. Vibewright reads it before the interview and plans from there; nothing is copied, and deleting the project in Vibewright never touches the folder.
+
 ### Fixed
 - **Content was cut off in small windows** (#3): cards in the needs analysis and in Settings now scroll when the window is too small, so every entry and button stays reachable (e.g. the "Scope" card, the 7th must-have, *GitHub / Gitea*).
 - **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.

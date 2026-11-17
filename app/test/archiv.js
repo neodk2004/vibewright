@@ -33,6 +33,17 @@ const core = require('../core');
   core.loeschen(info, 'Weg');
   assert.ok(!fs.existsSync(path.join(ablage, 'Weg')));
 
+  // Eigener Ordner (z. B. NAS): wird als Code-Ordner übernommen und beim Löschen des Projekts nie angefasst
+  const fremd = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-fremd-'));
+  fs.writeFileSync(path.join(fremd, 'main.py'), 'print(1)\n');
+  const st = core.neu(info, 'Fremd', 'Idee', fremd);
+  assert.deepStrictEqual([st.repo, st.projekttyp], [fremd, 'code']);
+  assert.match(await core.repoSteckbrief(fremd), /main\.py/);
+  core.loeschen(info, 'Fremd');
+  assert.ok(fs.existsSync(path.join(fremd, 'main.py')));
+  assert.throws(() => core.neu(info, 'Weg2', 'Idee', path.join(fremd, 'fehlt')), /nicht gefunden/);
+  fs.rmSync(fremd, { recursive: true });
+
   fs.rmSync(ablage, { recursive: true });
   console.log('archiv.js ok');
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -172,7 +172,8 @@ ul.liste li::before{content:"";width:5px;height:5px;border-radius:50%;background
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 ::-webkit-scrollbar-track{background:transparent}
-.box-akt{display:flex;gap:8px;align-items:center;margin-top:8px}
+.box-akt{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.box-akt .btn{white-space:nowrap} /* ganze Knöpfe rutschen in die nächste Reihe, statt in sich umzubrechen */
 .box-akt .sp{flex:1}
 .hinweis-tag{display:inline-block;vertical-align:middle;margin-left:8px;font:600 11px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.02em;
   color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:99px;padding:4px 9px}
