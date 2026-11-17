@@ -134,6 +134,13 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Fixed
+- **Content was cut off in small windows** (#3): cards in the needs analysis and in Settings now scroll when the window is too small, so every entry and button stays reachable (e.g. the "Scope" card, the 7th must-have, *GitHub / Gitea*).
+- **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.
+- **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
+
 #### 0.3.0 – 2026-11-13
 
 #### Added
@@ -154,11 +161,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Added
 - **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
-
-#### 0.2.8 – 2026-11-06
-
-#### Fixed
-- **Update notice did not appear in some networks:** if the GitHub API does not answer (for example because its limit of 60 requests per hour is used up on a shared network), Vibewright now checks the normal release page instead.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
