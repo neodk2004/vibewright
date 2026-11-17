@@ -375,7 +375,7 @@ app.whenReady().then(() => {
     setTimeout(() => { win.show(); splash.destroy(); setTimeout(() => dmgAufraeumen(win), 800); }, 300);
   });
   // Für Tests: SCREENSHOT=pfad.png speichert nach dem Laden ein Bild und beendet die App
-  if (process.env.SCREENSHOT) win.webContents.on('console-message', (_e, _l, msg, line, src) => console.log(`[ui] ${msg} (${src}:${line})`));
+  if (process.env.SCREENSHOT) win.webContents.on('console-message', ({ message, lineNumber, sourceId }) => console.log(`[ui] ${message} (${sourceId}:${lineNumber})`));
   if (process.env.SCREENSHOT) win.webContents.on('did-finish-load', () => setTimeout(async () => {
     if (process.env.SCREENSHOT_JS) { await win.webContents.executeJavaScript(process.env.SCREENSHOT_JS); await new Promise((r) => setTimeout(r, 1500)); }
     fs.writeFileSync(process.env.SCREENSHOT, (await win.webContents.capturePage()).toPNG());
