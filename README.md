@@ -134,11 +134,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
-#### Unreleased
-
-#### Fixed
-- **macOS: subscription usage (5 h / week) was not shown** (#10): if the keychain held an old Claude Code entry besides the current one, Vibewright read the old, expired token. It now reads the entry of the current user first.
-
 #### 0.3.1 – 2026-11-17
 
 #### Added
@@ -153,6 +148,7 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
 - **File list of imported code folders depended on the operating system** (#8): the overview Claude reads before the interview now lists files alphabetically (case-insensitive) on every OS, so the same first 40 files are chosen everywhere; `npm test` is green on macOS again.
 - **Settings footer links wrapped onto two lines in small windows** (#5): the buttons in the bottom bar now always stay on one line; only the info text wraps.
+- **macOS: subscription usage (5 h / week) was not shown** (#10): if the keychain held an old Claude Code entry besides the current one, Vibewright read the old, expired token. It now reads the entry of the current user first.
 
 #### 0.3.0 – 2026-11-13
 
@@ -169,6 +165,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - The sidebar showed "100 % · Phase 0" for finished projects; it now says "Done · Maintenance".
 - English interface: the phase details showed the effort in German ("Effort mittel"), and Claude sometimes named the area of a phase in German.
 - Fresh screenshots in the README.
+
+#### 0.2.9 – 2026-11-08
+
+#### Added
+- **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
