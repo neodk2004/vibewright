@@ -49,7 +49,10 @@ for (const sprache of ['de', 'en']) {
   fs.writeFileSync(path.join(daten, 'einstellungen.json'), JSON.stringify({ modus: 'lokal', ablage, sprache }));
   for (const [ansicht, js] of Object.entries(ansichten)) {
     const env = { ...process.env, KPH_USERDATA: daten, KPH_GROESSE: '960x580', SCREENSHOT: path.join(basis, `${ansicht}-${sprache}.png`), SCREENSHOT_DELAY: '1500',
-      SCREENSHOT_JS: `${MESSEN}; (async () => { await ${js}; await new Promise((r) => setTimeout(r, 2500)); __messen(); })()` }; // 2,5 s: Einblend-Animation abwarten
+      // Einblend-Animationen abwarten (feste Zeit war unter Last zu knapp); endlose wie Spinner nicht mitzählen
+      SCREENSHOT_JS: `${MESSEN}; (async () => { await ${js}; await new Promise((r) => setTimeout(r, 2500));
+        const fertig = Promise.allSettled(document.getAnimations().filter((a) => a.effect.getTiming().iterations !== Infinity).map((a) => a.finished));
+        await Promise.race([fertig, new Promise((r) => setTimeout(r, 8000))]); __messen(); })()` };
     const r = spawnSync(electron, ['.'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8', timeout: 60000 });
     const zeile = (r.stdout || '').split('\n').find((z) => z.includes('MESSUNG '));
     assert.ok(zeile, `${ansicht}/${sprache}: keine Messung (Exit ${r.status}, ${r.error || ''})`);
