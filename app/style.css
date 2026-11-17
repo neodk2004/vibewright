@@ -308,9 +308,9 @@ a[data-url]:hover{text-decoration:underline}
 .einst .pfad{font-size:12px}
 .klein{font-size:12px}
 .unten{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px} /* minmax: sonst sprengt „gründlichsten“ die Karte (#4) */
 .seg button{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:var(--r);padding:8px;text-align:center;display:flex;flex-direction:column;gap:2px;font-weight:600;transition:border-color .18s,background .18s}
-.seg button small{font-weight:400;font-size:11px;color:var(--muted)}
+.seg button small{font-weight:400;font-size:11px;color:var(--muted);hyphens:auto;overflow-wrap:anywhere}
 .seg button:hover{border-color:var(--faint)}
 .seg button.on{border-color:var(--accent);background:var(--accent-soft)}
 .schalter{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:4px}
