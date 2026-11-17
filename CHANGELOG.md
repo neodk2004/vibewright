@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.1] – 2026-11-17
 
 ### Added
 - **Import a project from your own folder:** *New project → From a folder* takes any existing code folder – on this computer, an external drive, a USB stick, a NAS or a network drive. Vibewright reads it before the interview and plans from there; nothing is copied, and deleting the project in Vibewright never touches the folder.
