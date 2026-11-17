@@ -123,7 +123,7 @@ handle('obsidian-installieren', async () => {
 handle('projekte', () => core.projekte(info()));
 handle('neu', (name, idee, repo) => core.neu(info(), name, idee, repo));
 handle('claude-sitzungen', () => core.claudeSitzungen());
-// Vorhandenen Code-Ordner übernehmen – auch externe Festplatte, NAS oder Netzlaufwerk; wird nur gelesen, nichts kopiert
+// Vorhandenen Code-Ordner übernehmen – auch externe Festplatte, NAS oder Netzlaufwerk; nichts wird kopiert (nur git init, wenn „Git automatisch“ an ist)
 handle('ordner-importieren', async () => {
   const s = lies(), en = s.sprache === 'en';
   const r = await dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), { title: en ? 'Choose your project folder' : 'Projektordner wählen', defaultPath: s.codeOrdner || DOKUMENTE, properties: ['openDirectory'] });
