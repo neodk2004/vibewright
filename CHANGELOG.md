@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Header status wrapped onto two lines in small windows** (#12): "wartet auf dich" / "Claude arbeitet …" next to the steps now stays on one line; the connectors between the steps get shorter instead.
+
 ## [0.3.1] – 2026-11-17
 
 ### Added
