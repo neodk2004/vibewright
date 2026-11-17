@@ -67,9 +67,11 @@ async function checks() {
 const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 async function claudeLimits() {
   let roh;
+  // macOS: Es kann mehrere Einträge dieses Namens geben (alte mit Konto „unknown“) – zuerst den des eigenen Benutzers lesen (#10)
+  const schluessel = (...konto) => require('child_process').execFileSync('security', ['find-generic-password', '-s', 'Claude Code-credentials', ...konto, '-w'], { timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
   try {
-    roh = MAC ? require('child_process').execFileSync('security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { timeout: 4000 }).toString()
-      : fs.readFileSync(path.join(CLAUDE_DIR, '.credentials.json'), 'utf8');
+    if (!MAC) roh = fs.readFileSync(path.join(CLAUDE_DIR, '.credentials.json'), 'utf8');
+    else try { roh = schluessel('-a', os.userInfo().username); } catch { roh = schluessel(); }
   } catch { return null; }
   const o = JSON.parse(roh).claudeAiOauth;
   if (!o?.accessToken || o.expiresAt < Date.now()) return null;
