@@ -626,7 +626,7 @@ function analyse(st) {
 function phaseDetail(st, p, i) {
   const ov = $('#overlay');
   ov.innerHTML = `<div class="karte" style="--ak:${phasenFarbe(i)}"><span class="label">Phase ${i + 1} · ${esc(p.bereich)} · Aufwand ${esc(p.aufwand)}</span><h3>${esc(p.titel)}</h3>
-    <p>${esc(p.ziel)}</p><span class="label">Schritte</span><ol>${p.checkliste.map((c) => `<li>${verlinke(c)}</li>`).join('')}</ol>
+    <p>${esc(p.ziel)}</p><span class="label">Schritte</span><ol>${p.checkliste.map((c, j) => `<li>${p.done?.[j] ? '✓ ' : ''}${verlinke(c)}</li>`).join('')}</ol>
     <span class="label">Fertig, wenn</span><p>${esc(p.fertig_wenn)}</p></div>`;
   ov.hidden = false;
   ov.onclick = (e) => !e.target.closest('a') && (ov.hidden = true);
@@ -637,7 +637,7 @@ function plan(st) {
       <span class="nr">${String(i + 1).padStart(2, '0')}</span><h3>${esc(p.titel)}</h3>
       <div><span class="chip">${esc(p.aufwand)}</span> <span class="chip">${esc(p.bereich)}</span></div>
       <p>${esc(p.ziel)}</p>
-      <span class="label">Schritte</span><ol>${p.checkliste.map((c) => `<li>${esc(c)}</li>`).join('')}</ol>
+      <span class="label">Schritte</span><ol>${p.checkliste.map((c, j) => `<li>${p.done?.[j] ? '✓ ' : ''}${esc(c)}</li>`).join('')}</ol>
     </div>`).join('')}</div>`, gateAktionen(st, 'Plan freigeben', 'Claude prüft Werkzeuge und Erweiterungen …'));
   $$('.phase').forEach((el) => (el.onclick = () => phaseDetail(st, st.plan.phasen[el.dataset.i], Number(el.dataset.i))));
 }

@@ -38,7 +38,26 @@ const core = require('../core');
   fs.writeFileSync(path.join(fremd, 'main.py'), 'print(1)\n');
   const st = core.neu(info, 'Fremd', 'Idee', fremd);
   assert.deepStrictEqual([st.repo, st.projekttyp], [fremd, 'code']);
-  assert.match(await core.repoSteckbrief(fremd), /main\.py/);
+  // Doku wird mitgelesen (Stand-Dateien zuerst), Abhängigkeits-Ordner nicht
+  fs.mkdirSync(path.join(fremd, 'docs', 'wiki'), { recursive: true });
+  fs.mkdirSync(path.join(fremd, 'node_modules', 'x'), { recursive: true });
+  fs.writeFileSync(path.join(fremd, 'docs', 'wiki', 'Aufbau.md'), 'Sensor angeschlossen\n');
+  fs.writeFileSync(path.join(fremd, 'docs', 'Stand.md'), 'Phase 1 fertig\n');
+  fs.writeFileSync(path.join(fremd, 'node_modules', 'x', 'README.md'), 'fremdes Paket\n');
+  const sb = await core.repoSteckbrief(fremd);
+  assert.match(sb, /main\.py/);
+  assert.match(sb, /Doku-Dateien: docs\/Stand\.md, docs\/wiki\/Aufbau\.md/);
+  assert.match(sb, /--- docs\/wiki\/Aufbau\.md ---\nSensor angeschlossen/);
+  assert.ok(!sb.includes('fremdes Paket'));
+
+  // Schon Erledigtes aus dem Plan bleibt beim Werkzeug-Check erhalten (auch wenn ein Installationsschritt davor rutscht)
+  const phase = (t, done) => ({ titel: t, bereich: 'Software', aufwand: 'klein', ziel: 'z', fertig_wenn: 'f', checkliste: ['a', 'b', 'c'], done });
+  Object.assign(st, { plan: { einzeiler: 'e', phasen: [phase('Eins', [true, true, true]), phase('Zwei', [true, false, false]), phase('Drei', [false, false, false])] },
+    werkzeug: { plan_korrekturen: [], eintraege: [{ bedarf: 'Python', phase: 2, art: 'system', status: 'fehlt', quelle: 'https://python.org', empfehlung: 'x', aktion: 'installieren' }] } });
+  core.spiegel(info, st, [0]);
+  assert.deepStrictEqual(st.plan.phasen.map((p) => p.status), ['erledigt', 'in-arbeit', 'offen']);
+  assert.deepStrictEqual(st.plan.phasen[1].done, [false, true, false, false]);
+  assert.strictEqual(st.stand.naechster, 'Python installieren (https://python.org)');
   core.loeschen(info, 'Fremd');
   assert.ok(fs.existsSync(path.join(fremd, 'main.py')));
   assert.throws(() => core.neu(info, 'Weg2', 'Idee', path.join(fremd, 'fehlt')), /nicht gefunden/);

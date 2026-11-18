@@ -369,7 +369,8 @@ const S_PLAN = {
     phasen: { type: 'array', minItems: 3, maxItems: 6, items: { type: 'object',
       required: ['titel', 'bereich', 'aufwand', 'ziel', 'fertig_wenn', 'checkliste'],
       properties: { titel: { type: 'string' }, bereich: { type: 'string' }, aufwand: { enum: ['klein', 'mittel', 'groß'] },
-        ziel: { type: 'string' }, fertig_wenn: { type: 'string' }, checkliste: { type: 'array', minItems: 3, maxItems: 8, items: { type: 'string' } } } } },
+        ziel: { type: 'string' }, fertig_wenn: { type: 'string' }, checkliste: { type: 'array', minItems: 3, maxItems: 8, items: { type: 'string' } },
+        schon_erledigt: { type: 'array', items: { type: 'integer' } } } } }, // nur bei bestehenden Projekten: Nummern der Schritte, die schon fertig sind
   },
 };
 const S_WERKZEUG = {
@@ -415,9 +416,32 @@ async function repoSteckbrief(ordner) {
     const t = f && lese(f, max);
     if (t) teile.push(`--- ${f} ---\n${t}`);
   }
+  // Doku (docs/, wiki/, Obsidian-Notizen, CHANGELOG …): zeigt den aktuellen Stand – Fortschritts-Dateien zuerst, dann die neuesten
+  const doku = dokuDateien(ordner).filter((f) => f !== readme && f !== 'CLAUDE.md');
+  if (doku.length) teile.push(`Doku-Dateien: ${doku.slice(0, 30).join(', ')}${doku.length > 30 ? ' …' : ''}`);
+  for (const f of doku.slice(0, 8)) { const t = lese(f, 1500); if (t) teile.push(`--- ${f} ---
+${t}`); }
   const log = await run('git', ['-C', ordner, 'log', '--oneline', '-15']);
   if (log.code === 0 && log.out.trim()) teile.push(`--- letzte Commits ---\n${log.out.trim()}`);
   return teile.join('\n\n');
+}
+
+// .md/.txt bis 3 Ebenen tief, ohne Abhängigkeits- und Build-Ordner; sortiert: Stand/Changelog/Todo/Plan zuerst, dann neueste
+const DOKU_SKIP = /^(node_modules|vendor|dist|build|out|target|venv|env|__pycache__)$/i;
+const DOKU_WICHTIG = /changelog|roadmap|todo|status|stand|fortschritt|progress|plan|dashboard|notes|notizen/i;
+function dokuDateien(ordner) {
+  const funde = [];
+  const gehe = (rel, tiefe) => {
+    let es; try { es = fs.readdirSync(path.join(ordner, rel), { withFileTypes: true }); } catch { return; }
+    for (const e of es) {
+      if (e.name.startsWith('.') || funde.length >= 200) continue;
+      const f = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) { if (tiefe < 3 && !DOKU_SKIP.test(e.name)) gehe(f, tiefe + 1); }
+      else if (/\.(md|txt)$/i.test(e.name) && !/^(license|licence|third_party|requirements)/i.test(e.name)) funde.push({ f, t: fs.statSync(path.join(ordner, f)).mtimeMs });
+    }
+  };
+  gehe('', 0);
+  return funde.sort((a, b) => DOKU_WICHTIG.test(b.f) - DOKU_WICHTIG.test(a.f) || b.t - a.t || a.f.localeCompare(b.f)).map((x) => x.f);
 }
 
 async function fragenRunde(st) {
@@ -450,9 +474,14 @@ async function analyse(st, wunsch) {
 async function plan(st, wunsch) {
   const prompt = wunsch
     ? `Änderungswunsch zum Plan: ${wunsch}\nGib den vollständigen überarbeiteten Plan zurück.`
-    : `Die Bedarfsanalyse ist freigegeben. Schritt: Plan mit 3–6 Phasen. Phase 1 = kleinster lauffähiger Stand. Pro Phase: titel (kurz, ohne Doppelpunkt), bereich (ein Wort in der Sprache des Nutzers, z. B. Software oder Hardware), aufwand, ziel (1 Satz), fertig_wenn (prüfbar), checkliste (3–8 konkrete Schritte). Schreibe alles auf Laien-Niveau passend zum Erfahrungsstand aus dem Interview: keine Befehle, Paketnamen oder Fachbegriffe ohne kurze Erklärung in Klammern; Programme werden über ihre offizielle Download-Seite installiert, nicht über winget oder die Kommandozeile. Dazu einzeiler: das Projekt in einem Satz (höchstens 120 Zeichen).`;
+    : `Die Bedarfsanalyse ist freigegeben. Schritt: Plan mit 3–6 Phasen. Phase 1 = kleinster lauffähiger Stand. Pro Phase: titel (kurz, ohne Doppelpunkt), bereich (ein Wort in der Sprache des Nutzers, z. B. Software oder Hardware), aufwand, ziel (1 Satz), fertig_wenn (prüfbar), checkliste (3–8 konkrete Schritte). Schreibe alles auf Laien-Niveau passend zum Erfahrungsstand aus dem Interview: keine Befehle, Paketnamen oder Fachbegriffe ohne kurze Erklärung in Klammern; Programme werden über ihre offizielle Download-Seite installiert, nicht über winget oder die Kommandozeile. Dazu einzeiler: das Projekt in einem Satz (höchstens 120 Zeichen).${st.repo ? `
+Das Projekt ist schon begonnen: Plane vom Anfang bis zum Ziel, auch was laut Code-Ordner, Doku und Commits (siehe oben) schon fertig ist. Trage pro Phase in schon_erledigt die Nummern (ab 1) der Schritte ein, die dort nachweislich erledigt sind – im Zweifel nicht. So beginnt die Umsetzung beim tatsächlichen Stand.` : ''}`;
   const d = await ask(st, prompt, S_PLAN);
-  d.phasen.forEach((p) => (p.titel = sauber(p.titel)));
+  d.phasen.forEach((p) => {
+    p.titel = sauber(p.titel);
+    p.done = p.checkliste.map((_c, j) => !!st.repo && (p.schon_erledigt || []).includes(j + 1));
+    delete p.schon_erledigt;
+  });
   st.plan = d;
   st.offen = { typ: 'gate', schritt: 'plan' };
 }
@@ -807,10 +836,10 @@ function spiegel(info, st, auswahl) {
     const punkt = st.sprache === 'en'
       ? (skill ? `Create your own project skill "${name}" (stage 2)` : `Install ${e.bedarf} (${e.quelle})`)
       : (skill ? `Eigenen Projekt-Skill „${name}“ anlegen (Etappe 2)` : `${e.bedarf} installieren (${e.quelle})`);
-    if (!p.checkliste.includes(punkt)) p.checkliste[skill ? 'push' : 'unshift'](punkt);
+    if (!p.checkliste.includes(punkt)) { p.checkliste[skill ? 'push' : 'unshift'](punkt); p.done?.[skill ? 'push' : 'unshift'](false); }
   }
   st.plan.phasen.forEach((p, i) => {
-    p.done = p.checkliste.map(() => false);
+    p.done = p.checkliste.map((_c, j) => !!p.done?.[j]); // bei übernommenen Projekten schon Erledigtes behalten
     p.status = i === 0 ? 'in-arbeit' : 'offen';
     schreibe(st, punktDatei(info, st, i), punktMd(st, p, i), 'utf8');
   });
