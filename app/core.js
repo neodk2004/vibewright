@@ -429,7 +429,7 @@ ${t}`); }
   return teile.join('\n\n');
 }
 
-// .md/.txt bis 3 Ebenen tief, ohne Abhängigkeits- und Build-Ordner; sortiert: Stand/Changelog/Todo/Plan zuerst, dann neueste
+// .md/.txt bis 3 Ebenen tief, ohne Abhängigkeits- und Build-Ordner und ohne Symlinks (ein geklontes Repo könnte sonst auf private Dateien zeigen); sortiert: Stand/Changelog/Todo/Plan zuerst, dann neueste
 const DOKU_SKIP = /^(node_modules|vendor|dist|build|out|target|venv|env|__pycache__)$/i;
 const DOKU_WICHTIG = /changelog|roadmap|todo|status|stand|fortschritt|progress|plan|dashboard|notes|notizen/i;
 function dokuDateien(ordner) {
@@ -440,7 +440,7 @@ function dokuDateien(ordner) {
       if (e.name.startsWith('.') || funde.length >= 200) continue;
       const f = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) { if (tiefe < 3 && !DOKU_SKIP.test(e.name)) gehe(f, tiefe + 1); }
-      else if (/\.(md|txt)$/i.test(e.name) && !/^(license|licence|third_party|requirements)/i.test(e.name)) funde.push({ f, t: fs.statSync(path.join(ordner, f)).mtimeMs });
+      else if (e.isFile() && /\.(md|txt)$/i.test(e.name) &&!/^(license|licence|third_party|requirements)/i.test(e.name)) funde.push({ f, t: fs.statSync(path.join(ordner, f)).mtimeMs });
     }
   };
   gehe('', 0);
