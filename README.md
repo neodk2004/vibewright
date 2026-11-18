@@ -134,6 +134,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Fixed
+- **Header status wrapped onto two lines in small windows** (#12): "wartet auf dich" / "Claude arbeitet …" next to the steps now stays on one line; the connectors between the steps get shorter instead.
+
 #### 0.3.1 – 2026-11-17
 
 #### Added
@@ -165,11 +170,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - The sidebar showed "100 % · Phase 0" for finished projects; it now says "Done · Maintenance".
 - English interface: the phase details showed the effort in German ("Effort mittel"), and Claude sometimes named the area of a phase in German.
 - Fresh screenshots in the README.
-
-#### 0.2.9 – 2026-11-08
-
-#### Added
-- **Several projects at the same time:** starting Claude in another project no longer ends the running session. Each project keeps its own terminal; the sidebar shows every project in which Claude is working. *End session* only stops the project you are looking at.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
