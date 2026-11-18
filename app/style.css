@@ -110,7 +110,7 @@ kbd{font:11px/1 ui-monospace,Consolas,monospace;border:1px solid var(--line);bor
 .block{display:flex;flex-direction:column;gap:6px}
 .block p{margin:0}
 dl.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:13px}
-dl.kv dt{color:var(--muted)} dl.kv dd{margin:0}
+dl.kv dt{color:var(--muted)} dl.kv dd{margin:0;overflow-wrap:anywhere} /* lange Wörter/URLs umbrechen statt am Kartenrand abschneiden (#14) */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
 .tabs button{all:unset;cursor:pointer;padding:7px 12px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
 .tabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
