@@ -77,7 +77,9 @@ const UI_EN = {
   'Schritte': 'Steps', 'Klicken für alle Schritte': 'Click for all steps', 'Fertig, wenn': 'Done when',
   'klein': 'small', 'mittel': 'medium', 'groß': 'large',
   // Werkzeuge
-  'Auf diesem Rechner': 'On this computer', 'Für Claude': 'For Claude', 'Nichts nötig.': 'Nothing needed.', 'Plan angepasst:': 'Plan adjusted:',
+  'Auf diesem Rechner': 'On this computer', 'Für Claude': 'For Claude', 'Nichts nötig.': 'Nothing needed.', 'Plan angepasst:': 'Plan adjusted:', 'Projekt eingelesen:': 'Project read in:',
+  'Die Bedarfsanalyse hat Vibewright selbst erstellt.': 'Vibewright created the needs analysis on its own.', 'Den Plan hat Vibewright aus deiner Doku übernommen.': 'Vibewright took the plan from your docs.',
+  'Claude liest den Projektordner und prüft, wie weit das Projekt ist …': 'Claude reads the project folder and checks how far the project is …',
   'vorhanden': 'available', 'fehlt': 'missing', 'nicht nötig': 'not needed', 'vormerken': 'note down',
   'Installiert wird nichts – Angehaktes kommt als Aufgabe in die passende Phase.': 'Nothing gets installed – checked items become tasks in the matching phase.',
   // Cockpit & Sitzung

@@ -5,7 +5,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 ## [Unreleased]
 
 ### Added
-- **Imported projects start where they really are**: when importing from GitHub / Gitea, Claude Code or your own folder (e.g. an Obsidian project), Vibewright now also reads the documentation (docs/, wiki, notes, CHANGELOG, status files – up to 3 levels deep, newest and progress files first) besides README and CLAUDE.md. The plan then ticks off the steps that are already done, so progress, dashboard and the next step match the actual state.
+- **Imported projects start where they really are**: when importing from GitHub / Gitea, Claude Code or your own folder (e.g. an Obsidian project), Vibewright now also reads the documentation (docs/, wiki, notes, CHANGELOG, status files – up to 3 levels deep, newest and progress files first) besides README and CLAUDE.md. The plan then ticks off the steps that are already done, so progress, dashboard and the next step match the actual state. Claude also decides whether the needs analysis and plan still need your approval: if the docs already state goal and scope (or contain a roadmap), Vibewright creates them on its own and goes straight to the tool check, with a short note on how far the project is.
 
 ### Fixed
 - **Header status wrapped onto two lines in small windows** (#12): "wartet auf dich" / "Claude arbeitet …" next to the steps now stays on one line; the connectors between the steps get shorter instead.

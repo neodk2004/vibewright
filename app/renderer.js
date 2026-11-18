@@ -484,7 +484,7 @@ async function anlegen() {
   if (st.fehler) return ($('.box .fehler')?.remove(), $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(st.fehler)}</div>`));
   aktuell = st;
   seitenleiste();
-  schritt(st, {}, 'Claude stellt die ersten Fragen zusammen …');
+  schritt(st, {}, importOrdner ? 'Claude liest den Projektordner und prüft, wie weit das Projekt ist …' : 'Claude stellt die ersten Fragen zusammen …');
 }
 
 // ---------- Archivieren & Löschen ----------
@@ -652,7 +652,8 @@ function werkzeug(st) {
     <div class="e">${esc(e.empfehlung)}</div>${/^https:\/\//.test(e.quelle) ? `<div class="q">${verlinke(e.quelle)}</div>` : ''}</span>
     ${wahl(e) ? `<input type="checkbox" value="${i}" checked title="vormerken">` : ''}</label>`;
   const spalte = (art, titel) => `<div class="spalte"><span class="label">${titel}</span><div class="wz-liste">${o.eintraege.map((e, i) => [e, i]).filter(([e]) => e.art === art).map(([e, i]) => zeile(e, i)).join('') || '<p class="muted">Nichts nötig.</p>'}</div></div>`;
-  ansicht(st, `${o.korrekturen.length ? `<div class="hinweis"><b>Plan angepasst:</b> ${o.korrekturen.map(esc).join(' · ')}</div>` : ''}
+  const ue = st.einordnung, auto = ue?.uebersprungen || [];
+  ansicht(st, `${ue ? `<div class="hinweis"><b>Projekt eingelesen:</b> ${esc(ue.begruendung)}${auto.includes('analyse') ? ' <span>Die Bedarfsanalyse hat Vibewright selbst erstellt.</span>' : ''}${auto.includes('plan') ? ' <span>Den Plan hat Vibewright aus deiner Doku übernommen.</span>' : ''}</div>` : ''}${o.korrekturen.length ? `<div class="hinweis"><b>Plan angepasst:</b> ${o.korrekturen.map(esc).join(' · ')}</div>` : ''}
     <div class="werk">${spalte('system', 'Auf diesem Rechner')}${spalte('claude', 'Für Claude')}</div>`,
   [{ text: 'Später', ghost: true, klick: neuesProjekt }, { info: 'Installiert wird nichts – Angehaktes kommt als Aufgabe in die passende Phase.' }, 'sp',
     { text: 'Übernehmen', primary: true, klick: () => schritt(st, { auswahl: $$('#inhalt input:checked').map((x) => Number(x.value)) }, 'Dateien werden geschrieben …') }]);
