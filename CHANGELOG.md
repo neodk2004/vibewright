@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Long words or URLs in the needs-analysis scope card were cut off** (#14): they now wrap inside the card instead of disappearing at its edge, and the labels next to them keep their width.
+
 ## [0.3.2] – 2026-11-18
 
 ### Added

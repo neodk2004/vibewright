@@ -1,5 +1,5 @@
 // Layout-Test ohne Claude-Aufruf: Bedarfsanalyse und Einstellungen bei 960×580 (DE/EN) dürfen nichts abschneiden
-// oder über Kartenränder ragen (Issues #3, #4). Aufruf: node test/layout.js
+// oder über Kartenränder ragen (Issues #3, #4, #14). Aufruf: node test/layout.js
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -28,7 +28,7 @@ const lang = (n, t) => Array.from({ length: n }, (_, i) => `${t} ${i + 1}: ein e
 const analyse = {
   ziel: 'Ein Testprojekt, dessen Texte bewusst so lang sind, dass sie bei 960×580 nicht ohne Scrollen in die Karten passen.',
   machbarkeit: 'Gut machbar, die Inhalte dienen nur dem Layout-Test und werden nicht an Claude geschickt.', ampel: 'gruen',
-  rahmen: Array.from({ length: 7 }, (_, i) => ({ punkt: `Punkt ${i + 1}`, wert: 'Wert mit etwas Text, der umbricht' })),
+  rahmen: Array.from({ length: 7 }, (_, i) => ({ punkt: `Punkt ${i + 1}`, wert: i === 2 ? `https://example.com/${'langerpfadohneleerzeichen'.repeat(6)}` : 'Wert mit etwas Text, der umbricht' })), // lange URL: #14
   muss: lang(7, 'Muss'), kann: lang(4, 'Kann'), nicht: lang(5, 'Nicht'),
   risiken: Array.from({ length: 5 }, (_, i) => ({ risiko: `Risiko ${i + 1}`, auswirkung: 'Auswirkung', massnahme: 'Maßnahme' })),
 };
