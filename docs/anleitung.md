@@ -109,12 +109,12 @@ Gedanken in die Kachel tippen und **Einarbeiten** (oder Strg+Enter). Claude ordn
 
 ## 12. Einstellungen
 
-**⚙ Einstellungen** unten in der Seitenleiste:
+**⚙ Einstellungen** unten in der Seitenleiste. Links wählst du den Bereich – grüner Punkt: alles eingerichtet, roter Punkt: da fehlt noch etwas –, rechts erscheinen seine Einstellungen.
 
 - **Claude:** Status, Anmelden, **Modell für die Planung** (Haiku = sparsam, Sonnet = Standard, Opus = gründlich). Die Umsetzung im Terminal nutzt deine normale Claude-Code-Einstellung.
 - **Ablage:** Vault oder Ordner, Dataview- und Kanban-Erkennung, Ablage wechseln, Obsidian installieren.
 - **Git:** Name und E-Mail für Commits, automatische Git-Projekte an/aus.
-- **Sprache:** 🇩🇪 / 🇬🇧.
+- **Sprache** (oben rechts): 🇩🇪 / 🇬🇧.
 
 > **Datenschutz-Tipp:** Commits enthalten Name und E-Mail. Wer Projekte auf GitHub veröffentlicht, kann hier die `noreply`-Adresse von GitHub eintragen.
 

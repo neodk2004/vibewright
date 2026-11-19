@@ -163,14 +163,14 @@ If Claude is currently working in the terminal, the idea **waits until the curre
 
 ## 12. Settings
 
-Open **⚙ Settings** at the bottom of the sidebar.
+Open **⚙ Settings** at the bottom of the sidebar. Choose a section on the left – a green dot means everything is set up, a red dot means something is missing – and its settings appear on the right.
 
-| Card | What you can do |
+| Section | What you can do |
 |---|---|
 | **Claude** | See whether Claude Code is installed and signed in; **Sign in again**; choose the **model for planning**: Haiku (most economical), Sonnet (default), Opus (most thorough). The build in the terminal uses your normal Claude Code setting. |
 | **Storage** | See the current Obsidian vault or local folder, whether Dataview and a Kanban board were found; **Change storage**, **Open folder**, install Obsidian. |
 | **Git** | See whether Git is installed; set the **name and email** used for commits; switch **automatic Git projects** on or off. |
-| **Language** | Switch between 🇩🇪 Deutsch and 🇬🇧 English. |
+| **Language** (top right) | Switch between 🇩🇪 Deutsch and 🇬🇧 English. |
 
 > **Privacy tip:** commits contain your name and email. If you publish a project on GitHub and don't want your email to be visible, use GitHub's `noreply` address here.
 

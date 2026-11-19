@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.3] – 2026-11-19
 
 ### Changed
 - **Settings look like a normal settings page**: sections (Claude, Storage, Git) are listed on the left with a status dot, the chosen section is shown on the right – instead of three cards side by side.
