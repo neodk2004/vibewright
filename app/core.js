@@ -50,6 +50,19 @@ async function claude(prompt, { schema, session, sprache = 'de' } = {}) {
   return { session: j.session_id, data: j.structured_output ?? j.result };
 }
 
+// Update-Check: Ergebnis eine Stunde merken, einen Fehlschlag (null) aber nicht –
+// sonst fehlt der Hinweis bis zum Neustart, wenn GitHub beim Start nicht erreichbar war (#17)
+function updateMerker(pruefen, dauer = 60 * 60 * 1000) {
+  let zeit = 0, ergebnis;
+  return () => {
+    if (Date.now() - zeit >= dauer) {
+      zeit = Date.now();
+      ergebnis = pruefen().then((n) => { if (!n) zeit = 0; return n; });
+    }
+    return ergebnis;
+  };
+}
+
 // ---------- Onboarding & Ablage ----------
 
 async function checks() {
@@ -1084,5 +1097,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };
