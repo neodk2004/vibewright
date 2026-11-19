@@ -398,3 +398,11 @@ a[data-url]:hover{text-decoration:underline}
 .bausteine .opt{min-height:0;flex:none;padding:8px 12px}
 .bausteine .opt.on{cursor:default}
 .bausteine .opt.on b::after{content:" ✓";color:var(--ok)}
+/* Verbrauch je Modell */
+.modellwahl select{font:inherit;font-size:12px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:5px;padding:0 4px;margin-left:4px}
+table.verbrauch{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.verbrauch th,table.verbrauch td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.verbrauch th:first-child,table.verbrauch td:first-child{text-align:left}
+table.verbrauch th{color:var(--muted);font-weight:500}
+.einst.einst-verbrauch{grid-template-columns:minmax(0,1fr);align-content:start;overflow-y:auto}
+.tabelle-scroll{overflow-x:auto;max-width:100%}

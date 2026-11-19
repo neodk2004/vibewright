@@ -14,12 +14,14 @@ assert.strictEqual(core.sauber('Phase: A/B?'), 'Phase – AB');
   fs.mkdirSync(lokal, { recursive: true });
   // Sprache per Umgebungsvariable: E2E_SPRACHE=en testet ein englisches Projekt
   core.setSprache(process.env.E2E_SPRACHE || 'de');
+  core.setModell(process.env.E2E_MODELL || 'sonnet'); // E2E_MODELL=haiku prüft eine andere Modellwahl
   const tx = (t) => (process.env.E2E_SPRACHE === 'en' ? core.enText(t) : t);
   const info = core.ablageInfo({ modus: 'lokal', ablage: lokal });
   let st = core.neu(info, 'Test: Vogelhaus', 'Ein Vogelhaus mit Kamera, das Fotos von Besuchern aufs Handy schickt');
   assert.strictEqual(st.name, 'Test – Vogelhaus');
   assert.throws(() => core.neu(info, 'test – vogelhaus', 'x'), /gibt es/);
 
+  const vorher = core.verbrauch(info).planung;
   const t0 = Date.now();
   for (let i = 0; i < 10 && st.offen?.typ !== 'fertig'; i++) {
     const o = st.offen;
@@ -32,6 +34,10 @@ assert.strictEqual(core.sauber('Phase: A/B?'), 'Phase – AB');
     assert.ok(!st.fehler, st.fehler);
   }
   assert.strictEqual(st.offen.typ, 'fertig');
+  // Nachweis Modellwahl: der Lauf meldet Verbrauch für genau das gewählte Modell (z. B. sonnet → claude-sonnet-…)
+  const nachher = core.verbrauch(info).planung;
+  const genutzt = Object.keys(nachher).filter((m) => (nachher[m].outputTokens || 0) > (vorher[m]?.outputTokens || 0));
+  assert.ok(genutzt.some((m) => m.includes(core.modell())), `Modell ${core.modell()} nicht im Verbrauch: ${genutzt}`);
   const d = path.join(lokal, st.name);
   for (const f of ['Interview.md', 'Bedarfsanalyse.md', 'Plan.md', 'Werkzeug-Check.md', 'Dashboard.md', 'Dashboard.html'])
     assert.ok(fs.existsSync(path.join(d, `${st.name} – ${tx(f)}`)), tx(f));

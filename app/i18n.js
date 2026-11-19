@@ -93,8 +93,15 @@ const UI_EN = {
   'Strg+Enter oder „Einarbeiten“': 'Ctrl+Enter or "Add it"', '⌘+Enter oder „Einarbeiten“': '⌘+Enter or "Add it"', 'Bitte erst einen Gedanken eintippen.': 'Please type a thought first.',
   // Einstellungen
   'Verbindungen zu Claude, deiner Ablage und Git': 'Connections to Claude, your storage and Git', 'Sprache': 'Language',
-  'Modell für die Planung': 'Model for planning', 'am sparsamsten': 'most economical', 'Standard, schnell': 'default, fast', 'am gründlichsten': 'most thorough',
-  'Gilt für Interview, Analyse, Plan und Ideen. Die Umsetzung im Terminal nutzt deine normale Claude-Code-Einstellung.': 'Used for interview, analysis, plan and ideas. The build in the terminal uses your normal Claude Code setting.',
+  'Modell': 'Model', 'am sparsamsten': 'most economical', 'Standard, schnell': 'default, fast', 'am gründlichsten': 'most thorough', 'Fable-Modell': 'Fable model',
+  'Gilt für Interview, Analyse, Plan, Ideen und neue Terminal-Sitzungen. Auch im Seitenmenü wählbar.': 'Used for interview, analysis, plan, ideas and new terminal sessions. Also selectable in the sidebar.',
+  'Gilt für die Planung und neue Terminal-Sitzungen': 'Used for planning and new terminal sessions',
+  // Verbrauch
+  'Verbrauch': 'Usage', 'Verbrauch je Modell': 'Usage per model', 'Tokens, wie Claude Code sie meldet': 'Tokens as reported by Claude Code',
+  'Planung': 'Planning', 'Terminal-Sitzungen': 'Terminal sessions', 'Eingabe': 'Input', 'Ausgabe': 'Output', 'Cache gelesen': 'Cache read', 'Cache geschrieben': 'Cache write', 'Kosten*': 'Cost*',
+  'Noch kein Verbrauch erfasst.': 'No usage recorded yet.', 'Aktualisieren': 'Refresh',
+  '* Geschätzt zum Listenpreis – im Abo (Pro/Max) nicht einzeln abgerechnet.': '* Estimated at list price – not billed separately on a subscription (Pro/Max).',
+  'Alle Claude-Code-Sitzungen in den Projektordnern. Kosten meldet Claude Code hier nicht.': 'All Claude Code sessions in the project folders. Claude Code does not report costs here.',
   'Installationsanleitung': 'Installation guide', 'Im Browser anmelden, dann „Neu prüfen“.': 'Sign in in your browser, then click "Check again".',
   'Angemeldet per': 'Signed in with', ': Jede Nutzung wird einzeln abgerechnet. Mit einem Claude-Abo (Pro/Max) ist sie im Abo enthalten.': ': every use is billed separately. With a Claude subscription (Pro/Max) it is included.',
   'Ablage': 'Storage', 'Obsidian-Vault': 'Obsidian vault', 'Lokal als .md + .html': 'Local as .md + .html',
