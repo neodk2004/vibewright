@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.
+
 ## [0.3.3] – 2026-11-19
 
 ### Changed
