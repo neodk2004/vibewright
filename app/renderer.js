@@ -873,7 +873,7 @@ function arbeitSeite(st) {
   const alt = fortschrittMerken(st);
   $('#arbeit-seite').innerHTML = `
     <div class="fort"><div class="bar"><i style="width:${alt}%" data-ziel="${s.fortschritt}"></i></div><span class="num muted">${s.fortschritt} %</span></div>
-    <div class="next"><span class="label">Nächster Schritt</span><div class="v">${verlinke(s.naechster)}</div></div>
+    <div class="next"><span class="label">Nächster Schritt</span><div class="v" title="${esc(s.naechster)}">${verlinke(s.naechster)}</div></div>
     <div class="karte voll" style="--ak:${phasenFarbe(i)}"><span class="label">Phase ${i + 1} – ${esc(p.titel)}</span>
       <div class="todo">${p.checkliste.map((c, j) => `<label class="${p.done[j] ? 'x' : ''} ${j === naechstIdx ? 'n' : ''} ${p.done[j] && (frisch === `${i}:${j}` || (st.vorher && !st.vorher[j])) ? 'frisch' : ''}"><input type="checkbox" data-j="${j}" ${p.done[j] ? 'checked' : ''}><span>${verlinke(c)}</span></label>`).join('')}</div></div>
     ${ideeKachel(st)}`;
