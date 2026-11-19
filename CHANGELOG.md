@@ -4,6 +4,9 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 
 ## [Unreleased]
 
+### Changed
+- **Settings look like a normal settings page**: sections (Claude, Storage, Git) are listed on the left with a status dot, the chosen section is shown on the right – instead of three cards side by side.
+
 ### Fixed
 - **Long words or URLs in the needs-analysis scope card were cut off** (#14): they now wrap inside the card instead of disappearing at its edge, and the labels next to them keep their width.
 - **Long words or URLs from Claude were cut off in other cards too** – interview, needs analysis, plan, phase details, tool check, cockpit, maintenance and the work view now wrap them as well, without splitting normal words. A very long label in the scope card no longer squeezes its value to one letter per line.

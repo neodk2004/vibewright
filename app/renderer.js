@@ -291,6 +291,7 @@ async function spracheWechseln(s) {
 }
 
 // ---------- Einstellungen: Claude, Ablage (Obsidian), Git ----------
+let einstTeil = 'claude'; // zuletzt gewählter Bereich, bleibt beim Neuzeichnen erhalten
 const MODELLE = [['haiku', 'Haiku', 'am sparsamsten'], ['sonnet', 'Sonnet', 'Standard, schnell'], ['opus', 'Opus', 'am gründlichsten']];
 async function einstellungen() {
   aktuell = null;
@@ -302,7 +303,9 @@ async function einstellungen() {
   ansicht(null, `<div class="einst-kopf"><h2>Einstellungen</h2><span class="muted">Verbindungen zu Claude, deiner Ablage und Git</span>
     <span class="sp"></span><span class="label">Sprache</span><div class="seg seg-klein">${[['de', 'Deutsch'], ['en', 'English']].map(([s, n]) => `<button data-s="${s}" class="${uiSprache === s ? 'on' : ''}">${FLAGGEN[s]}${n}</button>`).join('')}</div></div>
   <div class="einst">
-    <div class="karte" style="--ak:var(--accent)"><span class="label">Claude</span>
+    <nav class="einst-nav">${[['claude', 'Claude', c.claude && c.loggedIn], ['ablage', 'Ablage', !!a.ablage], ['git', 'Git', g.installiert && g.name && g.email]]
+      .map(([k, t, ok]) => `<button data-teil="${k}" class="${k === einstTeil ? 'on' : ''}"><span class="dot ${ok ? 'ok' : 'bad'}"></span>${t}</button>`).join('')}</nav>
+    <div class="karte einst-teil" data-teil="claude" style="--ak:var(--accent)"><span class="label">Claude</span>
       ${punkt(c.claude, c.claude ? `Claude Code ${esc(c.version.split(' ')[0])}` : 'Claude Code ist nicht installiert')}
       ${c.claude ? punkt(c.loggedIn, c.loggedIn ? `Angemeldet${c.abo ? ` · ${esc(c.abo)}` : ''}` : 'Nicht angemeldet') : ''}
       ${c.apiKey ? '<div class="hinweis klein" style="margin:0">Angemeldet per <b>API-Key</b>: Jede Nutzung wird einzeln abgerechnet. Mit einem Claude-Abo (Pro/Max) ist sie im Abo enthalten.</div>' : ''}
@@ -311,7 +314,7 @@ async function einstellungen() {
       <span class="muted klein">Gilt für Interview, Analyse, Plan und Ideen. Die Umsetzung im Terminal nutzt deine normale Claude-Code-Einstellung.</span>
       <div class="unten" id="claude-unten">${c.claude ? `<button class="btn ${c.loggedIn ? '' : 'primary'}" id="anmelden">${c.loggedIn ? 'Neu anmelden' : 'Anmelden'}</button>` : '<a href="#" data-url="https://docs.claude.com/en/docs/claude-code/setup">Installationsanleitung</a>'}<button class="btn ghost" id="pruefen">Neu prüfen</button><button class="btn" id="regeln" title="Regeln, die Claude in jedem Projekt befolgt">Globale Regeln</button></div>
     </div>
-    <div class="karte" style="--ak:#4fb8c9"><span class="label">Ablage</span>
+    <div class="karte einst-teil" data-teil="ablage" style="--ak:#4fb8c9"><span class="label">Ablage</span>
       ${punkt(true, a.modus === 'obsidian' ? 'Obsidian-Vault' : 'Lokal als .md + .html')}
       <div class="muted pfad">${esc(a.ablage || '–')}</div>
       ${a.modus === 'obsidian' ? punkt(a.dataview, a.dataview ? 'Dataview aktiv – Tabellen aktualisieren sich live' : 'Dataview fehlt – feste Tabellen') : ''}
@@ -319,7 +322,7 @@ async function einstellungen() {
       ${!e.vaults.length ? '<span class="muted klein">Obsidian ist nicht installiert – optional, kein Muss.</span>' : ''}
       <div class="unten"><button class="btn" id="ablage">Ablage wechseln</button>${!e.vaults.length ? '<button class="btn" id="obs-inst">Obsidian installieren</button>' : ''}<button class="btn ghost" id="ordner">Ordner öffnen</button></div>
     </div>
-    <div class="karte" style="--ak:#e0a84a"><span class="label">Git</span>
+    <div class="karte einst-teil" data-teil="git" style="--ak:#e0a84a"><span class="label">Git</span>
       ${punkt(g.installiert, g.installiert ? `Git ${esc(g.version)}` : 'Git ist nicht installiert')}
       ${g.installiert ? `${punkt(g.name && g.email, g.name && g.email ? 'Name und E-Mail für Commits eingetragen' : 'Name und E-Mail fehlen noch')}
         <input type="text" id="g-name" placeholder="Dein Name" value="${esc(g.name)}">
@@ -333,6 +336,9 @@ async function einstellungen() {
     { text: 'Fehler melden', ghost: true, klick: () => api['fehler-melden']() },
     { text: 'Lizenzen & Quellen', ghost: true, klick: () => api.link('https://github.com/neodk2004/vibewright/blob/main/THIRD_PARTY_NOTICES.md') },
     { info: `Vibewright ${e.version} · © 2026 neodk2004 · MIT License` }]);
+  const teilZeigen = (k) => { einstTeil = k; $$('.einst [data-teil]').forEach((el) => (el.matches('button') ? el.classList.toggle('on', el.dataset.teil === k) : (el.hidden = el.dataset.teil !== k))); };
+  $$('.einst-nav button').forEach((b) => (b.onclick = () => teilZeigen(b.dataset.teil)));
+  teilZeigen(einstTeil);
   $$('.seg button[data-m]').forEach((b) => (b.onclick = async () => { await api.einstellung('modell', b.dataset.m); einstellungen(); }));
   $$('.seg button[data-s]').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   $('#anmelden')?.addEventListener('click', async () => { await api['claude-anmelden'](); $('#claude-unten').insertAdjacentHTML('beforeend', '<span class="muted klein">Im Browser anmelden, dann „Neu prüfen“.</span>'); });

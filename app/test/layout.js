@@ -73,6 +73,8 @@ const ansichten = {
     issuesNeu: [{ nr: 1, art: 'fehler', titel: ${JSON.stringify(L)}, von: ${JSON.stringify(W)} }] }`, 'pflegeGeprueft.set(st.name, Date.now()); cockpit(st);'),
   arbeit: mit(`{ offen: { dashboard: 'x' } }`, 'arbeit(st);'),
   einstellungen: 'einstellungen()',
+  'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
+  'einstellungen-git': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=git]').click(); })()",
 };
 
 const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-layout-'));
