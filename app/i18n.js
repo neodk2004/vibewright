@@ -97,6 +97,14 @@ const UI_EN = {
   'Gilt für Interview, Analyse, Plan, Ideen und neue Terminal-Sitzungen. Auch im Seitenmenü wählbar.': 'Used for interview, analysis, plan, ideas and new terminal sessions. Also selectable in the sidebar.',
   'Gilt für die Planung und neue Terminal-Sitzungen': 'Used for planning and new terminal sessions',
   // Verbrauch
+  'Statistik': 'Statistics', 'Überblick': 'Overview', 'Modelle': 'Models', 'Gesamt': 'All time', '7 Tage': 'Last 7 days', '30 Tage': 'Last 30 days',
+  'Weniger': 'Less', 'Mehr': 'More', 'Lieblingsmodell': 'Favorite model', 'Tokens gesamt': 'Total tokens', 'Sitzungen': 'Sessions', 'Längste Sitzung': 'Longest session',
+  'Aktive Tage': 'Active days', 'Längste Serie': 'Longest streak', 'Aktivster Tag': 'Most active day', 'Aktuelle Serie': 'Current streak',
+  'Planung in Vibewright': 'Planning in Vibewright', 'Terminal-Sitzungen in Vibewright-Projekten': 'Terminal sessions in Vibewright projects',
+  'Noch kein Verlauf.': 'No history yet.', 'Zu wenige Tage für einen Verlauf.': 'Too few days for a chart.',
+  'Aufteilung nach Eingabe, Ausgabe und Cache gibt es nur für „Gesamt“.': 'The split into input, output and cache is only available for "All time".',
+  'Claude Code hat noch keine Statistik angelegt. Sie entsteht, sobald du Claude Code eine Weile genutzt hast.': 'Claude Code has not created statistics yet. They appear once you have used Claude Code for a while.',
+  'Claude Code speichert seine Statistik in einem neuen Format. Diese Vibewright-Version kann es noch nicht lesen – bitte auf ein Update achten.': 'Claude Code stores its statistics in a new format. This Vibewright version cannot read it yet – please watch for an update.',
   'Verbrauch': 'Usage', 'Verbrauch je Modell': 'Usage per model', 'Tokens, wie Claude Code sie meldet': 'Tokens as reported by Claude Code',
   'Planung': 'Planning', 'Terminal-Sitzungen': 'Terminal sessions', 'Eingabe': 'Input', 'Ausgabe': 'Output', 'Cache gelesen': 'Cache read', 'Cache geschrieben': 'Cache write', 'Kosten*': 'Cost*',
   'Noch kein Verbrauch erfasst.': 'No usage recorded yet.', 'Aktualisieren': 'Refresh',
@@ -138,6 +146,10 @@ const UI_EN = {
   'Im Ordner zeigen': 'Show in folder', 'Projekt nicht gefunden.': 'Project not found.',
 };
 const UI_EN_MUSTER = [
+  [/^Stand (.+) · alle Claude-Code-Sitzungen auf diesem Rechner$/, 'As of $1 · all Claude Code sessions on this computer'],
+  [/^Eingabe (\S+) · Ausgabe (\S+) · Cache gelesen (\S+) · Cache geschrieben (\S+)$/, 'Input $1 · Output $2 · Cache read $3 · Cache write $4'],
+  [/^Eingabe (\S+) · Ausgabe (\S+)$/, 'Input $1 · Output $2'],
+  [/^Cache (\S+) gelesen · (\S+) geschrieben$/, 'Cache $1 read · $2 write'],
   [/^Server antwortet mit Fehler (\d+)\.$/, 'Server responded with error $1.'],
   [/^Klonen fehlgeschlagen: (.*)$/s, 'Download failed: $1'],
   [/^Runde (\d+) · Frage (\d+) von (\d+)$/, 'Round $1 · Question $2 of $3'],
