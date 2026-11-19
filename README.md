@@ -134,10 +134,10 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
-#### Unreleased
+#### 0.3.4 – 2026-11-19
 
 #### Added
-- **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. The same choice is in the settings.
+- **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. Fable is not included in any subscription and runs on usage credits only; without credits Vibewright says so and keeps your progress. The same choice is in the settings.
 - **Usage per model** (#16): „Usage“ in the sidebar shows the tokens per model (input, output, cache read/write) – for planning runs as reported by Claude Code, including its cost estimate at list price (not billed separately on a Pro/Max subscription), and for all Claude Code sessions in the project folders (tokens only; Claude Code reports no cost there).
 
 #### Changed
