@@ -35,7 +35,6 @@ handle('start', async () => {
 handle('programmordner', (p) => core.imProgrammordner(p));
 // Neue Version auf GitHub? Einmal pro App-Start; ohne Netz oder bei Fehlern still nichts anzeigen.
 // Gesendet wird nur die übliche Anfrage an die GitHub-API (keine Projektdaten).
-let updateInfo;
 async function neuestesRelease() {
   const opt = { headers: { 'User-Agent': 'Vibewright' }, signal: AbortSignal.timeout(8000) };
   try {
@@ -51,11 +50,12 @@ async function neuestesRelease() {
   } catch {}
   return null;
 }
+const release = core.updateMerker(neuestesRelease);
 async function updatePruefen() {
-  const n = await neuestesRelease();
+  const n = await release();
   return n && core.istNeuer(n.tag, app.getVersion()) && /^https:\/\//.test(n.url) ? { version: n.tag.replace(/^v/, ''), url: n.url } : null;
 }
-handle('update', () => (updateInfo ??= updatePruefen()));
+handle('update', updatePruefen);
 core.setModell(lies().modell);
 core.setSprache(lies().sprache || 'de');
 

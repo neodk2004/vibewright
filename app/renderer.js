@@ -189,7 +189,7 @@ async function start() {
     <span class="sprachwahl"><button data-s="de" title="Deutsch" class="${uiSprache === 'de' ? 'on' : ''}">${FLAGGEN.de}</button><button data-s="en" title="English" class="${uiSprache === 'en' ? 'on' : ''}">${FLAGGEN.en}</button></span>`;
   $('#einst-link').onclick = einstellungen;
   limitsZeigen();
-  api.update().then((u) => { if (u?.version) $('#meta').insertAdjacentHTML('afterbegin', `<a href="#" class="update-hinweis" data-url="${esc(u.url)}">⬆ Neue Version verfügbar: <b>${esc(u.version)}</b></a>`); });
+  updateZeigen();
   $$('.sprachwahl button').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   if (!checks.claude || !checks.loggedIn) {
     return ansicht(null, `<div class="mitte"><div class="box"><h2>Willkommen bei Vibewright</h2>
@@ -226,6 +226,12 @@ async function limitsZeigen() {
   el.innerHTML = teil(l.fuenf, en ? '5 h' : '5 Std.') + teil(l.woche, en ? 'Week' : 'Woche');
 }
 setInterval(limitsZeigen, 5 * 60 * 1000);
+
+// Update-Hinweis oben im Seitenmenü; stündlich neu fragen, falls die App lange offen bleibt (#17)
+function updateZeigen() {
+  api.update().then((u) => { if (u?.version && !$('.update-hinweis')) $('#meta')?.insertAdjacentHTML('afterbegin', `<a href="#" class="update-hinweis" data-url="${esc(u.url)}">⬆ Neue Version verfügbar: <b>${esc(u.version)}</b></a>`); });
+}
+setInterval(updateZeigen, 60 * 60 * 1000);
 
 // Ablage-Ordner fehlt (verschoben, gelöscht, Laufwerk nicht verbunden) – deutlich sagen statt eine leere Liste zu zeigen
 function ablageFehlt(vaults) {

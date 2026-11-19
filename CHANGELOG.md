@@ -5,6 +5,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 ## [Unreleased]
 
 ### Fixed
+- **„New version available“ did not show up** (#17) when GitHub could not be reached at startup (connection refused or API limit used up): the failed check was remembered until the app was closed. Now only a successful check is remembered, a failed one is retried, and the app checks again every hour while it stays open.
 - **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.
 
 ## [0.3.3] – 2026-11-19
