@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.4] – 2026-11-19
 
 ### Added
 - **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. Fable is not included in any subscription and runs on usage credits only; without credits Vibewright says so and keeps your progress. The same choice is in the settings.
