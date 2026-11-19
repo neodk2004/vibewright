@@ -134,6 +134,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Fixed
+- **Long words or URLs in the needs-analysis scope card were cut off** (#14): they now wrap inside the card instead of disappearing at its edge, and the labels next to them keep their width.
+
 #### 0.3.2 – 2026-11-18
 
 #### Added
@@ -157,22 +162,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - **File list of imported code folders depended on the operating system** (#8): the overview Claude reads before the interview now lists files alphabetically (case-insensitive) on every OS, so the same first 40 files are chosen everywhere; `npm test` is green on macOS again.
 - **Settings footer links wrapped onto two lines in small windows** (#5): the buttons in the bottom bar now always stay on one line; only the info text wraps.
 - **macOS: subscription usage (5 h / week) was not shown** (#10): if the keychain held an old Claude Code entry besides the current one, Vibewright read the old, expired token. It now reads the entry of the current user first.
-
-#### 0.3.0 – 2026-11-13
-
-#### Added
-- **Maintenance mode for finished code projects:** once all phases are done, the cockpit shows a *Maintenance* tile. If the code folder belongs to a GitHub or Gitea repository (Settings → Git), Vibewright checks it for new issues when you open the project and every 30 minutes. Each new issue appears with *Apply* (Claude adds it to the plan) or ✕ (ignore) – nothing from other people goes into the plan without your click.
-- **Report bugs and wishes separately:** the tile has its own field with *🐞 Bug* and *✨ Feature*. With a token, Vibewright creates a matching issue (label `bug` or `enhancement`) and Claude plans it right away; without a repository it goes straight into the plan. Claude mentions the issue number in its commits, so the issue closes itself after the push.
-- **macOS: tidy installer window:** the .dmg opens with a Vibewright background that shows where to drag the app ("Drag Vibewright to Applications").
-- **Imported projects skip unnecessary interviews:** for projects from GitHub, Gitea or Claude Code, Vibewright first reads the code folder (README, CLAUDE.md, project files, recent commits). If that already says enough, it goes straight to the needs analysis; otherwise Claude asks only what is missing, in a single round.
-- **Drag images into the Claude terminal:** drop a screenshot (or any file) onto the terminal, e.g. while hunting a bug – its path is inserted and Claude Code attaches the image. Files dropped elsewhere no longer replace the app window.
-- **Multiple-choice questions are easier to spot:** when several answers are allowed, every answer shows a checkbox and a highlighted badge "Multiple answers allowed" appears below the question.
-- **macOS: clean up after installing:** on the first start of a new version, Vibewright offers to eject the .dmg and move it to the Trash (asks once; nothing happens if you click *Keep*).
-
-#### Fixed
-- The sidebar showed "100 % · Phase 0" for finished projects; it now says "Done · Maintenance".
-- English interface: the phase details showed the effort in German ("Effort mittel"), and Claude sometimes named the area of a phase in German.
-- Fresh screenshots in the README.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
