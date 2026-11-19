@@ -136,8 +136,15 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 <!-- Generated from CHANGELOG.md – do not edit here. -->
 #### Unreleased
 
+#### Changed
+- **Settings look like a normal settings page**: sections (Claude, Storage, Git) are listed on the left with a status dot, the chosen section is shown on the right – instead of three cards side by side.
+
 #### Fixed
 - **Long words or URLs in the needs-analysis scope card were cut off** (#14): they now wrap inside the card instead of disappearing at its edge, and the labels next to them keep their width.
+- **Long words or URLs from Claude were cut off in other cards too** – interview, needs analysis, plan, phase details, tool check, cockpit, maintenance and the work view now wrap them as well, without splitting normal words. A very long label in the scope card no longer squeezes its value to one letter per line.
+- **Model choice in the settings was too narrow at small window sizes** („Sonn-et“): the three models are now listed as rows.
+- The layout test now checks all views with long words and URLs, and also catches split words, squeezed columns and sideways scrolling.
+- **A long „next step“ in the work view pushed the idea card out of the window**: it now shows at most 3 lines; hover for the full text.
 
 #### 0.3.2 – 2026-11-18
 
