@@ -107,6 +107,8 @@ Während Claude arbeitet: Rückfragen und Freigaben beantwortest du **im Termina
 
 Gedanken in die Kachel tippen und **Einarbeiten** (oder Strg+Enter). Claude ordnet sie der passenden Phase zu (1–3 Schritte) oder legt eine neue Phase an und weist auf Widersprüche zu früheren Entscheidungen hin. Arbeitet Claude gerade im Terminal, wartet die Idee bis zum Ende des aktuellen Schritts. Protokoll: `… – Ideen.md`.
 
+**Ideen (n)** in der Kachel öffnet die Liste aller Ideen: wartende und schon eingearbeitete (mit Datum und Phase). Dort lässt sich der Text mit **Bearbeiten** korrigieren und ein Eintrag mit **Löschen** entfernen – erst nach einer Rückfrage. Der Plan bleibt dabei unberührt: Bei eingearbeiteten Ideen ändert sich nur die Liste und `… – Ideen.md`, die Schritte in den Phasen bleiben stehen. Eine wartende Idee, die du löschst, wird nicht mehr eingearbeitet.
+
 ## 12. Einstellungen
 
 **⚙ Einstellungen** unten in der Seitenleiste. Links wählst du den Bereich – grüner Punkt: alles eingerichtet, roter Punkt: da fehlt noch etwas –, rechts erscheinen seine Einstellungen.

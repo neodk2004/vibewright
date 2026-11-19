@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Ideas list** (#22): **Ideas (n)** in the „I just had another idea“ tile opens all ideas of the project – waiting ones and those already added to the plan, with date and phase. You can correct the text or delete an entry (only after a confirmation). The plan stays untouched: only the list and `… – Ideas.md` change, the steps in the phases remain.
+
 ## [0.3.4] – 2026-11-19
 
 ### Added

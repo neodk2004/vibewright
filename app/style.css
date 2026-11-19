@@ -406,3 +406,11 @@ table.verbrauch th:first-child,table.verbrauch td:first-child{text-align:left}
 table.verbrauch th{color:var(--muted);font-weight:500}
 .einst.einst-verbrauch{grid-template-columns:minmax(0,1fr);align-content:start;overflow-y:auto}
 .tabelle-scroll{overflow-x:auto;max-width:100%}
+/* Ideen-Lane (#22) */
+.ideen-lane{flex:1 !important;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;max-width:760px}
+.ideen-lane .karte{flex:none;overflow:visible} /* die Seite scrollt, nicht die Karte */
+.idee-zeile{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.idee-zeile .btn{flex:none;white-space:nowrap}
+.idee-inhalt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
+.idee-zeile textarea{flex:1;min-width:0;font-size:13px;resize:vertical}
+.idee-zitat{overflow-wrap:anywhere;max-height:30vh;overflow-y:auto}

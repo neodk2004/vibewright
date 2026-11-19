@@ -67,6 +67,8 @@ const stand = { aktiv: 0, fortschritt: 7, naechster: L, erledigt: 1, gesamt: 15 
 const wz = (i, art) => ({ art, phase: 1, bedarf: i === 1 ? W : `Bedarf ${i + 1}`, status: i ? 'fehlt' : 'vorhanden', aktion: 'installieren', empfehlung: L, quelle: U });
 // Projektzustand ohne Claude: geladenes Testprojekt plus erfundene Inhalte
 const mit = (extra, dann) => `(async () => { const st = { ...(await api.laden('Layout-Test')), plan: ${JSON.stringify(plan)}, stand: ${JSON.stringify(stand)}, letzteIdee: ${JSON.stringify(L)}, ...${extra} }; ${dann} })()`;
+const IDEEN = `{ offen: { dashboard: 'x' }, ideenWarten: [${JSON.stringify(L)}, ${JSON.stringify(W)}],
+  ideen: ${JSON.stringify([L, U, 'Kurz', W].map((text, i) => ({ text, datum: '2026-11-19', phase: i + 1, schritte: ['Schritt'], kurz: 'Kurz' })))} }`;
 const ansichten = {
   fragen: mit(`{ runden: [{}], offen: { typ: 'fragen', fragen: [{ frage: ${JSON.stringify(L)}, mehrfach: true, optionen: [${JSON.stringify(W)}, ${JSON.stringify(U)}, 'Kurz'] }] } }`, 'zeige(st);'),
   analyse: mit(`{ offen: { typ: 'gate', schritt: 'analyse', analyse: ${JSON.stringify(analyse)} } }`, 'zeige(st);'),
@@ -82,6 +84,10 @@ const ansichten = {
   'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
   'einstellungen-git': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=git]').click(); })()",
   verbrauch: 'verbrauchZeigen()', // Tabelle je Modell (#16)
+  // Ideen-Lane (#22): Liste, Zeile im Bearbeiten, Rückfrage vor dem Löschen
+  ideen: mit(IDEEN, 'ideenZeigen(st, cockpit);'),
+  'ideen-bearbeiten': mit(IDEEN, "ideenZeigen(st, cockpit); document.querySelector('.idee-zeile [data-akt=aendern]').click();"),
+  'ideen-loeschen': mit(IDEEN, "ideenZeigen(st, cockpit); document.querySelectorAll('.idee-zeile [data-akt=loeschen]')[2].click();"),
 };
 
 const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-layout-'));
