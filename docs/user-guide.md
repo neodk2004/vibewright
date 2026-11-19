@@ -167,7 +167,7 @@ Open **⚙ Settings** at the bottom of the sidebar. Choose a section on the left
 
 | Section | What you can do |
 |---|---|
-| **Claude** | See whether Claude Code is installed and signed in; **Sign in again**; choose the **model**: Haiku (most economical), Sonnet (default), Opus (most thorough) or Fable. It applies to planning and to new terminal sessions; you can also switch it in the sidebar, where **Usage** shows the tokens used per model. |
+| **Claude** | See whether Claude Code is installed and signed in; **Sign in again**; choose the **model**: Haiku (most economical), Sonnet (default), Opus (most thorough) or Fable (usage credits only, not included in any subscription). It applies to planning and to new terminal sessions; you can also switch it in the sidebar, where **Usage** shows the tokens used per model. |
 | **Storage** | See the current Obsidian vault or local folder, whether Dataview and a Kanban board were found; **Change storage**, **Open folder**, install Obsidian. |
 | **Git** | See whether Git is installed; set the **name and email** used for commits; switch **automatic Git projects** on or off. |
 | **Language** (top right) | Switch between 🇩🇪 Deutsch and 🇬🇧 English. |

@@ -185,7 +185,7 @@ async function start() {
   // Gespeicherte Sprache weicht ab (z. B. erster Start nach Umschalten auf anderem Weg) → einmal neu laden
   if ((settings.sprache || 'de') !== uiSprache) { spracheSetzen(settings.sprache || 'de'); return location.reload(); }
   $('#meta').innerHTML = `<div id="limits"></div>${checks.claude ? `Claude Code ${esc(checks.version.split(' ')[0])} · ${esc(checks.abo || '–')}<br>` : ''}
-    <label class="modellwahl" title="Gilt für die Planung und neue Terminal-Sitzungen">Modell <select id="modell-wahl">${MODELLE.map(([m, n]) => `<option value="${m}" ${(settings.modell || 'sonnet') === m ? 'selected' : ''}>${n}</option>`).join('')}</select></label> · <button id="verbrauch-link">Verbrauch</button><br>
+    <label class="modellwahl" title="Gilt für die Planung und neue Terminal-Sitzungen">Modell <select id="modell-wahl">${MODELLE.map(([m, n]) => `<option value="${m}" ${(settings.modell || 'sonnet') === m ? 'selected' : ''}>${n}${m === 'fable' ? ' (Credits)' : ''}</option>`).join('')}</select></label> · <button id="verbrauch-link">Verbrauch</button><br>
     ${settings.ablage ? `${settings.modus === 'obsidian' ? 'Obsidian' : 'Lokal'} · ` : ''}<button id="einst-link">⚙ Einstellungen</button>
     <span class="sprachwahl"><button data-s="de" title="Deutsch" class="${uiSprache === 'de' ? 'on' : ''}">${FLAGGEN.de}</button><button data-s="en" title="English" class="${uiSprache === 'en' ? 'on' : ''}">${FLAGGEN.en}</button></span>`;
   $('#einst-link').onclick = einstellungen;
@@ -301,7 +301,7 @@ async function spracheWechseln(s) {
 
 // ---------- Einstellungen: Claude, Ablage (Obsidian), Git ----------
 let einstTeil = 'claude'; // zuletzt gewählter Bereich, bleibt beim Neuzeichnen erhalten
-const MODELLE = [['haiku', 'Haiku', 'am sparsamsten'], ['sonnet', 'Sonnet', 'Standard, schnell'], ['opus', 'Opus', 'am gründlichsten'], ['fable', 'Fable', 'Fable-Modell']];
+const MODELLE = [['haiku', 'Haiku', 'am sparsamsten'], ['sonnet', 'Sonnet', 'Standard, schnell'], ['opus', 'Opus', 'am gründlichsten'], ['fable', 'Fable', 'nur mit Usage Credits']];
 // Seitenmenü und Einstellungen zeigen dieselbe gespeicherte Wahl
 async function modellSetzen(m) {
   await api.einstellung('modell', m);

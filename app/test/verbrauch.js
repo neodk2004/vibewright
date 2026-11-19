@@ -48,4 +48,9 @@ assert.deepStrictEqual(core.sitzungsVerbrauch([path.join(os.tmpdir(), 'gibt-es-n
 
 // Terminal-Sitzung startet mit dem gewählten Modell
 assert.ok(fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8').includes("'--model', core.modell()"), 'Terminal ohne --model');
+// Fable ohne Credits: eigene Meldung (nicht „Limit – später erneut“), und die englische Übersetzung greift
+const quelle = (d) => fs.readFileSync(path.join(__dirname, '..', d), 'utf8');
+const meldung = quelle('core.js').match(/`(Keine Usage Credits[^`]*)\(\$\{msg\}\)`/)[1] + '(x)';
+const muster = eval(quelle('i18n.js').match(/\[(\/\^Keine Usage Credits.*\/), '/)[1]);
+assert.ok(muster.test(meldung), 'EN-Übersetzung der Credits-Meldung passt nicht');
 console.log('verbrauch ok');

@@ -46,6 +46,8 @@ async function claude(prompt, { schema, session, sprache = 'de' } = {}) {
   if (j.is_error) {
     const msg = String(j.result || 'Unbekannter Fehler');
     // ponytail: bei Limit nur speichern + Hinweis; automatisch warten und fortsetzen kommt später
+    // Fable steckt in keinem Abo und läuft nur über Usage Credits – Warten hilft hier nicht, anderes Modell schon
+    if (/credit/i.test(msg)) throw new Error(`Keine Usage Credits für dieses Modell – der Stand ist gespeichert. Fable ist in keinem Abo enthalten. Im Seitenmenü ein anderes Modell wählen oder Credits aufladen, dann „Erneut versuchen“. (${msg})`);
     if (/limit|usage/i.test(msg)) throw new Error(`Limit erreicht – der Stand ist gespeichert. Später auf „Erneut versuchen“ klicken. (${msg})`);
     throw new Error(msg);
   }

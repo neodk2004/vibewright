@@ -93,7 +93,7 @@ const UI_EN = {
   'Strg+Enter oder „Einarbeiten“': 'Ctrl+Enter or "Add it"', '⌘+Enter oder „Einarbeiten“': '⌘+Enter or "Add it"', 'Bitte erst einen Gedanken eintippen.': 'Please type a thought first.',
   // Einstellungen
   'Verbindungen zu Claude, deiner Ablage und Git': 'Connections to Claude, your storage and Git', 'Sprache': 'Language',
-  'Modell': 'Model', 'am sparsamsten': 'most economical', 'Standard, schnell': 'default, fast', 'am gründlichsten': 'most thorough', 'Fable-Modell': 'Fable model',
+  'Modell': 'Model', 'am sparsamsten': 'most economical', 'Standard, schnell': 'default, fast', 'am gründlichsten': 'most thorough', 'nur mit Usage Credits': 'usage credits only',
   'Gilt für Interview, Analyse, Plan, Ideen und neue Terminal-Sitzungen. Auch im Seitenmenü wählbar.': 'Used for interview, analysis, plan, ideas and new terminal sessions. Also selectable in the sidebar.',
   'Gilt für die Planung und neue Terminal-Sitzungen': 'Used for planning and new terminal sessions',
   // Verbrauch
@@ -153,6 +153,7 @@ const UI_EN_MUSTER = [
   [/^„(.*)“ löschen\?$/, 'Delete "$1"?'],
   [/^Archivieren fehlgeschlagen: (.*)$/s, 'Archiving failed: $1'],
   [/^„(.*)“ gibt es in der Ablage schon\. Bitte einen anderen Namen wählen – vorhandene Projekte werden nie überschrieben\.$/, '"$1" already exists. Please choose another name – existing projects are never overwritten.'],
+  [/^Keine Usage Credits für dieses Modell – der Stand ist gespeichert\. Fable ist in keinem Abo enthalten. Im Seitenmenü ein anderes Modell wählen oder Credits aufladen, dann „Erneut versuchen“\. (.*)$/, 'No usage credits for this model – progress is saved. Fable is not included in any subscription. Pick another model in the sidebar or add credits, then click "Try again". $1'],
   [/^Limit erreicht – der Stand ist gespeichert\. Später auf „Erneut versuchen“ klicken\. (.*)$/, 'Limit reached – progress is saved. Click "Try again" later. $1'],
 ];
 
