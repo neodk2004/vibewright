@@ -182,6 +182,7 @@ handle('regeln-speichern', (text) => {
   fs.writeFileSync(REGELN, String(text), 'utf8');
 });
 handle('limits', () => core.claudeLimits());
+handle('verbrauch', () => core.verbrauch(info()));
 handle('laden', (name) => core.laden(info(), name));
 handle('weiter', (name, eingabe) => core.weiter(info(), core.laden(info(), name), eingabe));
 handle('oeffnen', (datei) => (info().modus === 'obsidian'
@@ -282,7 +283,7 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
   sitzungBeenden(name); // nur dieses Projekt neu starten, andere laufen weiter
   const b = core.claudeBefehl();
   if (!b) throw new Error('Claude Code wurde nicht gefunden. Bitte installieren und die App neu starten.');
-  const pty = require('@lydell/node-pty').spawn(b.datei, [...b.vorne, 'Lies CLAUDE.md und beginne mit dem aktuellen Auftrag.'],
+  const pty = require('@lydell/node-pty').spawn(b.datei, [...b.vorne, '--model', core.modell(), 'Lies CLAUDE.md und beginne mit dem aktuellen Auftrag.'],
     { name: 'xterm-256color', cols, rows, cwd: ordner, env: sauberesEnv() });
   // Hakt Claude (oder du in Obsidian) einen Schritt ab, soll die Checkliste in der App sofort mitziehen
   // Wartende Ideen werden eingearbeitet, sobald Claude einen Schritt abgehakt hat („nach einem Task“)

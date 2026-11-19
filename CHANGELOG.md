@@ -4,6 +4,13 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. The same choice is in the settings.
+- **Usage per model** (#16): „Usage“ in the sidebar shows the tokens per model (input, output, cache read/write) – for planning runs as reported by Claude Code, including its cost estimate at list price (not billed separately on a Pro/Max subscription), and for all Claude Code sessions in the project folders (tokens only; Claude Code reports no cost there).
+
+### Changed
+- **The model choice now also applies to new terminal sessions** (#16): the build in the terminal starts with the chosen model (`claude --model …`) instead of your normal Claude Code setting. If you never chose a model in Vibewright, that is Sonnet – check the sidebar before your next build session. Sessions that are already running keep their model.
+
 ### Fixed
 - **„New version available“ did not show up** (#17) when GitHub could not be reached at startup (connection refused or API limit used up): the failed check was remembered until the app was closed. Now only a successful check is remembered, a failed one is retried, and the app checks again every hour while it stays open.
 - **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.

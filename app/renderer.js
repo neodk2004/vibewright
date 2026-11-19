@@ -185,9 +185,12 @@ async function start() {
   // Gespeicherte Sprache weicht ab (z. B. erster Start nach Umschalten auf anderem Weg) → einmal neu laden
   if ((settings.sprache || 'de') !== uiSprache) { spracheSetzen(settings.sprache || 'de'); return location.reload(); }
   $('#meta').innerHTML = `<div id="limits"></div>${checks.claude ? `Claude Code ${esc(checks.version.split(' ')[0])} · ${esc(checks.abo || '–')}<br>` : ''}
+    <label class="modellwahl" title="Gilt für die Planung und neue Terminal-Sitzungen">Modell <select id="modell-wahl">${MODELLE.map(([m, n]) => `<option value="${m}" ${(settings.modell || 'sonnet') === m ? 'selected' : ''}>${n}</option>`).join('')}</select></label> · <button id="verbrauch-link">Verbrauch</button><br>
     ${settings.ablage ? `${settings.modus === 'obsidian' ? 'Obsidian' : 'Lokal'} · ` : ''}<button id="einst-link">⚙ Einstellungen</button>
     <span class="sprachwahl"><button data-s="de" title="Deutsch" class="${uiSprache === 'de' ? 'on' : ''}">${FLAGGEN.de}</button><button data-s="en" title="English" class="${uiSprache === 'en' ? 'on' : ''}">${FLAGGEN.en}</button></span>`;
   $('#einst-link').onclick = einstellungen;
+  $('#verbrauch-link').onclick = verbrauchZeigen;
+  $('#modell-wahl').onchange = (ev) => modellSetzen(ev.target.value);
   limitsZeigen();
   updateZeigen();
   $$('.sprachwahl button').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
@@ -298,7 +301,35 @@ async function spracheWechseln(s) {
 
 // ---------- Einstellungen: Claude, Ablage (Obsidian), Git ----------
 let einstTeil = 'claude'; // zuletzt gewählter Bereich, bleibt beim Neuzeichnen erhalten
-const MODELLE = [['haiku', 'Haiku', 'am sparsamsten'], ['sonnet', 'Sonnet', 'Standard, schnell'], ['opus', 'Opus', 'am gründlichsten']];
+const MODELLE = [['haiku', 'Haiku', 'am sparsamsten'], ['sonnet', 'Sonnet', 'Standard, schnell'], ['opus', 'Opus', 'am gründlichsten'], ['fable', 'Fable', 'Fable-Modell']];
+// Seitenmenü und Einstellungen zeigen dieselbe gespeicherte Wahl
+async function modellSetzen(m) {
+  await api.einstellung('modell', m);
+  settings.modell = m;
+  if ($('#modell-wahl')) $('#modell-wahl').value = m;
+}
+
+// Verbrauch je Modell: echte Token-Zahlen von Claude Code, Kosten nur als Schätzung zum Listenpreis
+async function verbrauchZeigen() {
+  aktuell = null;
+  seitenleiste();
+  const v = await api.verbrauch();
+  if (v.fehler) return ansicht(null, `<div class="mitte"><div class="box"><div class="fehler">${esc(v.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: start }]);
+  const zahl = (n) => (n || 0).toLocaleString(uiSprache);
+  const tabelle = (daten, kosten) => {
+    const zeilen = Object.entries(daten).sort((a, b) => a[0].localeCompare(b[0]));
+    if (!zeilen.length) return '<p class="muted">Noch kein Verbrauch erfasst.</p>';
+    return `<div class="tabelle-scroll"><table class="verbrauch"><tr><th>Modell</th><th>Eingabe</th><th>Ausgabe</th><th>Cache gelesen</th><th>Cache geschrieben</th>${kosten ? '<th>Kosten*</th>' : ''}</tr>
+      ${zeilen.map(([m, u]) => `<tr><td>${esc(m)}</td><td>${zahl(u.inputTokens)}</td><td>${zahl(u.outputTokens)}</td><td>${zahl(u.cacheReadInputTokens)}</td><td>${zahl(u.cacheCreationInputTokens)}</td>${kosten ? `<td>$${(u.costUSD || 0).toFixed(2)}</td>` : ''}</tr>`).join('')}</table></div>`;
+  };
+  ansicht(null, `<div class="einst-kopf"><h2>Verbrauch je Modell</h2><span class="muted">Tokens, wie Claude Code sie meldet</span></div>
+  <div class="einst einst-verbrauch">
+    <div class="karte" style="--ak:var(--accent)"><span class="label">Planung</span>${tabelle(v.planung, true)}
+      <span class="muted klein">* Geschätzt zum Listenpreis – im Abo (Pro/Max) nicht einzeln abgerechnet.</span></div>
+    <div class="karte" style="--ak:#4fb8c9"><span class="label">Terminal-Sitzungen</span>${tabelle(v.terminal, false)}
+      <span class="muted klein">Alle Claude-Code-Sitzungen in den Projektordnern. Kosten meldet Claude Code hier nicht.</span></div>
+  </div>`, [{ text: 'Zurück', klick: start }, 'sp', { text: 'Aktualisieren', klick: verbrauchZeigen }]);
+}
 async function einstellungen() {
   aktuell = null;
   seitenleiste();
@@ -315,9 +346,9 @@ async function einstellungen() {
       ${punkt(c.claude, c.claude ? `Claude Code ${esc(c.version.split(' ')[0])}` : 'Claude Code ist nicht installiert')}
       ${c.claude ? punkt(c.loggedIn, c.loggedIn ? `Angemeldet${c.abo ? ` · ${esc(c.abo)}` : ''}` : 'Nicht angemeldet') : ''}
       ${c.apiKey ? '<div class="hinweis klein" style="margin:0">Angemeldet per <b>API-Key</b>: Jede Nutzung wird einzeln abgerechnet. Mit einem Claude-Abo (Pro/Max) ist sie im Abo enthalten.</div>' : ''}
-      <span class="label" style="margin-top:8px">Modell für die Planung</span>
+      <span class="label" style="margin-top:8px">Modell</span>
       <div class="seg">${MODELLE.map(([m, n, d]) => `<button data-m="${m}" class="${e.modell === m ? 'on' : ''}">${n}<small>${d}</small></button>`).join('')}</div>
-      <span class="muted klein">Gilt für Interview, Analyse, Plan und Ideen. Die Umsetzung im Terminal nutzt deine normale Claude-Code-Einstellung.</span>
+      <span class="muted klein">Gilt für Interview, Analyse, Plan, Ideen und neue Terminal-Sitzungen. Auch im Seitenmenü wählbar.</span>
       <div class="unten" id="claude-unten">${c.claude ? `<button class="btn ${c.loggedIn ? '' : 'primary'}" id="anmelden">${c.loggedIn ? 'Neu anmelden' : 'Anmelden'}</button>` : '<a href="#" data-url="https://docs.claude.com/en/docs/claude-code/setup">Installationsanleitung</a>'}<button class="btn ghost" id="pruefen">Neu prüfen</button><button class="btn" id="regeln" title="Regeln, die Claude in jedem Projekt befolgt">Globale Regeln</button></div>
     </div>
     <div class="karte einst-teil" data-teil="ablage" style="--ak:#4fb8c9"><span class="label">Ablage</span>
@@ -345,7 +376,7 @@ async function einstellungen() {
   const teilZeigen = (k) => { einstTeil = k; $$('.einst [data-teil]').forEach((el) => (el.matches('button') ? el.classList.toggle('on', el.dataset.teil === k) : (el.hidden = el.dataset.teil !== k))); };
   $$('.einst-nav button').forEach((b) => (b.onclick = () => teilZeigen(b.dataset.teil)));
   teilZeigen(einstTeil);
-  $$('.seg button[data-m]').forEach((b) => (b.onclick = async () => { await api.einstellung('modell', b.dataset.m); einstellungen(); }));
+  $$('.seg button[data-m]').forEach((b) => (b.onclick = async () => { await modellSetzen(b.dataset.m); einstellungen(); }));
   $$('.seg button[data-s]').forEach((b) => (b.onclick = () => spracheWechseln(b.dataset.s)));
   $('#anmelden')?.addEventListener('click', async () => { await api['claude-anmelden'](); $('#claude-unten').insertAdjacentHTML('beforeend', '<span class="muted klein">Im Browser anmelden, dann „Neu prüfen“.</span>'); });
   $('#pruefen').onclick = einstellungen;

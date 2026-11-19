@@ -5,8 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-let MODEL = 'sonnet'; // Modell für die Planung, in den Einstellungen wählbar
-const setModell = (m) => { if (['sonnet', 'opus', 'haiku'].includes(m)) MODEL = m; };
+let MODEL = 'sonnet'; // Modell für Planung und neue Terminal-Sitzungen, im Seitenmenü wählbar
+const setModell = (m) => { if (['sonnet', 'opus', 'haiku', 'fable'].includes(m)) MODEL = m; };
+const modell = () => MODEL;
 const STATE = 'projekthelper-state.json';
 // Feste cwd, sonst findet --resume die Sitzung nicht (alter Ordnername bleibt für bestehende Installationen)
 const WORKDIR = path.join(os.homedir(), fs.existsSync(path.join(os.homedir(), '.ki-projekthelper')) ? '.ki-projekthelper' : '.vibewright', 'work');
@@ -41,6 +42,7 @@ async function claude(prompt, { schema, session, sprache = 'de' } = {}) {
   const r = await claudeLauf(args, { input: prompt, cwd: WORKDIR });
   let j;
   try { j = JSON.parse(r.out); } catch { throw new Error(`Claude-Aufruf fehlgeschlagen: ${(r.err || r.out).slice(0, 400)}`); }
+  try { verbrauchMerken(j.modelUsage); } catch {} // Anzeige darf nie die Planung stoppen
   if (j.is_error) {
     const msg = String(j.result || 'Unbekannter Fehler');
     // ponytail: bei Limit nur speichern + Hinweis; automatisch warten und fortsetzen kommt später
@@ -61,6 +63,63 @@ function updateMerker(pruefen, dauer = 60 * 60 * 1000) {
     }
     return ergebnis;
   };
+}
+
+// ---------- Verbrauch je Modell ----------
+// Planungsläufe: modelUsage aus der JSON-Antwort, aufsummiert (costUSD ist laut Claude Code eine Schätzung zum Listenpreis).
+// Terminal-Sitzungen: Tokens aus den Sitzungsdateien der Projektordner – dort gibt es keine Kosten.
+const VERBRAUCH = path.join(path.dirname(WORKDIR), 'verbrauch.json');
+const TOKEN = ['inputTokens', 'outputTokens', 'cacheReadInputTokens', 'cacheCreationInputTokens'];
+const verbrauchLesen = () => { try { return JSON.parse(fs.readFileSync(VERBRAUCH, 'utf8')); } catch { return {}; } };
+function verbrauchMerken(modelUsage) {
+  if (!modelUsage) return;
+  const v = verbrauchLesen();
+  for (const [m, u] of Object.entries(modelUsage)) {
+    const z = (v[m] ??= {});
+    for (const k of [...TOKEN, 'costUSD']) z[k] = (z[k] || 0) + (Number(u[k]) || 0);
+  }
+  fs.mkdirSync(path.dirname(VERBRAUCH), { recursive: true });
+  fs.writeFileSync(VERBRAUCH, JSON.stringify(v), 'utf8');
+}
+
+// Je Datei nur neu lesen, wenn sie sich geändert hat – Sitzungsdateien werden schnell viele MB groß
+const sitzungsCache = new Map();
+function sitzungsNachrichten(f) {
+  const s = fs.statSync(f);
+  const c = sitzungsCache.get(f);
+  if (c?.zeit === s.mtimeMs && c.groesse === s.size) return c.liste;
+  const liste = [];
+  for (const zeile of fs.readFileSync(f, 'utf8').split('\n')) {
+    if (!zeile.includes('"usage"')) continue;
+    let j; try { j = JSON.parse(zeile); } catch { continue; }
+    const m = j.message, u = m?.usage;
+    if (j.type !== 'assistant' || !u || !m.model || m.model === '<synthetic>') continue;
+    liste.push([m.id || j.uuid, m.model, { inputTokens: u.input_tokens, outputTokens: u.output_tokens, cacheReadInputTokens: u.cache_read_input_tokens, cacheCreationInputTokens: u.cache_creation_input_tokens }]);
+  }
+  sitzungsCache.set(f, { zeit: s.mtimeMs, groesse: s.size, liste });
+  return liste;
+}
+// Claude Code legt Sitzungen unter ~/.claude/projects/<Pfad, Sonderzeichen durch „-“ ersetzt> ab
+// shortcut: sehr lange Pfade kürzt Claude Code zusätzlich – solche Projekte fehlen dann in der Anzeige
+const sitzungsOrdner = (ordner) => path.join(CLAUDE_DIR, 'projects', path.resolve(ordner).replace(/[^a-zA-Z0-9]/g, '-'));
+function sitzungsVerbrauch(ordner) {
+  const je = new Map(); // dieselbe Antwort steht oft mehrfach in der Datei (je Inhaltsblock eine Zeile) → nur einmal zählen
+  for (const o of new Set(ordner)) {
+    const d = sitzungsOrdner(o);
+    let dateien = [];
+    try { dateien = fs.readdirSync(d, { recursive: true }).filter((f) => f.endsWith('.jsonl')); } catch { continue; }
+    for (const f of dateien) try { for (const [id, m, u] of sitzungsNachrichten(path.join(d, f))) je.set(id, [m, u]); } catch {}
+  }
+  const summe = {};
+  for (const [m, u] of je.values()) {
+    const z = (summe[m] ??= {});
+    for (const k of TOKEN) z[k] = (z[k] || 0) + (Number(u[k]) || 0);
+  }
+  return summe;
+}
+function verbrauch(info) {
+  const ordner = projekte(info).map((st) => arbeitsordner(info, st)).filter(Boolean);
+  return { planung: verbrauchLesen(), terminal: sitzungsVerbrauch(ordner) };
 }
 
 // ---------- Onboarding & Ablage ----------
@@ -1097,5 +1156,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, modell, verbrauch, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };

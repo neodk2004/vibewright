@@ -81,6 +81,7 @@ const ansichten = {
   einstellungen: 'einstellungen()',
   'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
   'einstellungen-git': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=git]').click(); })()",
+  verbrauch: 'verbrauchZeigen()', // Tabelle je Modell (#16)
 };
 
 const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-layout-'));
