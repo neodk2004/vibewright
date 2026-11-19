@@ -134,6 +134,19 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Added
+- **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. The same choice is in the settings.
+- **Usage per model** (#16): „Usage“ in the sidebar shows the tokens per model (input, output, cache read/write) – for planning runs as reported by Claude Code, including its cost estimate at list price (not billed separately on a Pro/Max subscription), and for all Claude Code sessions in the project folders (tokens only; Claude Code reports no cost there).
+
+#### Changed
+- **The model choice now also applies to new terminal sessions** (#16): the build in the terminal starts with the chosen model (`claude --model …`) instead of your normal Claude Code setting. If you never chose a model in Vibewright, that is Sonnet – check the sidebar before your next build session. Sessions that are already running keep their model.
+
+#### Fixed
+- **„New version available“ did not show up** (#17) when GitHub could not be reached at startup (connection refused or API limit used up): the failed check was remembered until the app was closed. Now only a successful check is remembered, a failed one is retried, and the app checks again every hour while it stays open.
+- **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.
+
 #### 0.3.3 – 2026-11-19
 
 #### Changed
@@ -153,22 +166,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Header status wrapped onto two lines in small windows** (#12): "wartet auf dich" / "Claude arbeitet …" next to the steps now stays on one line; the connectors between the steps get shorter instead.
-
-#### 0.3.1 – 2026-11-17
-
-#### Added
-- **Import a project from your own folder:** *New project → From a folder* takes any existing code folder – on this computer, an external drive, a USB stick, a NAS or a network drive. Vibewright reads it before the interview and plans from there; nothing is copied, and deleting the project in Vibewright never touches the folder.
-
-#### Changed
-- **Larger window at startup:** Vibewright now opens 15 % larger (up to 1380×897), but never larger than the screen.
-
-#### Fixed
-- **Content was cut off in small windows** (#3): cards in the needs analysis and in Settings now scroll when the window is too small, so every entry and button stays reachable (e.g. the "Scope" card, the 7th must-have, *GitHub / Gitea*).
-- **Model buttons overflowed their card in German** (#4): the three model buttons now always fit; long words such as "gründlichsten" are hyphenated.
-- **Startup could stop with "Uncaught Exception: write EPIPE"** on macOS/Linux (#6): reading the PATH from the login shell no longer opens an input pipe.
-- **File list of imported code folders depended on the operating system** (#8): the overview Claude reads before the interview now lists files alphabetically (case-insensitive) on every OS, so the same first 40 files are chosen everywhere; `npm test` is green on macOS again.
-- **Settings footer links wrapped onto two lines in small windows** (#5): the buttons in the bottom bar now always stay on one line; only the info text wraps.
-- **macOS: subscription usage (5 h / week) was not shown** (#10): if the keychain held an old Claude Code entry besides the current one, Vibewright read the old, expired token. It now reads the entry of the current user first.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
