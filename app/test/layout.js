@@ -7,8 +7,13 @@ const os = require('os');
 const { spawnSync } = require('child_process');
 const core = require('../core');
 
-// Meldet abgeschnittene Inhalte (overflow hidden/clip) und Elemente, die aus einem nicht scrollbaren Elternteil ragen
-const MESSEN = `window.__messen = () => {
+// Meldet abgeschnittene Inhalte (overflow hidden/clip) und Elemente, die aus einem nicht scrollbaren Elternteil ragen.
+// Gemessen wird das fertige Layout: Animationen, Übergänge und Hover sind dabei aus – sonst zählen je nach Zeitpunkt
+// der endlose Glanz im Fortschrittsbalken oder eine vom Mauszeiger angehobene Karte als „abgeschnitten“.
+const MESSEN = `window.__messen = (ansicht) => {
+  const still = document.head.appendChild(document.createElement('style'));
+  still.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}html{pointer-events:none!important}';
+  void document.body.offsetHeight; // Layout sofort neu berechnen – requestAnimationFrame pausiert bei verdecktem Fenster
   const out = [];
   const name = (e) => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\\s+/).join('.') : '');
   for (const e of document.querySelectorAll('#main *, #overlay *')) {
@@ -39,7 +44,8 @@ const MESSEN = `window.__messen = () => {
       }
     }
   }
-  console.log('MESSUNG ' + JSON.stringify([...new Set(out)]));
+  still.remove();
+  console.log('MESSUNG ' + ansicht + ' ' + JSON.stringify([...new Set(out)]));
 };`;
 
 // Lange Wörter und URLs ohne Leerzeichen, wie Claude sie liefern kann (#14)
@@ -83,20 +89,28 @@ fs.mkdirSync(ablage);
 core.neu(core.ablageInfo({ modus: 'lokal', ablage }), 'Layout-Test', 'Ein Projekt nur für den Layout-Test');
 const electron = require('electron'); // liefert im Node-Prozess den Pfad zur Electron-Programmdatei
 const fehler = [];
+// Je Sprache nur ein App-Start, der alle Ansichten nacheinander misst (statt eines Starts pro Ansicht)
+const schritte = Object.entries(ansichten).map(([n, js]) => `[${JSON.stringify(n)}, async () => { await ${js}; }]`).join(',\n');
 for (const sprache of ['de', 'en']) {
   const daten = path.join(basis, `daten-${sprache}`);
   fs.mkdirSync(daten);
   fs.writeFileSync(path.join(daten, 'einstellungen.json'), JSON.stringify({ modus: 'lokal', ablage, sprache }));
-  for (const [ansicht, js] of Object.entries(ansichten)) {
-    const env = { ...process.env, KPH_USERDATA: daten, KPH_GROESSE: '960x580', SCREENSHOT: path.join(basis, `${ansicht}-${sprache}.png`), SCREENSHOT_DELAY: '1500',
-      // Einblend-Animationen abwarten (feste Zeit war unter Last zu knapp); endlose wie Spinner nicht mitzählen
-      SCREENSHOT_JS: `${MESSEN}; (async () => { await ${js}; await new Promise((r) => setTimeout(r, 2500));
-        const fertig = Promise.allSettled(document.getAnimations().filter((a) => a.effect.getTiming().iterations !== Infinity).map((a) => a.finished));
-        await Promise.race([fertig, new Promise((r) => setTimeout(r, 8000))]); __messen(); })()` };
-    const r = spawnSync(electron, ['.'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8', timeout: 60000 });
-    const zeile = (r.stdout || '').split('\n').find((z) => z.includes('MESSUNG '));
-    assert.ok(zeile, `${ansicht}/${sprache}: keine Messung (Exit ${r.status}, ${r.error || ''})`);
-    const befunde = JSON.parse(zeile.slice(zeile.indexOf('MESSUNG ') + 8).replace(/\s*\(.*\)\s*$/, ''));
+  // EN lädt beim ersten Start einmal neu (Sprache steht in localStorage): erst messen, wenn die Seite in der richtigen Sprache ist;
+  // __lauf sorgt dafür, dass der doppelt ausgelöste Aufruf denselben Lauf abwartet statt einen zweiten zu starten
+  const env = { ...process.env, KPH_USERDATA: daten, KPH_GROESSE: '960x580', SCREENSHOT: path.join(basis, `${sprache}.png`), SCREENSHOT_DELAY: '1500',
+    SCREENSHOT_JS: `${MESSEN}; window.__lauf ??= (async () => {
+      while (document.documentElement.lang !== '${sprache}') await new Promise((r) => setTimeout(r, 200));
+      for (const [ansicht, zeigen] of [${schritte}]) { await zeigen(); await new Promise((r) => setTimeout(r, 1500)); await __messen(ansicht); }
+    })()` };
+  const r = spawnSync(electron, ['.'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8', timeout: 180000 });
+  const ergebnis = new Map();
+  for (const z of (r.stdout || '').split('\n')) {
+    const m = /MESSUNG (\S+) (\[.*\])/.exec(z.replace(/\s*\([^()]*\)\s*$/, ''));
+    if (m) ergebnis.set(m[1], JSON.parse(m[2]));
+  }
+  for (const ansicht of Object.keys(ansichten)) {
+    const befunde = ergebnis.get(ansicht);
+    assert.ok(befunde, `${ansicht}/${sprache}: keine Messung (Exit ${r.status}, ${r.error || ''})\n${(r.stdout || '').split('\n').filter((z) => z.includes('[ui]')).slice(-4).join('\n')}`);
     if (befunde.length) fehler.push(`${ansicht}/${sprache}: ${befunde.join(', ')}`);
     else console.log(`${ansicht}/${sprache}: ok`);
   }
