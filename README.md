@@ -134,6 +134,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### Unreleased
+
+#### Added
+- **Usage statistics like `/stats`** (#19): the usage view now starts with an overview of all Claude Code sessions on this computer – an activity grid for the last 12 months, favorite model, total tokens, sessions, active days, most active day, longest session and streaks – and a models tab with tokens per day per model and each model's share. Switch between all time, last 7 and last 30 days. The numbers come from Claude Code's own statistics file (`~/.claude/stats-cache.json`), as of yesterday; if Claude Code changes its format, Vibewright shows a note instead of wrong numbers.
+
 #### 0.3.4 – 2026-11-19
 
 #### Added
@@ -158,14 +163,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - **Model choice in the settings was too narrow at small window sizes** („Sonn-et“): the three models are now listed as rows.
 - The layout test now checks all views with long words and URLs, and also catches split words, squeezed columns and sideways scrolling.
 - **A long „next step“ in the work view pushed the idea card out of the window**: it now shows at most 3 lines; hover for the full text.
-
-#### 0.3.2 – 2026-11-18
-
-#### Added
-- **Imported projects start where they really are**: when importing from GitHub / Gitea, Claude Code or your own folder (e.g. an Obsidian project), Vibewright now also reads the documentation (docs/, wiki, notes, CHANGELOG, status files – up to 3 levels deep, newest and progress files first) besides README and CLAUDE.md. The plan then ticks off the steps that are already done, so progress, dashboard and the next step match the actual state. Claude also decides whether the needs analysis and plan still need your approval: if the docs already state goal and scope (or contain a roadmap), Vibewright creates them on its own and goes straight to the tool check, with a short note on how far the project is.
-
-#### Fixed
-- **Header status wrapped onto two lines in small windows** (#12): "wartet auf dich" / "Claude arbeitet …" next to the steps now stays on one line; the connectors between the steps get shorter instead.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
