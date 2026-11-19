@@ -111,7 +111,7 @@ Gedanken in die Kachel tippen und **Einarbeiten** (oder Strg+Enter). Claude ordn
 
 **⚙ Einstellungen** unten in der Seitenleiste. Links wählst du den Bereich – grüner Punkt: alles eingerichtet, roter Punkt: da fehlt noch etwas –, rechts erscheinen seine Einstellungen.
 
-- **Claude:** Status, Anmelden, **Modell** (Haiku = sparsam, Sonnet = Standard, Opus = gründlich, Fable = nur mit Usage Credits, in keinem Abo enthalten). Es gilt für die Planung und neue Terminal-Sitzungen und lässt sich auch im Seitenmenü umstellen. Dort zeigt **Verbrauch** die Tokens je Modell.
+- **Claude:** Status, Anmelden, **Modell** (Haiku = sparsam, Sonnet = Standard, Opus = gründlich, Fable = nur mit Usage Credits, in keinem Abo enthalten). Es gilt für die Planung und neue Terminal-Sitzungen und lässt sich auch im Seitenmenü umstellen. Dort zeigt **Verbrauch** eine Statistik wie `/stats` in Claude Code (Aktivität pro Tag, Kennzahlen, Tokens je Modell im Verlauf) und dazu die Tokens für Planung und Projektordner.
 - **Ablage:** Vault oder Ordner, Dataview- und Kanban-Erkennung, Ablage wechseln, Obsidian installieren.
 - **Git:** Name und E-Mail für Commits, automatische Git-Projekte an/aus.
 - **Sprache** (oben rechts): 🇩🇪 / 🇬🇧.

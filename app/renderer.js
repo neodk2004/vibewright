@@ -309,11 +309,86 @@ async function modellSetzen(m) {
   if ($('#modell-wahl')) $('#modell-wahl').value = m;
 }
 
-// Verbrauch je Modell: echte Token-Zahlen von Claude Code, Kosten nur als Schätzung zum Listenpreis
+// Verbrauch: oben die Statistik wie /stats (Claude Codes stats-cache), unten was nur Vibewright kennt (#16, #19)
+let statsTab = 'ueberblick', statsTage = null;
+const modellName = (m) => { const [f = '', ...v] = String(m).replace(/^claude-/, '').replace(/-\d{8}$/, '').split('-'); return `${f.charAt(0).toUpperCase()}${f.slice(1)} ${v.join('.')}`.trim(); };
+const kompakt = (n) => new Intl.NumberFormat(uiSprache, { notation: 'compact', maximumFractionDigits: 1 }).format(n || 0);
+const modellFarbe = (k) => ['var(--accent)', ...FARBEN][k % (FARBEN.length + 1)];
+const utc = (iso) => new Date(`${iso}T00:00:00Z`);
+const isoTag = (d) => d.toISOString().slice(0, 10);
+
+// Kachelgrafik der letzten 53 Wochen, Montag oben; 4 Stufen nach Vierteln der aktiven Tage (ein Ausreißer soll nicht alles blass machen)
+function heatmap(tageTokens, stand) {
+  const ende = utc(stand), start = utc(stand);
+  start.setUTCDate(ende.getUTCDate() - ((ende.getUTCDay() + 6) % 7) - 52 * 7);
+  const werte = Object.values(tageTokens).filter(Boolean).sort((a, b) => a - b);
+  const grenze = [0.25, 0.5, 0.75].map((q) => werte[Math.floor(q * (werte.length - 1))] ?? 0);
+  let zellen = '', monate = '', letzterMonat, letzteMarke = -9;
+  for (let w = 0; w < 53; w++) for (let t = 0; t < 7; t++) {
+    const d = new Date(start); d.setUTCDate(start.getUTCDate() + w * 7 + t);
+    if (d > ende) continue;
+    const n = tageTokens[isoTag(d)] || 0;
+    const stufe = n ? 1 + grenze.filter((g) => n > g).length : 0;
+    zellen += `<rect x="${30 + w * 12}" y="${16 + t * 12}" width="10" height="10" rx="2" class="hm${stufe}"><title>${d.toLocaleDateString(uiSprache, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })} · ${kompakt(n)} Tokens</title></rect>`;
+    if (t === 0 && d.getUTCMonth() !== letzterMonat) {
+      letzterMonat = d.getUTCMonth();
+      if (w - letzteMarke >= 3) { monate += `<text x="${30 + w * 12}" y="10">${d.toLocaleDateString(uiSprache, { month: 'short', timeZone: 'UTC' })}</text>`; letzteMarke = w; }
+    }
+  }
+  const wochentage = [0, 2, 4].map((t) => `<text x="0" y="${25 + t * 12}">${new Date(Date.UTC(2024, 0, 1 + t)) /* 1.1.2024 war ein Montag */.toLocaleDateString(uiSprache, { weekday: 'short', timeZone: 'UTC' })}</text>`).join('');
+  return `<svg class="heatmap" viewBox="0 0 ${30 + 53 * 12} ${16 + 7 * 12}" role="img" aria-label="${uiSprache === 'en' ? 'Activity per day' : 'Aktivität pro Tag'}">${monate}${wochentage}${zellen}</svg>
+    <div class="hm-legende muted klein">Weniger ${[0, 1, 2, 3, 4].map((k) => `<svg width="10" height="10"><rect width="10" height="10" rx="2" class="hm${k}"/></svg>`).join('')} Mehr</div>`;
+}
+
+// Tokens pro Tag je Modell; Tage ohne Nutzung zählen als 0, damit Lücken als Einbruch sichtbar sind
+function verlaufSvg(verlauf, modelle) {
+  if (!verlauf.length) return '<p class="muted">Noch kein Verlauf.</p>';
+  const erster = utc(verlauf[0].date), tage = Math.round((utc(verlauf.at(-1).date) - erster) / 864e5) + 1;
+  if (tage < 2) return '<p class="muted">Zu wenige Tage für einen Verlauf.</p>';
+  const jeTag = Object.fromEntries(verlauf.map((d) => [d.date, d.tokensByModel]));
+  const B = 640, H = 170, L = 72, U = 20;
+  const max = Math.max(1, ...verlauf.flatMap((d) => Object.values(d.tokensByModel)));
+  const x = (i) => L + (i / (tage - 1)) * (B - L - 6), y = (n) => 6 + (1 - n / max) * (H - U - 6);
+  const tag = (i) => { const d = new Date(erster); d.setUTCDate(erster.getUTCDate() + i); return d; };
+  const raster = [0, 0.5, 1].map((f) => `<line x1="${L}" x2="${B - 6}" y1="${y(max * f)}" y2="${y(max * f)}" class="raster"/><text x="${L - 6}" y="${y(max * f) + 3}" text-anchor="end">${kompakt(max * f)}</text>`).join('');
+  const marken = [0, Math.floor((tage - 1) / 2), tage - 1].map((i) => `<text x="${x(i)}" y="${H - 4}" text-anchor="${i ? (i === tage - 1 ? 'end' : 'middle') : 'start'}">${tag(i).toLocaleDateString(uiSprache, { day: 'numeric', month: 'short', timeZone: 'UTC' })}</text>`).join('');
+  const linien = modelle.map(({ m }, k) => `<polyline fill="none" stroke="${modellFarbe(k)}" stroke-width="1.6" stroke-linejoin="round" points="${Array.from({ length: tage }, (_, i) => `${x(i).toFixed(1)},${y(jeTag[isoTag(tag(i))]?.[m] || 0).toFixed(1)}`).join(' ')}"/>`).join('');
+  return `<svg class="verlauf" viewBox="0 0 ${B} ${H}" role="img" aria-label="${uiSprache === 'en' ? 'Tokens per day' : 'Tokens pro Tag'}">${raster}${marken}${linien}</svg>`;
+}
+
+const dauer = (ms) => {
+  const m = Math.floor(ms / 6e4), en = uiSprache === 'en';
+  return [[Math.floor(m / 1440), en ? 'd' : ' T'], [Math.floor(m / 60) % 24, en ? 'h' : ' Std'], [m % 60, en ? 'm' : ' Min']].filter(([n]) => n).map(([n, e]) => n + e).join(' ') || '–';
+};
+
+function statsHtml(s) {
+  if (s.fehler === 'fehlt') return '<p class="muted">Claude Code hat noch keine Statistik angelegt. Sie entsteht, sobald du Claude Code eine Weile genutzt hast.</p>';
+  if (s.fehler) return '<p class="muted">Claude Code speichert seine Statistik in einem neuen Format. Diese Vibewright-Version kann es noch nicht lesen – bitte auf ein Update achten.</p>';
+  const datum = (iso) => (iso ? utc(iso).toLocaleDateString(uiSprache, { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '–');
+  const kz = (name, wert) => `<div><dt>${name}</dt><dd>${wert}</dd></div>`;
+  const summe = (k) => s.modelle.reduce((a, x) => a + (x.teile?.[k] || 0), 0);
+  const tabs = `<div class="seg seg-klein">${[['ueberblick', 'Überblick'], ['modelle', 'Modelle']].map(([k, n]) => `<button data-tab="${k}" class="${statsTab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <div class="seg seg-klein">${[[null, 'Gesamt'], [7, '7 Tage'], [30, '30 Tage']].map(([t, n]) => `<button data-tage="${t ?? ''}" class="${statsTage === t ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  const ueberblick = `${heatmap(s.tageTokens, s.stand)}
+    <dl class="kennzahlen">
+      ${kz('Lieblingsmodell', esc(s.modelle[0] ? modellName(s.modelle[0].m) : '–'))}${kz('Tokens gesamt', kompakt(s.gesamt))}
+      ${kz('Sitzungen', s.sitzungen.toLocaleString(uiSprache))}${s.laengsteSitzung ? kz('Längste Sitzung', dauer(s.laengsteSitzung)) : ''}
+      ${kz('Aktive Tage', `${s.aktiveTage}/${s.tageGesamt}`)}${kz('Längste Serie', `${s.laengsteSerie} ${uiSprache === 'en' ? 'days' : 'Tage'}`)}
+      ${kz('Aktivster Tag', datum(s.aktivsterTag))}${kz('Aktuelle Serie', `${s.aktuelleSerie} ${uiSprache === 'en' ? 'days' : 'Tage'}`)}
+    </dl>
+    ${statsTage ? '' : `<p class="muted klein">Eingabe ${kompakt(summe('inputTokens'))} · Ausgabe ${kompakt(summe('outputTokens'))} · Cache gelesen ${kompakt(summe('cacheReadInputTokens'))} · Cache geschrieben ${kompakt(summe('cacheCreationInputTokens'))}</p>`}`;
+  const modelle = `${verlaufSvg(s.verlauf, s.modelle)}
+    <div class="modell-liste">${s.modelle.map((x, k) => `<div><b><span class="punkt" style="background:${modellFarbe(k)}"></span>${esc(modellName(x.m))}</b> <span class="muted">${(x.anteil * 100).toLocaleString(uiSprache, { maximumFractionDigits: 1 })} %</span>
+      <div class="muted klein">${x.teile ? `Eingabe ${kompakt(x.teile.inputTokens)} · Ausgabe ${kompakt(x.teile.outputTokens)}<br>Cache ${kompakt(x.teile.cacheReadInputTokens)} gelesen · ${kompakt(x.teile.cacheCreationInputTokens)} geschrieben` : `${kompakt(x.tokens)} Tokens`}</div></div>`).join('')}</div>
+    ${statsTage ? '<span class="muted klein">Aufteilung nach Eingabe, Ausgabe und Cache gibt es nur für „Gesamt“.</span>' : ''}`;
+  return `<div class="stats-kopf">${tabs}<span class="muted klein">Stand ${datum(s.stand)} · alle Claude-Code-Sitzungen auf diesem Rechner</span></div>
+    ${statsTab === 'modelle' ? modelle : ueberblick}`;
+}
+
 async function verbrauchZeigen() {
   aktuell = null;
   seitenleiste();
-  const v = await api.verbrauch();
+  const [v, s] = await Promise.all([api.verbrauch(), api.stats(statsTage)]);
   if (v.fehler) return ansicht(null, `<div class="mitte"><div class="box"><div class="fehler">${esc(v.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: start }]);
   const zahl = (n) => (n || 0).toLocaleString(uiSprache);
   const tabelle = (daten, kosten) => {
@@ -322,13 +397,16 @@ async function verbrauchZeigen() {
     return `<div class="tabelle-scroll"><table class="verbrauch"><tr><th>Modell</th><th>Eingabe</th><th>Ausgabe</th><th>Cache gelesen</th><th>Cache geschrieben</th>${kosten ? '<th>Kosten*</th>' : ''}</tr>
       ${zeilen.map(([m, u]) => `<tr><td>${esc(m)}</td><td>${zahl(u.inputTokens)}</td><td>${zahl(u.outputTokens)}</td><td>${zahl(u.cacheReadInputTokens)}</td><td>${zahl(u.cacheCreationInputTokens)}</td>${kosten ? `<td>$${(u.costUSD || 0).toFixed(2)}</td>` : ''}</tr>`).join('')}</table></div>`;
   };
-  ansicht(null, `<div class="einst-kopf"><h2>Verbrauch je Modell</h2><span class="muted">Tokens, wie Claude Code sie meldet</span></div>
+  ansicht(null, `<div class="einst-kopf"><h2>Verbrauch</h2><span class="muted">Tokens, wie Claude Code sie meldet</span></div>
   <div class="einst einst-verbrauch">
-    <div class="karte" style="--ak:var(--accent)"><span class="label">Planung</span>${tabelle(v.planung, true)}
+    <div class="karte stats" style="--ak:var(--accent)"><span class="label">Statistik</span>${statsHtml(s)}</div>
+    <div class="karte" style="--ak:#e0a84a"><span class="label">Planung in Vibewright</span>${tabelle(v.planung, true)}
       <span class="muted klein">* Geschätzt zum Listenpreis – im Abo (Pro/Max) nicht einzeln abgerechnet.</span></div>
-    <div class="karte" style="--ak:#4fb8c9"><span class="label">Terminal-Sitzungen</span>${tabelle(v.terminal, false)}
+    <div class="karte" style="--ak:#4fb8c9"><span class="label">Terminal-Sitzungen in Vibewright-Projekten</span>${tabelle(v.terminal, false)}
       <span class="muted klein">Alle Claude-Code-Sitzungen in den Projektordnern. Kosten meldet Claude Code hier nicht.</span></div>
   </div>`, [{ text: 'Zurück', klick: start }, 'sp', { text: 'Aktualisieren', klick: verbrauchZeigen }]);
+  $$('.stats [data-tab]').forEach((b) => (b.onclick = () => { statsTab = b.dataset.tab; verbrauchZeigen(); }));
+  $$('.stats [data-tage]').forEach((b) => (b.onclick = () => { statsTage = Number(b.dataset.tage) || null; verbrauchZeigen(); }));
 }
 async function einstellungen() {
   aktuell = null;
