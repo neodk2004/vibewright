@@ -119,6 +119,43 @@ function sitzungsVerbrauch(ordner) {
   }
   return summe;
 }
+// Statistik wie /stats: aus Claude Codes eigenem Zwischenspeicher ~/.claude/stats-cache.json (laut Doku „Historical totals
+// shown by /usage“). Der Aufbau ist nicht dokumentiert – bei unbekannter Version lieber nichts anzeigen als Falsches.
+const tagPlus = (iso, n) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+function statsAuswerten(j, tage, heute = new Date().toLocaleDateString('sv')) {
+  if (j?.version !== 5 || !Array.isArray(j.dailyModelTokens) || !Array.isArray(j.dailyActivity)) return { fehler: 'format' };
+  const ab = tage ? tagPlus(heute, 1 - tage) : '';
+  const verlauf = j.dailyModelTokens.filter((d) => d.date >= ab).sort((a, b) => a.date.localeCompare(b.date));
+  const aktiv = j.dailyActivity.filter((d) => d.date >= ab);
+  const jeModell = {};
+  for (const d of verlauf) for (const [m, n] of Object.entries(d.tokensByModel)) jeModell[m] = (jeModell[m] || 0) + (Number(n) || 0);
+  const gesamt = Object.values(jeModell).reduce((a, b) => a + b, 0);
+  // Aufteilung nach Eingabe/Ausgabe/Cache gibt es nur als Gesamtsumme, nicht je Tag
+  const modelle = Object.entries(jeModell).sort((a, b) => b[1] - a[1])
+    .map(([m, n]) => ({ m, tokens: n, anteil: gesamt ? n / gesamt : 0, ...(tage ? {} : { teile: j.modelUsage?.[m] }) }));
+  // Serien zählen über alle aktiven Tage; die aktuelle endet am letzten berechneten Tag
+  let laengste = 0, lauf = 0, vorher;
+  for (const d of j.dailyActivity.map((x) => x.date).sort()) { lauf = vorher && tagPlus(vorher, 1) === d ? lauf + 1 : 1; laengste = Math.max(laengste, lauf); vorher = d; }
+  const stand = j.lastComputedDate;
+  const erster = [(j.firstSessionDate || '').slice(0, 10), ab].sort().pop();
+  const spanne = erster && stand ? Math.round((new Date(stand) - new Date(erster)) / 864e5) + 1 : 0;
+  const summe = (d) => Object.values(d.tokensByModel).reduce((a, b) => a + (Number(b) || 0), 0);
+  return {
+    stand, gesamt, modelle, verlauf,
+    tageTokens: Object.fromEntries(j.dailyModelTokens.map((d) => [d.date, summe(d)])),
+    sitzungen: aktiv.reduce((a, d) => a + (Number(d.sessionCount) || 0), 0), // Zahlen erzwingen: die Datei landet in der Oberfläche
+    aktiveTage: aktiv.length, tageGesamt: Math.max(spanne, aktiv.length),
+    aktivsterTag: verlauf.reduce((b, d) => (!b || summe(d) > summe(b) ? d : b), null)?.date,
+    laengsteSerie: laengste, aktuelleSerie: vorher === stand ? lauf : 0,
+    laengsteSitzung: tage ? null : Number(j.longestSession?.duration) || null,
+  };
+}
+function claudeStats(tage) {
+  let j;
+  try { j = JSON.parse(fs.readFileSync(path.join(CLAUDE_DIR, 'stats-cache.json'), 'utf8')); } catch { return { fehler: 'fehlt' }; }
+  return statsAuswerten(j, [7, 30].includes(tage) ? tage : null);
+}
+
 function verbrauch(info) {
   const ordner = projekte(info).map((st) => arbeitsordner(info, st)).filter(Boolean);
   return { planung: verbrauchLesen(), terminal: sitzungsVerbrauch(ordner) };
@@ -1180,5 +1217,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };

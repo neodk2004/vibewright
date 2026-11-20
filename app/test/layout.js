@@ -83,7 +83,8 @@ const ansichten = {
   einstellungen: 'einstellungen()',
   'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
   'einstellungen-git': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=git]').click(); })()",
-  verbrauch: 'verbrauchZeigen()', // Tabelle je Modell (#16)
+  verbrauch: "(statsTab = 'ueberblick', statsTage = null, verbrauchZeigen())", // Statistik + Tabellen (#16, #19)
+  'verbrauch-modelle': "(statsTab = 'modelle', statsTage = 7, verbrauchZeigen())",
   // Ideen-Lane (#22): Liste, Zeile im Bearbeiten, Rückfrage vor dem Löschen
   ideen: mit(IDEEN, 'ideenZeigen(st, cockpit);'),
   'ideen-bearbeiten': mit(IDEEN, "ideenZeigen(st, cockpit); document.querySelector('.idee-zeile [data-akt=aendern]').click();"),

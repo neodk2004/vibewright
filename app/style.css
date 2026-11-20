@@ -406,6 +406,29 @@ table.verbrauch th:first-child,table.verbrauch td:first-child{text-align:left}
 table.verbrauch th{color:var(--muted);font-weight:500}
 .einst.einst-verbrauch{grid-template-columns:minmax(0,1fr);align-content:start;overflow-y:auto}
 .tabelle-scroll{overflow-x:auto;max-width:100%}
+/* Statistik wie /stats (#19) */
+.stats-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px}
+.stats-kopf .muted{margin-left:auto}
+.stats-kopf .seg{grid-auto-flow:column;grid-template-columns:none} /* alle Knöpfe in einer Reihe */
+.stats-kopf .seg button{padding:4px 12px;white-space:nowrap}
+.stats svg text{font-size:10px;fill:var(--muted)}
+svg.heatmap,svg.verlauf{display:block;width:100%;height:auto;flex:none} /* in der Flex-Karte sonst auf 0 geschrumpft */
+svg.heatmap{max-width:700px}
+.einst.einst-verbrauch{grid-auto-rows:max-content}
+.einst-verbrauch .karte{max-height:none;max-width:760px;overflow:visible} /* die Seite scrollt, nicht die Karte */
+.hm0{fill:var(--line)}
+.hm1{fill:color-mix(in srgb,var(--accent) 30%,var(--line))}
+.hm2{fill:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.hm3{fill:color-mix(in srgb,var(--accent) 80%,var(--line))}
+.hm4{fill:var(--accent)}
+.hm-legende{display:flex;align-items:center;gap:3px}
+dl.kennzahlen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;margin:10px 0 4px}
+dl.kennzahlen div{display:flex;gap:8px;min-width:0}
+dl.kennzahlen dt{color:var(--muted)}
+dl.kennzahlen dd{margin:0;font-weight:600;color:var(--accent)}
+svg.verlauf .raster{stroke:var(--line)}
+.modell-liste{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;margin-top:8px}
+.modell-liste .punkt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 /* Ideen-Lane (#22) */
 .ideen-lane{flex:1 !important;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;max-width:760px}
 .ideen-lane .karte{flex:none;overflow:visible} /* die Seite scrollt, nicht die Karte */

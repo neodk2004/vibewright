@@ -183,6 +183,7 @@ handle('regeln-speichern', (text) => {
 });
 handle('limits', () => core.claudeLimits());
 handle('verbrauch', () => core.verbrauch(info()));
+handle('stats', (tage) => core.claudeStats(tage));
 handle('laden', (name) => core.laden(info(), name));
 handle('weiter', (name, eingabe) => core.weiter(info(), core.laden(info(), name), eingabe));
 handle('oeffnen', (datei) => (info().modus === 'obsidian'
