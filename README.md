@@ -134,7 +134,7 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
-#### Unreleased
+#### 0.3.5 – 2026-11-20
 
 #### Added
 - **Usage statistics like `/stats`** (#19): the usage view now starts with an overview of all Claude Code sessions on this computer – an activity grid for the last 12 months, favorite model, total tokens, sessions, active days, most active day, longest session and streaks – and a models tab with tokens per day per model and each model's share. Switch between all time, last 7 and last 30 days. The numbers come from Claude Code's own statistics file (`~/.claude/stats-cache.json`), as of yesterday; if Claude Code changes its format, Vibewright shows a note instead of wrong numbers.
