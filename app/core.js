@@ -153,7 +153,7 @@ function statsAuswerten(j, tage, heute = new Date().toLocaleDateString('sv')) {
 function claudeStats(tage) {
   let j;
   try { j = JSON.parse(fs.readFileSync(path.join(CLAUDE_DIR, 'stats-cache.json'), 'utf8')); } catch { return { fehler: 'fehlt' }; }
-  return statsAuswerten(j, [7, 30].includes(tage) ? tage : null);
+  try { return statsAuswerten(j, [7, 30].includes(tage) ? tage : null); } catch { return { fehler: 'format' }; } // Aufbau undokumentiert: kaputte Einträge → Hinweis statt Absturz
 }
 
 function verbrauch(info) {

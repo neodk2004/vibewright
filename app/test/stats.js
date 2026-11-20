@@ -1,6 +1,10 @@
 // Prüft die Auswertung von Claude Codes stats-cache.json (#19) – ohne echte Daten.
 // Aufruf: node test/stats.js
 const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+process.env.CLAUDE_CONFIG_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'stats-')); // nie die echte Statistik lesen
 const core = require('../core');
 
 const tag = (date, tokens, sessionCount = 1) => ({ a: { date, messageCount: 1, sessionCount, toolCallCount: 0 }, t: { date, tokensByModel: tokens } });
@@ -54,4 +58,8 @@ assert.strictEqual(boese.gesamt, 0);
 // Unbekanntes Format: lieber nichts als Falsches
 assert.deepStrictEqual(core.statsAuswerten({ ...cache, version: 6 }, null), { fehler: 'format' });
 assert.deepStrictEqual(core.statsAuswerten(null, null), { fehler: 'format' });
+// Datei mit richtiger Version, aber kaputten Einträgen: Hinweis statt Absturz der Ansicht
+assert.deepStrictEqual(core.claudeStats(null), { fehler: 'fehlt' });
+fs.writeFileSync(path.join(process.env.CLAUDE_CONFIG_DIR, 'stats-cache.json'), JSON.stringify({ version: 5, dailyActivity: [], dailyModelTokens: [{ date: '2026-11-01', tokensByModel: null }] }));
+assert.deepStrictEqual(core.claudeStats(null), { fehler: 'format' });
 console.log('stats ok');
