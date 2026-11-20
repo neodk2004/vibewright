@@ -213,6 +213,7 @@ const ideeAufnehmen = (name, text) => {
   return sitzungen.has(name) ? st : core.ideenVerarbeiten(info(), name);
 };
 handle('idee', ideeAufnehmen);
+handle('idee-aendern', (name, wartend, i, alt, text) => core.ideeAendern(info(), name, wartend, i, alt, text));
 // ---------- Pflege-Modus: alle Phasen erledigt → Fehler und Wünsche laufen über die Issues des Projekt-Repos ----------
 async function pflegeZiel(st) {
   if (!st.repo || !fs.existsSync(path.join(st.repo, '.git'))) return null;
@@ -229,13 +230,13 @@ function issueErledigt(name, nr) {
   return st;
 }
 handle('pflege-pruefen', async (name) => {
-  const st = core.laden(info(), name);
-  const ziel = await pflegeZiel(st);
+  const ziel = await pflegeZiel(core.laden(info(), name));
+  let issues, fehler = null;
+  try { issues = ziel ? await core.forgeIssues(forgeKonto(), forgeToken(), ziel) : []; } catch (e) { fehler = e.message; }
+  const st = core.laden(info(), name); // erst nach dem Warten laden, sonst überschreibt die Prüfung inzwischen geänderte Ideen (#22)
   st.pflegeRepo = ziel ? `${ziel.owner}/${ziel.repo}` : null;
-  try {
-    st.issuesNeu = ziel ? (await core.forgeIssues(forgeKonto(), forgeToken(), ziel)).filter((x) => !(st.issuesErledigt || []).includes(x.nr)) : [];
-    st.pflegeFehler = null;
-  } catch (e) { st.pflegeFehler = e.message; }
+  if (issues) st.issuesNeu = issues.filter((x) => !(st.issuesErledigt || []).includes(x.nr));
+  st.pflegeFehler = fehler;
   core.speichern(info(), st);
   return st;
 });

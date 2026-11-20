@@ -821,7 +821,7 @@ function cockpit(st) {
     cockpit(await api.abhaken(st.name, gewaehlt, Number(cb.dataset.j), cb.checked));
   }));
   $$('.zeit button').forEach((b) => (b.onclick = () => { gewaehlt = Number(b.dataset.i); cockpit(st); }));
-  if (pflege) { pflegeBinden(st); pflegePruefen(st); } else ideeBinden(st, cockpit);
+  if (pflege) { pflegeBinden(st); pflegePruefen(st); } else ideeBinden(st, cockpit, cockpit);
 }
 
 // ---------- Pflege-Kachel: neue Issues aus dem Repo + Fehler/Wunsch melden ----------
@@ -879,10 +879,11 @@ function ideeKachel(st) {
     : st.letzteIdee ? `✓ ${esc(st.letzteIdee)}` : 'Claude ordnet den Gedanken in die passende Phase ein.';
   return `<div class="karte idee" style="--ak:var(--accent)"><span class="label">Mir ist noch was eingefallen</span>
     <textarea id="idee-text" rows="2" placeholder="Gedanke eintippen …">${esc(ideeEntwurf)}</textarea>
-    <div class="idee-fuss"><span class="muted" id="idee-info" title="${esc(st.letzteIdee || '')}">${info}</span><button class="btn" id="idee-los">Einarbeiten</button></div></div>`;
+    <div class="idee-fuss"><span class="muted" id="idee-info" title="${esc(st.letzteIdee || '')}">${info}</span>${ideenKnopf(st)}<button class="btn" id="idee-los">Einarbeiten</button></div></div>`;
 }
-function ideeBinden(st, neuZeichnen) {
+function ideeBinden(st, neuZeichnen, zurueck) {
   const feld = $('#idee-text');
+  $('#ideen-auf').onclick = () => ideenZeigen(st, zurueck);
   // Feld wächst mit dem Text mit, damit nichts gescrollt werden muss (Obergrenze: halbe Fensterhöhe)
   const wachsen = () => { feld.style.height = 'auto'; feld.style.height = `${feld.scrollHeight + 2}px`; };
   const infoAlt = $('#idee-info').innerHTML;
@@ -895,14 +896,52 @@ function ideeBinden(st, neuZeichnen) {
   feld.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('#idee-los').click(); }; // Strg bzw. ⌘ auf dem Mac
   $('#idee-los').onclick = async () => {
     if (!feld.value.trim()) return feld.focus();
-    $('#idee-los').disabled = true;
+    $('#idee-los').disabled = $('#ideen-auf').disabled = true; // Liste erst wieder öffnen, wenn die Antwort neu gezeichnet ist
     $('#idee-info').innerHTML = '<span class="spin klein"></span> Claude ordnet ein …';
     const r = await api.idee(st.name, feld.value);
-    if (r.fehler) { $('#idee-los').disabled = false; $('#idee-info').textContent = r.fehler; return; }
+    if (r.fehler) { $('#idee-los').disabled = $('#ideen-auf').disabled = false; $('#idee-info').textContent = r.fehler; return; }
     ideeEntwurf = '';
     aktuell = r;
     neuZeichnen(r);
   };
+}
+
+// ---------- Ideen-Lane (#22): alle Einfälle sehen, Text korrigieren, löschen – der Plan bleibt unberührt ----------
+const ideenKnopf = (st) => `<button class="btn ghost" id="ideen-auf" title="Alle Ideen ansehen, korrigieren oder löschen">Ideen (${(st.ideen?.length || 0) + (st.ideenWarten?.length || 0)})</button>`;
+function ideenZeigen(st, zurueck) {
+  const warten = st.ideenWarten || [], fertig = st.ideen || [];
+  const text = (z) => (z.dataset.w ? warten[z.dataset.i] : fertig[z.dataset.i].text);
+  const zeile = (w, i, t, zusatz) => `<div class="idee-zeile" data-w="${w}" data-i="${i}"><div class="idee-inhalt"><span>${esc(t)}</span>${zusatz}</div>
+    <button class="btn ghost" data-akt="aendern">Bearbeiten</button><button class="btn ghost" data-akt="loeschen">Löschen</button></div>`;
+  ansicht(st, `<div class="einst-kopf"><h2>Ideen</h2><span class="muted">Was dir während der Umsetzung eingefallen ist und wo es gelandet ist.</span></div>
+    <div class="ideen-lane">
+      ${warten.length ? `<div class="karte" style="--ak:#e0a84a"><span class="label">Wartet</span><span class="muted klein">Noch nicht im Plan – Claude ordnet sie nach dem aktuellen Schritt ein.</span>${warten.map((t, i) => zeile('1', i, t, '')).join('')}</div>` : ''}
+      <div class="karte" style="--ak:var(--accent)"><span class="label">Eingearbeitet</span>${fertig.length ? `<span class="muted klein">Ändern oder Löschen betrifft nur diese Liste. Die Schritte im Plan bleiben stehen.</span>${fertig.map((x, i) => zeile('', i, x.text, `<span class="muted klein">${esc(x.datum)} · Phase ${esc(x.phase)}</span>`)).join('')}` : '<span class="muted">Noch keine Ideen eingearbeitet.</span>'}</div>
+    </div>`, [{ text: 'Zurück', klick: () => zurueck(aktuell?.name === st.name ? aktuell : st) }]); // inzwischen abgehakte Schritte mitnehmen
+  $('.kopf-akt')?.remove();
+  const senden = async (z, neu) => {
+    const r = await api['idee-aendern'](st.name, !!z.dataset.w, Number(z.dataset.i), text(z), neu);
+    if (r.fehler) { if ($('.ideen-lane')) $('.ideen-lane .fehler')?.remove(); else ideenZeigen(st, zurueck); return $('.ideen-lane').insertAdjacentHTML('afterbegin', `<div class="fehler">${esc(r.fehler)}</div>`); }
+    aktuell = r;
+    ideenZeigen(r, zurueck);
+  };
+  $$('.idee-zeile [data-akt]').forEach((b) => (b.onclick = () => {
+    const z = b.closest('.idee-zeile');
+    if (b.dataset.akt === 'loeschen') return ideeLoeschenFragen(st, text(z), z.dataset.w ? 0 : fertig[z.dataset.i].phase, () => senden(z, null), () => ideenZeigen(st, zurueck));
+    z.innerHTML = `<textarea rows="3" title="Idee"></textarea><button class="btn" data-akt="ok">Speichern</button><button class="btn ghost" data-akt="nein">Abbrechen</button>`;
+    const feld = $('textarea', z);
+    feld.value = text(z);
+    feld.focus();
+    $('[data-akt=nein]', z).onclick = () => ideenZeigen(st, zurueck);
+    $('[data-akt=ok]', z).onclick = () => (feld.value.trim() ? senden(z, feld.value) : feld.focus());
+  }));
+}
+// Rückfrage vor dem Löschen; phase = 0 heißt: die Idee wartet noch und steht nicht im Plan
+function ideeLoeschenFragen(st, text, phase, loeschen, abbrechen) {
+  ansicht(st, `<div class="mitte"><div class="box"><h2>Idee löschen?</h2><p class="idee-zitat">${esc(text)}</p>
+    <p class="muted">${phase ? `Die Schritte in Phase ${esc(phase)} bleiben im Plan stehen. Entfernt wird nur der Eintrag in der Ideen-Liste.` : 'Die Idee wartet noch und steht nicht im Plan. Sie wird dann auch nicht mehr eingearbeitet.'}</p></div></div>`,
+  [{ text: 'Abbrechen', ghost: true, klick: abbrechen }, 'sp', { text: 'Idee löschen', gefahr: true, klick: loeschen }]);
+  $('.kopf-akt')?.remove();
 }
 
 // ---------- Claude-Sitzung im eingebetteten Terminal ----------
@@ -1005,7 +1044,7 @@ function arbeitSeite(st) {
     const r = await api.abhaken(st.name, i, Number(cb.dataset.j), cb.checked);
     if (!r.fehler) { aktuell = r; arbeitSeite(r); seitenleiste(); }
   }));
-  ideeBinden(st, (r) => { arbeitSeite(r); seitenleiste(); });
+  ideeBinden(st, (r) => { arbeitSeite(r); seitenleiste(); }, arbeit);
 }
 
 (async () => { (await api.sitzung()).forEach((n) => laeuft.add(n)); start(); })();

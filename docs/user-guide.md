@@ -159,6 +159,8 @@ The tile in the cockpit (and next to the terminal) catches thoughts that come up
 
 Claude decides which phase the idea belongs to, turns it into 1–3 steps and adds them there – or creates a new phase at the end. If the idea collides with something you excluded earlier, Claude says so. Every idea is logged in `… – Ideas.md`.
 
+**Ideas (n)** in the tile opens the list of all ideas: waiting ones and those already added to the plan (with date and phase). There you can correct the text with **Edit** and remove an entry with **Delete** – only after a confirmation. The plan stays untouched: for ideas already in the plan, only the list and `… – Ideas.md` change; the steps in the phases remain. A waiting idea you delete is no longer added.
+
 If Claude is currently working in the terminal, the idea **waits until the current step is finished**, so it never gets in the way.
 
 ## 12. Settings

@@ -429,3 +429,11 @@ dl.kennzahlen dd{margin:0;font-weight:600;color:var(--accent)}
 svg.verlauf .raster{stroke:var(--line)}
 .modell-liste{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;margin-top:8px}
 .modell-liste .punkt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+/* Ideen-Lane (#22) */
+.ideen-lane{flex:1 !important;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;max-width:760px}
+.ideen-lane .karte{flex:none;overflow:visible} /* die Seite scrollt, nicht die Karte */
+.idee-zeile{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.idee-zeile .btn{flex:none;white-space:nowrap}
+.idee-inhalt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
+.idee-zeile textarea{flex:1;min-width:0;font-size:13px;resize:vertical}
+.idee-zitat{overflow-wrap:anywhere;max-height:30vh;overflow-y:auto}

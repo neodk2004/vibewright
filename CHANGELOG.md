@@ -6,6 +6,7 @@ All notable changes to Vibewright are listed here. Format based on [Keep a Chang
 
 ### Added
 - **Usage statistics like `/stats`** (#19): the usage view now starts with an overview of all Claude Code sessions on this computer – an activity grid for the last 12 months, favorite model, total tokens, sessions, active days, most active day, longest session and streaks – and a models tab with tokens per day per model and each model's share. Switch between all time, last 7 and last 30 days. The numbers come from Claude Code's own statistics file (`~/.claude/stats-cache.json`), as of yesterday; if Claude Code changes its format, Vibewright shows a note instead of wrong numbers.
+- **Ideas list** (#22): **Ideas (n)** in the „I just had another idea“ tile opens all ideas of the project – waiting ones and those already added to the plan, with date and phase. You can correct the text or delete an entry (only after a confirmation). The plan stays untouched: only the list and `… – Ideas.md` change, the steps in the phases remain.
 
 ## [0.3.4] – 2026-11-19
 

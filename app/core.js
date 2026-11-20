@@ -1009,6 +1009,27 @@ const S_IDEE = {
   },
 };
 
+const ideenMd = (info, st) => schreibe(st, datei(info, st, 'Ideen.md'), `# ${st.name} – Ideen\n\n> Was dir während der Umsetzung eingefallen ist und wo es gelandet ist.\n\n${st.ideen.map((x) => `- **${x.datum}** – „${x.text}“\n  → Phase ${x.phase}: ${x.schritte.join(' · ')}`).join('\n')}\n`, 'utf8');
+const ideenInArbeit = new Map(); // Projekt → Zahl der Läufe, in denen Claude gerade Ideen einordnet; jeder schreibt am Ende den ganzen Stand zurück
+
+// Ideen-Lane (#22): Text korrigieren oder (text = null) Eintrag entfernen. Der Plan bleibt unberührt: wartende Ideen stehen
+// noch nicht drin, bei eingearbeiteten ändert sich nur die Liste samt Ideen.md, nicht die Schritte in den Phasen.
+function ideeAendern(info, name, wartend, i, alt, text) {
+  if (ideenInArbeit.get(name)) throw new Error('Claude ordnet gerade Ideen ein – bitte gleich noch einmal versuchen.');
+  const st = laden(info, name);
+  const liste = (wartend ? st.ideenWarten : st.ideen) || [];
+  // alt = Text, den die Oberfläche zeigte: schützt davor, nach einer Änderung im Hintergrund den falschen Eintrag zu treffen
+  if (!Number.isInteger(i) || !(i in liste) || (wartend ? liste[i] : liste[i].text) !== alt) throw new Error('Die Liste hat sich geändert – bitte noch einmal öffnen.');
+  if (text === null) liste.splice(i, 1);
+  else if (typeof text !== 'string' || !text.trim()) throw new Error('Bitte erst einen Gedanken eintippen.');
+  else if (wartend) liste[i] = text.trim();
+  else liste[i].text = text.trim();
+  if (!wartend) ideenMd(info, st);
+  else if (!liste.length) st.ideeFehler = null; // nichts wartet mehr, also ist auch nichts mehr gescheitert
+  speichern(info, st);
+  return st;
+}
+
 // Idee merken; verarbeitet wird sie sofort oder (wenn Claude gerade arbeitet) nach dem nächsten erledigten Schritt
 function ideeMerken(info, name, text) {
   const st = laden(info, name);
@@ -1023,6 +1044,7 @@ async function ideenVerarbeiten(info, name) {
   if (!st.ideenWarten?.length) return st;
   punkteLesen(info, st);
   const ph = st.plan.phasen;
+  ideenInArbeit.set(name, (ideenInArbeit.get(name) || 0) + 1);
   try {
     while (st.ideenWarten.length) {
       const idee = st.ideenWarten[0];
@@ -1041,7 +1063,7 @@ async function ideenVerarbeiten(info, name) {
       st.ideenWarten.shift();
       st.letzteIdee = d.kurz;
     }
-    schreibe(st, datei(info, st, 'Ideen.md'), `# ${st.name} – Ideen\n\n> Was dir während der Umsetzung eingefallen ist und wo es gelandet ist.\n\n${st.ideen.map((x) => `- **${x.datum}** – „${x.text}“\n  → Phase ${x.phase}: ${x.schritte.join(' · ')}`).join('\n')}\n`, 'utf8');
+    ideenMd(info, st);
     schreibe(st, datei(info, st, 'Plan.md'), planMd(st), 'utf8');
     dashboard(info, st);
     st.fehler = null;
@@ -1049,7 +1071,7 @@ async function ideenVerarbeiten(info, name) {
   } catch (e) {
     st.fehler = null; // Planungsfehler blockieren das Cockpit nicht; Idee bleibt in der Warteschlange
     st.ideeFehler = e.message;
-  }
+  } finally { ideenInArbeit.set(name, ideenInArbeit.get(name) - 1); }
   speichern(info, st);
   return st;
 }
@@ -1195,5 +1217,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };
