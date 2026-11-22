@@ -437,3 +437,9 @@ svg.verlauf .raster{stroke:var(--line)}
 .idee-inhalt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
 .idee-zeile textarea{flex:1;min-width:0;font-size:13px;resize:vertical}
 .idee-zitat{overflow-wrap:anywhere;max-height:30vh;overflow-y:auto}
+/* #24: Phase verschieben, Schritt in die nächste Phase schieben */
+.karte .kopf{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.umbau{display:flex;gap:2px}
+.umbau .btn,.todo .weiter{padding:0 6px;line-height:20px}
+.todo .weiter{margin-left:auto;opacity:0;flex-shrink:0}
+.todo label:hover .weiter,.todo .weiter:focus-visible{opacity:1}

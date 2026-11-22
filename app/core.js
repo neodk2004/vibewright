@@ -1088,6 +1088,43 @@ function abhaken(info, name, phase, idx, wert) {
   return st;
 }
 
+// #24: Plan umbauen. Verschoben wird nur, was noch nicht begonnen ist – erledigte und laufende Phasen behalten ihren Platz.
+function planUmbau(info, name, aendern) {
+  if (ideenInArbeit.get(name)) throw new Error('Claude ordnet gerade Ideen ein – bitte gleich noch einmal versuchen.');
+  const st = laden(info, name);
+  punkteLesen(info, st);
+  const ph = st.plan.phasen;
+  const fertig = (p) => p.checkliste.every((_c, j) => p.done[j]);
+  const aktiv = ph.findIndex((p) => !fertig(p));
+  aendern(st, ph, (i) => i > aktiv && aktiv >= 0 && !!ph[i] && !ph[i].done.some(Boolean) && !fertig(ph[i]));
+  schreibe(st, datei(info, st, 'Plan.md'), planMd(st), 'utf8');
+  dashboard(info, st);
+  speichern(info, st);
+  return st;
+}
+
+// Phase i mit ihrer Nachbarin tauschen (richtung -1 = früher, +1 = später). Die Nummer steckt im Dateinamen der Punkt-Datei:
+// alte Dateien löschen, unter neuem Namen schreiben; Häkchen und Schritte wandern im Zustand mit.
+const phaseVerschieben = (info, name, i, richtung) => planUmbau(info, name, (st, ph, frei) => {
+  const j = i + richtung;
+  if (!Number.isInteger(i) || Math.abs(richtung) !== 1 || !frei(i) || !frei(j)) throw new Error('Nur Phasen, die noch nicht begonnen sind, lassen sich verschieben.');
+  for (const k of [i, j]) fs.rmSync(punktDatei(info, st, k), { force: true });
+  [ph[i], ph[j]] = [ph[j], ph[i]];
+  for (const k of [i, j]) schreibe(st, punktDatei(info, st, k), punktMd(st, ph[k], k), 'utf8');
+  for (const x of st.ideen || []) x.phase = x.phase === i + 1 ? j + 1 : x.phase === j + 1 ? i + 1 : x.phase;
+  if (st.ideen?.length) ideenMd(info, st);
+});
+
+// Offenen Schritt j aus Phase i an den Anfang der nächsten Phase schieben – die Phase behält mindestens einen Schritt.
+const schrittWeiter = (info, name, i, j) => planUmbau(info, name, (st, ph) => {
+  const p = ph[i], n = ph[i + 1];
+  if (!p || !n || !(j in p.checkliste) || p.done[j] || p.checkliste.length < 2) throw new Error('Dieser Schritt lässt sich nicht weiterschieben.');
+  n.checkliste.unshift(p.checkliste.splice(j, 1)[0]);
+  n.done.unshift(false);
+  p.done.splice(j, 1);
+  for (const k of [i, i + 1]) schreibe(st, punktDatei(info, st, k), punktMd(st, ph[k], k), 'utf8');
+});
+
 // Arbeitsordner für Claude Code: bei Code-Projekten ein eigener Ordner (st.repo), sonst der Projektordner
 const arbeitsordner = (info, st) => (typ(st) === 'code' ? st.repo : dir(info, st));
 
@@ -1217,5 +1254,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };

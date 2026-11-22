@@ -75,6 +75,8 @@ const UI_EN = {
   'Was soll anders sein?': 'What should be different?', 'Ändern lassen': 'Request changes', 'Passt so': 'Looks good', 'Plan freigeben': 'Approve plan',
   'Ziel': 'Goal', 'Machbarkeit': 'Feasibility', 'Rahmen': 'Scope', 'Muss': 'Must-have', 'Kann später': 'Later', 'Nicht-Ziele': 'Non-goals', 'Risiken': 'Risks',
   'Schritte': 'Steps', 'Klicken für alle Schritte': 'Click for all steps', 'Fertig, wenn': 'Done when',
+  'Phase früher einplanen': 'Schedule phase earlier', 'Phase später einplanen': 'Schedule phase later', 'In die nächste Phase schieben': 'Move to the next phase',
+  'Nur Phasen, die noch nicht begonnen sind, lassen sich verschieben.': 'Only phases that have not started yet can be moved.', 'Dieser Schritt lässt sich nicht weiterschieben.': 'This step cannot be moved on.',
   'klein': 'small', 'mittel': 'medium', 'groß': 'large',
   // Werkzeuge
   'Auf diesem Rechner': 'On this computer', 'Für Claude': 'For Claude', 'Nichts nötig.': 'Nothing needed.', 'Plan angepasst:': 'Plan adjusted:', 'Projekt eingelesen:': 'Project read in:',

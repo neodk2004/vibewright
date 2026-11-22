@@ -797,13 +797,18 @@ function cockpit(st) {
   const naechstIdx = gewaehlt === s.aktiv ? p.done.indexOf(false) : -1;
   const alt = fortschrittMerken(st);
   const pflege = s.aktiv < 0 && st.projekttyp === 'code'; // fertig gebaut → Pflege: Fehler und Wünsche über Issues
+  // #24: nur noch nicht begonnene Phasen verschieben; offene Schritte in die nächste Phase schieben (Phase behält einen Schritt)
+  const frei = (i) => st.plan.phasen[i]?.status === 'offen' && !st.plan.phasen[i].done.some(Boolean);
+  const weiterGeht = !!st.plan.phasen[gewaehlt + 1] && p.checkliste.length > 1;
   ansicht(st, `<div class="fort"><div class="bar"><i style="width:${alt}%" data-ziel="${s.fortschritt}"></i></div><span class="num muted">${s.fortschritt} % · ${s.erledigt ?? 0}/${s.gesamt ?? 0} Schritte</span></div>
     <div class="cockpit">
       <div class="spalte">
         ${s.aktiv >= 0 ? `<div class="next"><span class="label">Nächster Schritt · Phase ${s.aktiv + 1}</span><div class="v">${verlinke(s.naechster)}</div></div>` : '<div class="next"><div class="v">Alle Phasen erledigt.</div></div>'}
         <div class="karte voll" style="--ak:${phasenFarbe(gewaehlt)}">
-          <span class="label">Phase ${gewaehlt + 1} – ${esc(p.titel)}</span><span class="muted kompakt-weg">${esc(p.ziel)}</span>
-          <div class="todo">${p.checkliste.map((c, j) => `<label class="${p.done[j] ? 'x' : ''} ${j === naechstIdx ? 'n' : ''} ${p.done[j] && frisch === `${gewaehlt}:${j}` ? 'frisch' : ''}"><input type="checkbox" data-j="${j}" ${p.done[j] ? 'checked' : ''}><span>${verlinke(c)}</span></label>`).join('')}</div>
+          <div class="kopf"><span class="label">Phase ${gewaehlt + 1} – ${esc(p.titel)}</span>${frei(gewaehlt) ? `<span class="umbau">
+            <button class="btn ghost" data-r="-1" ${frei(gewaehlt - 1) ? '' : 'disabled'} title="Phase früher einplanen">▲</button><button class="btn ghost" data-r="1" ${frei(gewaehlt + 1) ? '' : 'disabled'} title="Phase später einplanen">▼</button></span>` : ''}</div>
+          <span class="muted kompakt-weg" id="umbau-info">${esc(p.ziel)}</span>
+          <div class="todo">${p.checkliste.map((c, j) => `<label class="${p.done[j] ? 'x' : ''} ${j === naechstIdx ? 'n' : ''} ${p.done[j] && frisch === `${gewaehlt}:${j}` ? 'frisch' : ''}"><input type="checkbox" data-j="${j}" ${p.done[j] ? 'checked' : ''}><span>${verlinke(c)}</span>${!p.done[j] && weiterGeht ? `<button class="btn ghost weiter" data-w="${j}" title="In die nächste Phase schieben">→</button>` : ''}</label>`).join('')}</div>
           <span class="label kompakt-weg">Fertig, wenn</span><span class="muted kompakt-weg">${esc(p.fertig_wenn)}</span>
         </div>
       </div>
@@ -821,6 +826,16 @@ function cockpit(st) {
     cockpit(await api.abhaken(st.name, gewaehlt, Number(cb.dataset.j), cb.checked));
   }));
   $$('.zeit button').forEach((b) => (b.onclick = () => { gewaehlt = Number(b.dataset.i); cockpit(st); }));
+  const umbau = async (r, neu) => {
+    if (r.fehler) return ($('#umbau-info').innerHTML = `<span class="fehltext">${esc(r.fehler)}</span>`);
+    gewaehlt = neu;
+    cockpit(r);
+  };
+  $$('.umbau button').forEach((b) => (b.onclick = async () => umbau(await api['phase-verschieben'](st.name, gewaehlt, Number(b.dataset.r)), gewaehlt + Number(b.dataset.r))));
+  $$('.todo .weiter').forEach((b) => (b.onclick = async (e) => {
+    e.preventDefault(); // Klick im Label soll nicht abhaken
+    umbau(await api['schritt-weiter'](st.name, gewaehlt, Number(b.dataset.w)), gewaehlt);
+  }));
   if (pflege) { pflegeBinden(st); pflegePruefen(st); } else ideeBinden(st, cockpit, cockpit);
 }
 

@@ -191,6 +191,8 @@ handle('oeffnen', (datei) => (info().modus === 'obsidian'
   : shell.openPath(datei)));
 handle('aktualisieren', (name) => core.aktualisieren(info(), name));
 handle('abhaken', (name, phase, idx, wert) => core.abhaken(info(), name, phase, idx, wert));
+handle('phase-verschieben', (name, i, richtung) => core.phaseVerschieben(info(), name, i, richtung));
+handle('schritt-weiter', (name, i, j) => core.schrittWeiter(info(), name, i, j));
 // ---------- Eingebettetes Terminal: Claude Code läuft interaktiv in der App ----------
 // Mehrere Projekte dürfen gleichzeitig laufen – höchstens eine Sitzung pro Projekt
 const sitzungen = new Map(); // name → { pty, watcher, erledigt, ideeLaeuft }

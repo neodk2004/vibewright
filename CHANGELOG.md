@@ -2,6 +2,15 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Reorder phases** (#24): in the cockpit, a phase that has not started yet can be moved with ▲ / ▼ – for example to put the versions of a release plan in the right order. Finished and running phases keep their place, so the progress stays correct. The phase notes („Phase N – …“), `… – Plan.md`, the dashboard and the ideas list follow; checkmarks and steps are kept. To add a phase at a certain position, add it via „I just had another idea“ and move it up.
+- **Move a step to the next phase** (#24): hover over an open step and click → to move it to the start of the next phase. A phase always keeps at least one step.
+
+### Fixed
+- **macOS: ejecting the installer** (#25): Vibewright now uses `diskutil eject` instead of `hdiutil detach`, which macOS 27 marks as deprecated. If ejecting fails, it is written to the log instead of failing silently.
+
 ## [0.3.5] – 2026-11-20
 
 ### Added
