@@ -354,7 +354,7 @@ async function dmgAufraeumen(win) {
   speichereEinstellung({ dmgGefragt: app.getVersion() });
   if (response !== 0) return;
   for (const d of dmgs) {
-    if (d.laufwerk) try { cp.execFileSync('hdiutil', ['detach', d.laufwerk], { timeout: 15000 }); } catch {}
+    if (d.laufwerk) try { cp.execFileSync('diskutil', ['eject', d.laufwerk], { timeout: 15000 }); } catch (e) { console.error('Auswerfen fehlgeschlagen:', d.laufwerk, e.message); }
     await shell.trashItem(d.datei).catch(() => {});
   }
 }
