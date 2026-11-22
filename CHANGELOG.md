@@ -2,7 +2,7 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.0] – 2026-11-22
 
 ### Added
 - **Reorder phases** (#24): in the cockpit, a phase that has not started yet can be moved with ▲ / ▼ – for example to put the versions of a release plan in the right order. Finished and running phases keep their place, so the progress stays correct. The phase notes („Phase N – …“), `… – Plan.md`, the dashboard and the ideas list follow; checkmarks and steps are kept. To add a phase at a certain position, add it via „I just had another idea“ and move it up.
