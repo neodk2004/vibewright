@@ -134,6 +134,15 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.0 – 2026-11-22
+
+#### Added
+- **Reorder phases** (#24): in the cockpit, a phase that has not started yet can be moved with ▲ / ▼ – for example to put the versions of a release plan in the right order. Finished and running phases keep their place, so the progress stays correct. The phase notes („Phase N – …“), `… – Plan.md`, the dashboard and the ideas list follow; checkmarks and steps are kept. To add a phase at a certain position, add it via „I just had another idea“ and move it up.
+- **Move a step to the next phase** (#24): hover over an open step and click → to move it to the start of the next phase. A phase always keeps at least one step.
+
+#### Fixed
+- **macOS: ejecting the installer** (#25): Vibewright now uses `diskutil eject` instead of `hdiutil detach`, which macOS 27 marks as deprecated. If ejecting fails, it is written to the log instead of failing silently.
+
 #### 0.3.5 – 2026-11-20
 
 #### Added
@@ -152,18 +161,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Fixed
 - **„New version available“ did not show up** (#17) when GitHub could not be reached at startup (connection refused or API limit used up): the failed check was remembered until the app was closed. Now only a successful check is remembered, a failed one is retried, and the app checks again every hour while it stays open.
 - **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.
-
-#### 0.3.3 – 2026-11-19
-
-#### Changed
-- **Settings look like a normal settings page**: sections (Claude, Storage, Git) are listed on the left with a status dot, the chosen section is shown on the right – instead of three cards side by side.
-
-#### Fixed
-- **Long words or URLs in the needs-analysis scope card were cut off** (#14): they now wrap inside the card instead of disappearing at its edge, and the labels next to them keep their width.
-- **Long words or URLs from Claude were cut off in other cards too** – interview, needs analysis, plan, phase details, tool check, cockpit, maintenance and the work view now wrap them as well, without splitting normal words. A very long label in the scope card no longer squeezes its value to one letter per line.
-- **Model choice in the settings was too narrow at small window sizes** („Sonn-et“): the three models are now listed as rows.
-- The layout test now checks all views with long words and URLs, and also catches split words, squeezed columns and sideways scrolling.
-- **A long „next step“ in the work view pushed the idea card out of the window**: it now shows at most 3 lines; hover for the full text.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
