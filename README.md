@@ -37,17 +37,20 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 
 ## Features
 
-- **Guided interview** – one multiple-choice question per screen (keys 1–4), with your own answer as an option. Two short rounds, follow-up questions only where answers leave gaps.
+- **Guided interview** – one multiple-choice question per screen (keys 1–4), with your own answer as an option. Two short rounds, follow-up questions only where answers leave gaps. For an existing project, one round at most – or none, if the code folder already answers everything.
 - **Needs analysis** – goal, scope, must-have / could-have / non-goals, risks you didn't think of, and a feasibility traffic light.
 - **Plan as a roadmap** – 3–6 phases with goals, "done when" criteria and concrete steps in plain language (no unexplained commands).
 - **Tool check** – inspects your PC and your Claude setup (plugins, skills, MCP servers, operating system) and recommends only what a phase really needs, from official sources. Nothing gets installed without your OK.
-- **Cockpit** – the current phase with its checklist, progress, next step and all phases at a glance.
+- **Start from an existing project** – point Vibewright at a code folder, a GitHub / Gitea repository or an earlier Claude Code session. It reads the code, docs and commits and only asks what's still missing.
+- **Cockpit** – the current phase with its checklist, progress, next step and all phases at a glance. Phases that haven't started can be reordered (▲ / ▼), and an open step can be moved to the next phase.
 - **Claude Code inside the app** – an embedded terminal runs Claude Code with a generated `CLAUDE.md` that knows your project, phase and next step. Claude ticks off finished steps; the checklist updates live.
-- **"I just had another idea"** – type a thought any time; Claude sorts it into the right phase (or creates a new one). While Claude is working, the idea waits until the current step is done.
+- **"I just had another idea"** – type a thought any time; Claude sorts it into the right phase (or creates a new one). While Claude is working, the idea waits until the current step is done. Waiting and collected ideas can be edited or removed.
 - **Your notes, your format** – everything is written as Markdown into your **Obsidian** vault (with Dataview tables and Kanban if you use them) or locally as `.md` + an `.html` dashboard.
 - **Git safety net (optional)** – the code folder becomes a Git project and Claude commits after every finished step, so you can always go back.
+- **GitHub / Gitea issues (optional)** – see the issues of your repository and create new ones from the app; Claude adds them to the plan.
 - **English & German** – UI, Claude's texts and the generated files. The language is fixed per project.
-- **Easy on your limits** – planning calls run Claude Code headless without tools and with a short system prompt (~1,000 input tokens per call instead of ~15,000–20,000).
+- **Easy on your limits** – planning calls run Claude Code headless without tools and with a short system prompt (~1,000 input tokens per call instead of ~15,000–20,000). The sidebar shows your 5-hour and weekly Claude limits; a usage page lists the tokens per project and per model.
+- **Archive** – pack a finished project into a ZIP file instead of deleting it.
 
 ## Screenshots
 
@@ -188,7 +191,9 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 ## Privacy
 
-- Vibewright itself sends **no telemetry** and stores its settings only on your PC (`%APPDATA%`).
+- Vibewright itself sends **no telemetry** and stores its settings only on your computer (Windows: `%APPDATA%`, macOS: `~/Library/Application Support`).
+- **Limit display:** to show your 5-hour and weekly limits, Vibewright reads the Claude Code sign-in token on your computer and asks Anthropic's usage endpoint (`api.anthropic.com/api/oauth/usage`). The token is only sent to Anthropic and never stored by Vibewright.
+- **GitHub / Gitea (optional):** if you connect an account, Vibewright lists your repositories and reads or creates issues through that service's API. An access token is stored encrypted with your operating system's key store (Electron `safeStorage`).
 - **Tool check:** while checking tools, Vibewright fetches the [claude-skills](https://github.com/alirezarezvani/claude-skills) plugin catalog from GitHub, sends 1–3 English keywords per missing skill to the [SkillsMP](https://skillsmp.com) search (never your idea or plan text), reads candidate `SKILL.md` files from GitHub and opens the suggested download pages once to check they exist.
 - **Update check:** once per start, Vibewright asks the public GitHub API for the newest release (`api.github.com/repos/neodk2004/vibewright/releases/latest`). No project data is sent – GitHub only sees an ordinary web request.
 - What you plan with Claude (your idea, answers, plan, a list of installed Claude plugins/skills and your operating system for the tool check) is sent to Anthropic through Claude Code – exactly like any other Claude Code usage.
