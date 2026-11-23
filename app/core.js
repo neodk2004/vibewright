@@ -1010,7 +1010,7 @@ const S_IDEE = {
 };
 
 const ideenMd = (info, st) => schreibe(st, datei(info, st, 'Ideen.md'), `# ${st.name} – Ideen\n\n> Was dir während der Umsetzung eingefallen ist und wo es gelandet ist.\n\n${st.ideen.map((x) => `- **${x.datum}** – „${x.text}“\n  → Phase ${x.phase}: ${x.schritte.join(' · ')}`).join('\n')}\n`, 'utf8');
-const ideenInArbeit = new Map(); // Projekt → Zahl der Läufe, in denen Claude gerade Ideen einordnet; jeder schreibt am Ende den ganzen Stand zurück
+const ideenInArbeit = new Map(); // Projekt → läuft gerade eine Einordnung? (höchstens eine je Projekt, #27)
 
 // Ideen-Lane (#22): Text korrigieren oder (text = null) Eintrag entfernen. Der Plan bleibt unberührt: wartende Ideen stehen
 // noch nicht drin, bei eingearbeiteten ändert sich nur die Liste samt Ideen.md, nicht die Schritte in den Phasen.
@@ -1040,16 +1040,23 @@ function ideeMerken(info, name, text) {
 }
 
 async function ideenVerarbeiten(info, name) {
-  const st = laden(info, name);
-  if (!st.ideenWarten?.length) return st;
-  punkteLesen(info, st);
-  const ph = st.plan.phasen;
-  ideenInArbeit.set(name, (ideenInArbeit.get(name) || 0) + 1);
+  let st = laden(info, name);
+  // Läuft schon eine Einordnung, nimmt deren Schleife neue Ideen mit – ein zweiter Lauf würde dieselbe Idee erneut schicken (#27)
+  if (!st.ideenWarten?.length || ideenInArbeit.get(name)) return st;
+  ideenInArbeit.set(name, 1);
   try {
-    while (st.ideenWarten.length) {
+    while (st.ideenWarten?.length) {
+      punkteLesen(info, st);
+      let ph = st.plan.phasen;
       const idee = st.ideenWarten[0];
       const uebersicht = ph.map((p, i) => `Phase ${i + 1} – ${p.titel} [${p.status}] Ziel: ${p.ziel}\n${p.checkliste.map((c, j) => `  - [${p.done[j] ? 'x' : ' '}] ${c}`).join('\n')}`).join('\n');
       const d = await ask(st, `Das Projekt ist in der Umsetzung. Dem Nutzer ist noch etwas eingefallen:\n„${idee}“\n\nAktueller Plan:\n${uebersicht}\n\nOrdne die Idee ein: phase = Nummer der passenden Phase, die noch nicht erledigt ist (die Idee gehört dorthin, wo sie sachlich hinpasst, nicht automatisch in die aktuelle Phase). Passt sie in keine Phase, phase = ${ph.length + 1} und fülle neue_phase aus; sonst neue_phase mit leeren Texten und aufwand "klein". schritte = 1–3 konkrete Schritte auf Laien-Niveau, die sich nicht mit vorhandenen Schritten doppeln. kurz = ein Satz für den Nutzer, was du wo eingeordnet hast.`, S_IDEE);
+      // Während Claude antwortet, können neue Ideen oder Häkchen dazukommen → frisch laden und das Ergebnis darauf anwenden (#27)
+      const session = st.session;
+      st = laden(info, name);
+      st.session = session;
+      punkteLesen(info, st);
+      ph = st.plan.phasen;
       let n = Math.min(Math.max(d.phase, 1), ph.length + 1) - 1;
       if (n === ph.length) {
         ph.push({ ...d.neue_phase, titel: sauber(d.neue_phase.titel || 'Ergänzungen'), checkliste: [], done: [], status: 'offen' });
@@ -1060,8 +1067,10 @@ async function ideenVerarbeiten(info, name) {
       schreibe(st, punktDatei(info, st, n), punktMd(st, p, n), 'utf8');
       (st.ideen ||= []).push({ text: idee, datum: heute(), phase: n + 1, schritte: d.schritte, kurz: d.kurz });
       st.zuletzt = `Idee eingearbeitet: ${d.kurz} (${heute()})`;
-      st.ideenWarten.shift();
+      const w = st.ideenWarten.indexOf(idee);
+      if (w >= 0) st.ideenWarten.splice(w, 1);
       st.letzteIdee = d.kurz;
+      speichern(info, st);
     }
     ideenMd(info, st);
     schreibe(st, datei(info, st, 'Plan.md'), planMd(st), 'utf8');
@@ -1069,9 +1078,10 @@ async function ideenVerarbeiten(info, name) {
     st.fehler = null;
     st.ideeFehler = null;
   } catch (e) {
+    st = laden(info, name); // nicht den Stand von vor der Claude-Antwort zurückschreiben (#27)
     st.fehler = null; // Planungsfehler blockieren das Cockpit nicht; Idee bleibt in der Warteschlange
     st.ideeFehler = e.message;
-  } finally { ideenInArbeit.set(name, ideenInArbeit.get(name) - 1); }
+  } finally { ideenInArbeit.delete(name); }
   speichern(info, st);
   return st;
 }
