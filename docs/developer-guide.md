@@ -62,7 +62,7 @@ claude -p --output-format json --model <haiku|sonnet|opus>
 ```
 
 - The prompt goes in through **stdin**, the working directory is fixed (`~/.vibewright/work`, older installs `~/.ki-projekthelper/work`) because `--resume` looks sessions up per directory.
-- With no tools and a short system prompt a call costs ~1,400 input tokens instead of ~15,000–20,000 (measure it: `node test/tokens.js`) – this keeps the user's subscription limits intact.
+- With no tools and a short system prompt a call starts with ~1,400 tokens of fixed overhead instead of up to ~44,000 for a plain `claude -p` with many plugins (measure it: `node test/tokens.js`). The prompt, schema and resumed history come on top – this keeps the user's subscription limits intact.
 - `--bare` would be even leaner but **does not work with subscription login** (it requires an API key).
 - **Finding Claude:** `claudeBefehl()` prefers `claude.exe` (native installer, also `~/.local/bin`), otherwise reads the npm shim `claude.cmd` and runs the target (`node cli.js` or the bundled `.exe`) directly – Windows cannot start `.cmd` files without a shell, and a shell would break the JSON-schema arguments.
 

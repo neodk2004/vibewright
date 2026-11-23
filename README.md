@@ -49,7 +49,7 @@ Idea ──► Interview ──► Needs analysis ──► Plan ──► Tool 
 - **Git safety net (optional)** – the code folder becomes a Git project and Claude commits after every finished step, so you can always go back.
 - **GitHub / Gitea issues (optional)** – see the issues of your repository and create new ones from the app; Claude adds them to the plan.
 - **English & German** – UI, Claude's texts and the generated files. The language is fixed per project.
-- **Easy on your limits** – planning calls run Claude Code headless without tools and with a short system prompt (~1,400 input tokens per call instead of ~15,000–20,000). The sidebar shows your 5-hour and weekly Claude limits; a usage page lists the tokens per project and per model.
+- **Easy on your limits** – Vibewright plans with a lean, tool-free Claude: **~30× less overhead per step** (1,400 instead of up to 44,000 tokens in our test). Your subscription goes into your project, not into boilerplate. The sidebar shows your 5-hour and weekly Claude limits; a usage page lists the tokens per project and per model.
 - **Archive** – pack a finished project into a ZIP file instead of deleting it.
 
 ## Screenshots
@@ -233,7 +233,7 @@ Vibewright macht aus einer einzeiligen Idee eine fertige Laufkarte: Interview �
 - **Git-Sicherheitsnetz (optional)** – der Code-Ordner wird ein Git-Projekt, Claude macht nach jedem erledigten Schritt einen Commit – du kannst jederzeit zurück.
 - **GitHub- / Gitea-Issues (optional)** – Issues deines Repositorys ansehen und neue direkt aus der App anlegen; Claude plant sie in den Plan ein.
 - **Deutsch & Englisch** – Oberfläche, Claudes Texte und die erzeugten Dateien. Die Sprache ist pro Projekt fest.
-- **Schont deine Limits** – Planungsaufrufe laufen headless ohne Tools und mit kurzem System-Prompt (~1.400 Eingabe-Tokens pro Aufruf statt ~15.000–20.000). Die Seitenleiste zeigt dein 5-Stunden- und Wochenlimit; eine Verbrauchsseite listet die Tokens je Projekt und Modell.
+- **Schont deine Limits** – Vibewright plant mit einem schlanken Claude ohne Tools: **~30× weniger Ballast pro Schritt** (1.400 statt bis zu 44.000 Tokens in unserem Test). Dein Abo fließt in dein Projekt, nicht in Overhead. Die Seitenleiste zeigt dein 5-Stunden- und Wochenlimit; eine Verbrauchsseite listet die Tokens je Projekt und Modell.
 - **Archivieren** – ein fertiges Projekt als ZIP-Datei aufheben, statt es zu löschen.
 
 ### Datenschutz
