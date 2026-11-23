@@ -33,10 +33,13 @@ function run(cmd, args, { input, cwd, env } = {}) {
   });
 }
 
+// Schlanker Planungsaufruf: eigener System-Prompt, keine Tools, keine Nutzer-Plugins/MCP (test/tokens.js misst das)
+const planArgs = (sprache = 'de') => ['-p', '--output-format', 'json', '--model', MODEL, '--system-prompt', sprache === 'en' ? SYSTEM_EN : SYSTEM,
+  '--tools', '', '--setting-sources', 'project', '--strict-mcp-config'];
+
 async function claude(prompt, { schema, session, sprache = 'de' } = {}) {
   fs.mkdirSync(WORKDIR, { recursive: true });
-  const args = ['-p', '--output-format', 'json', '--model', MODEL, '--system-prompt', sprache === 'en' ? SYSTEM_EN : SYSTEM,
-    '--tools', '', '--setting-sources', 'project', '--strict-mcp-config'];
+  const args = planArgs(sprache);
   if (schema) args.push('--json-schema', JSON.stringify(schema));
   if (session) args.push('--resume', session);
   const r = await claudeLauf(args, { input: prompt, cwd: WORKDIR });
@@ -1253,6 +1256,6 @@ function vibewrightDmgs(hdiutilText) {
   })).filter((d) => d.datei && /^Vibewright[^/]*\.dmg$/i.test(path.basename(d.datei)));
 }
 
-module.exports = { vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
+module.exports = { planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
   aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };
