@@ -726,14 +726,14 @@ Regeln:
     e.status = (await vorhanden(e)) ? 'vorhanden' : 'fehlt';
     if (e.status === 'vorhanden' && e.aktion === 'installieren') e.aktion = 'vorhanden';
   }
-  await quellenPruefen(st, d, neben);
+  await quellenPruefen(st, d);
   st.werkzeug = d;
   st.offen = { typ: 'werkzeug', eintraege: d.eintraege, korrekturen: d.plan_korrekturen };
 }
 
 // Nachprüfung: tote Download-Links ersetzen lassen und für eigene Skills fertige Skills auf SkillsMP suchen.
 // Ein zweiter Claude-Aufruf nur, wenn es etwas zu entscheiden gibt.
-async function quellenPruefen(st, d, neben) {
+async function quellenPruefen(st, d) {
   const links = [];
   await Promise.all(d.eintraege.map(async (e, i) => { if (e.art === 'system' && e.status === 'fehlt' && await linkKaputt(e.quelle)) links.push(i); }));
   const kandidaten = {};
@@ -744,9 +744,11 @@ async function quellenPruefen(st, d, neben) {
     if (k.length) kandidaten[i] = k;
   }
   if (!links.length && !Object.keys(kandidaten).length) return;
-  const prompt = `Nachprüfung zum Werkzeug-Check (Nummern = Position in deiner Liste, ab 0).
-${links.length ? `Diese Download-Links sind nicht erreichbar (404). Nenne je die aktuelle offizielle Download-Seite des Herstellers als vollständige https-URL:\n${links.map((i) => `- Nr. ${i}: ${d.eintraege[i].bedarf} – ${d.eintraege[i].quelle}`).join('\n')}\n` : ''}${Object.keys(kandidaten).length ? `Für diese eigenen Skills gibt es fertige, Claude-kompatible Skills auf SkillsMP (GitHub-Repos mit mindestens ${SKILLSMP_MIN_STERNE.toLocaleString('de-DE')} Sternen). Wähle je den passenden (wahl = Nummer ab 1) oder 0, wenn keiner wirklich passt – im Zweifel 0:\n${Object.entries(kandidaten).map(([i, k]) => `- Nr. ${i}: ${d.eintraege[i].bedarf}\n${k.map((x, j) => `  ${j + 1}. ${x.name} (${x.autor}) – ${x.beschreibung}`).join('\n')}`).join('\n')}` : ''}`;
-  const n = await ask(st, prompt, S_NACHPRUEFUNG, neben);
+  // Ohne Sitzung: alles Nötige steht im Prompt, sonst liefe der ganze Werkzeug-Check (~25.000 Tokens) noch einmal mit
+  const prompt = `Nachprüfung zum Werkzeug-Check. Projekt: ${st.plan?.einzeiler || st.idee}
+Betriebssystem: ${MAC ? 'macOS' : WIN ? 'Windows' : 'Linux'} (${os.arch()}). Nr. = Nummer des Eintrags, gib sie unverändert zurück.
+${links.length ? `Diese Download-Links sind nicht erreichbar (404). Nenne je die aktuelle offizielle Download-Seite des Herstellers als vollständige https-URL:\n${links.map((i) => `- Nr. ${i}: ${d.eintraege[i].bedarf} – ${d.eintraege[i].quelle}`).join('\n')}\n` : ''}${Object.keys(kandidaten).length ? `Für diese eigenen Skills gibt es fertige, Claude-kompatible Skills auf SkillsMP (GitHub-Repos mit mindestens ${SKILLSMP_MIN_STERNE.toLocaleString('de-DE')} Sternen). Wähle je den passenden (wahl = Nummer ab 1) oder 0, wenn keiner wirklich passt – im Zweifel 0:\n${Object.entries(kandidaten).map(([i, k]) => `- Nr. ${i}: ${d.eintraege[i].bedarf} – wofür: ${d.eintraege[i].empfehlung}\n${k.map((x, j) => `  ${j + 1}. ${x.name} (${x.autor}) – ${x.beschreibung}`).join('\n')}`).join('\n')}` : ''}`;
+  const n = await ask(st, prompt, S_NACHPRUEFUNG, { session: null });
   const t = (de, en) => (st.sprache === 'en' ? en : de);
   for (const l of n.links) {
     const e = d.eintraege[l.nr];
