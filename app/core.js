@@ -37,11 +37,12 @@ function run(cmd, args, { input, cwd, env } = {}) {
 const planArgs = (sprache = 'de') => ['-p', '--output-format', 'json', '--model', MODEL, '--system-prompt', sprache === 'en' ? SYSTEM_EN : SYSTEM,
   '--tools', '', '--setting-sources', 'project', '--strict-mcp-config'];
 
-async function claude(prompt, { schema, session, sprache = 'de' } = {}) {
+async function claude(prompt, { schema, session, fork, sprache = 'de' } = {}) {
   fs.mkdirSync(WORKDIR, { recursive: true });
   const args = planArgs(sprache);
   if (schema) args.push('--json-schema', JSON.stringify(schema));
   if (session) args.push('--resume', session);
+  if (session && fork) args.push('--fork-session');
   const r = await claudeLauf(args, { input: prompt, cwd: WORKDIR });
   let j;
   try { j = JSON.parse(r.out); } catch { throw new Error(`Claude-Aufruf fehlgeschlagen: ${(r.err || r.out).slice(0, 400)}`); }
@@ -514,10 +515,13 @@ const S_NACHPRUEFUNG = {
 
 const antwortenText = (r) => r.fragen.map((f, i) => `- ${f.frage} → ${r.antworten[i] || '(keine Angabe)'}`).join('\n');
 
-async function ask(st, prompt, schema) {
+async function ask(st, prompt, schema, neben) {
   const sprache = st.sprache === 'en' ? '\n\nIMPORTANT: Write every user-facing text (questions, options, analysis, plan, steps, recommendations, explanations) in English.' : '';
-  const r = await claude(prompt + sprache, { schema, session: st.session, sprache: st.sprache });
-  st.session = r.session;
+  // neben = Seitensitzung { session, fork }: zweigt beim ersten Aufruf von der Hauptsitzung ab, die Hauptsitzung bleibt unverändert
+  const s = neben || st;
+  const r = await claude(prompt + sprache, { schema, session: s.session, fork: s.fork, sprache: st.sprache });
+  s.session = r.session;
+  s.fork = false;
   return r.data;
 }
 
@@ -714,20 +718,22 @@ Regeln:
 - bedarf = kurzer Name (höchstens 6 Wörter, z. B. „Raspberry Pi Imager“), Details gehören in empfehlung. quelle = bei art=system die offizielle Download-Seite als vollständige https-URL (keine winget-IDs oder Befehle, der Nutzer ist Laie). empfehlung in Laiensprache.
 - phase = erste Phase, die den Eintrag braucht.
 - Widersprüche zum Plan (z. B. Werkzeug läuft auf diesem Betriebssystem bzw. dieser Edition nicht) → plan_korrekturen.`;
-  const d = await ask(st, prompt, S_WERKZEUG);
+  // Eigene Seitensitzung: Katalog und Inventar (~20.000 Tokens) sollen nicht in jedem späteren Ideen-Aufruf mitlaufen
+  const neben = { session: st.session, fork: true };
+  const d = await ask(st, prompt, S_WERKZEUG, neben);
   for (const e of d.eintraege) {
     if (e.art !== 'system' || e.aktion === 'nicht_noetig') { if (e.aktion === 'nicht_noetig') e.status = 'nicht_noetig'; continue; }
     e.status = (await vorhanden(e)) ? 'vorhanden' : 'fehlt';
     if (e.status === 'vorhanden' && e.aktion === 'installieren') e.aktion = 'vorhanden';
   }
-  await quellenPruefen(st, d);
+  await quellenPruefen(st, d, neben);
   st.werkzeug = d;
   st.offen = { typ: 'werkzeug', eintraege: d.eintraege, korrekturen: d.plan_korrekturen };
 }
 
 // Nachprüfung: tote Download-Links ersetzen lassen und für eigene Skills fertige Skills auf SkillsMP suchen.
 // Ein zweiter Claude-Aufruf nur, wenn es etwas zu entscheiden gibt.
-async function quellenPruefen(st, d) {
+async function quellenPruefen(st, d, neben) {
   const links = [];
   await Promise.all(d.eintraege.map(async (e, i) => { if (e.art === 'system' && e.status === 'fehlt' && await linkKaputt(e.quelle)) links.push(i); }));
   const kandidaten = {};
@@ -740,7 +746,7 @@ async function quellenPruefen(st, d) {
   if (!links.length && !Object.keys(kandidaten).length) return;
   const prompt = `Nachprüfung zum Werkzeug-Check (Nummern = Position in deiner Liste, ab 0).
 ${links.length ? `Diese Download-Links sind nicht erreichbar (404). Nenne je die aktuelle offizielle Download-Seite des Herstellers als vollständige https-URL:\n${links.map((i) => `- Nr. ${i}: ${d.eintraege[i].bedarf} – ${d.eintraege[i].quelle}`).join('\n')}\n` : ''}${Object.keys(kandidaten).length ? `Für diese eigenen Skills gibt es fertige, Claude-kompatible Skills auf SkillsMP (GitHub-Repos mit mindestens ${SKILLSMP_MIN_STERNE.toLocaleString('de-DE')} Sternen). Wähle je den passenden (wahl = Nummer ab 1) oder 0, wenn keiner wirklich passt – im Zweifel 0:\n${Object.entries(kandidaten).map(([i, k]) => `- Nr. ${i}: ${d.eintraege[i].bedarf}\n${k.map((x, j) => `  ${j + 1}. ${x.name} (${x.autor}) – ${x.beschreibung}`).join('\n')}`).join('\n')}` : ''}`;
-  const n = await ask(st, prompt, S_NACHPRUEFUNG);
+  const n = await ask(st, prompt, S_NACHPRUEFUNG, neben);
   const t = (de, en) => (st.sprache === 'en' ? en : de);
   for (const l of n.links) {
     const e = d.eintraege[l.nr];
