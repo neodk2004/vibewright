@@ -137,6 +137,14 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.1 – 2026-11-24
+
+#### Changed
+- **Fewer tokens for ideas and the tool check:** the tool check now runs in its own side session, so the plugin catalog no longer travels along with every later „I just had another idea“ call (one idea: ~30,000 → ~11,000 input tokens in our test). The follow-up check for dead download links and ready-made skills runs without a session and only gets the entries it needs (~27,000 → ~2,200 tokens). Measure it yourself: `node test/tokens.js` in `app/`.
+
+#### Fixed
+- **Ideas no longer get lost or placed twice** (#27): an idea entered while Claude was placing another one could disappear, or one idea was sent to Claude twice. Vibewright now reloads the project after each Claude answer and runs only one placement per project at a time.
+
 #### 0.4.0 – 2026-11-22
 
 #### Added
@@ -151,19 +159,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 #### Added
 - **Usage statistics like `/stats`** (#19): the usage view now starts with an overview of all Claude Code sessions on this computer – an activity grid for the last 12 months, favorite model, total tokens, sessions, active days, most active day, longest session and streaks – and a models tab with tokens per day per model and each model's share. Switch between all time, last 7 and last 30 days. The numbers come from Claude Code's own statistics file (`~/.claude/stats-cache.json`), as of yesterday; if Claude Code changes its format, Vibewright shows a note instead of wrong numbers.
 - **Ideas list** (#22): **Ideas (n)** in the „I just had another idea“ tile opens all ideas of the project – waiting ones and those already added to the plan, with date and phase. You can correct the text or delete an entry (only after a confirmation). The plan stays untouched: only the list and `… – Ideas.md` change, the steps in the phases remain.
-
-#### 0.3.4 – 2026-11-19
-
-#### Added
-- **Model choice in the sidebar** (#16): pick Haiku, Sonnet, Opus or Fable right below the project list. Fable is not included in any subscription and runs on usage credits only; without credits Vibewright says so and keeps your progress. The same choice is in the settings.
-- **Usage per model** (#16): „Usage“ in the sidebar shows the tokens per model (input, output, cache read/write) – for planning runs as reported by Claude Code, including its cost estimate at list price (not billed separately on a Pro/Max subscription), and for all Claude Code sessions in the project folders (tokens only; Claude Code reports no cost there).
-
-#### Changed
-- **The model choice now also applies to new terminal sessions** (#16): the build in the terminal starts with the chosen model (`claude --model …`) instead of your normal Claude Code setting. If you never chose a model in Vibewright, that is Sonnet – check the sidebar before your next build session. Sessions that are already running keep their model.
-
-#### Fixed
-- **„New version available“ did not show up** (#17) when GitHub could not be reached at startup (connection refused or API limit used up): the failed check was remembered until the app was closed. Now only a successful check is remembered, a failed one is retried, and the app checks again every hour while it stays open.
-- **The layout test failed at random** (#18): it measured while the shine on progress bars or a card lifted by the mouse pointer was still moving. It now measures the finished layout (animations, transitions and hover off) and starts the app once per language instead of once per view – 2 windows instead of 24, about 50 s instead of several minutes.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
