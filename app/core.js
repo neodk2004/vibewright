@@ -553,8 +553,13 @@ async function repoSteckbrief(ordner, gelesen = []) {
   // Doku (docs/, wiki/, Obsidian-Notizen, CHANGELOG …): zeigt den aktuellen Stand – Fortschritts-Dateien zuerst, dann die neuesten
   const doku = dokuDateien(ordner).filter((f) => f !== readme && f !== 'CLAUDE.md');
   if (doku.length) teile.push(`Doku-Dateien: ${doku.slice(0, 30).join(', ')}${doku.length > 30 ? ' …' : ''}`);
-  for (const f of doku.slice(0, 8)) { const t = lese(f, 1500); if (t) teile.push(`--- ${f} ---
-${t}`); }
+  // #26 Teil A: bis 20 Dateien à 4.000 Zeichen, zusammen höchstens 40.000 – die letzte wird notfalls gekürzt
+  let rest = 40000;
+  for (const f of doku.slice(0, 20)) {
+    if (rest <= 0) break;
+    const t = lese(f, Math.min(4000, rest));
+    if (t) { teile.push(`--- ${f} ---\n${t}`); rest -= t.length; }
+  }
   const log = await run('git', ['-C', ordner, 'log', '--oneline', '-15']);
   if (log.code === 0 && log.out.trim()) teile.push(`--- letzte Commits ---\n${log.out.trim()}`);
   return teile.join('\n\n');
