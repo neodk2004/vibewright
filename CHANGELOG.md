@@ -2,6 +2,14 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] – 2026-11-24
+
+### Added
+- **"Documents" note for imported projects** (part B of #26): when you start from an existing project, Vibewright now writes `<Project> – Documents.md` listing every file it read – path, date, read fully or shortened, and one sentence from Claude about what it contains (from the same first interview round, no extra Claude call). No copies; the files stay in the folder. Linked from the needs analysis, the plan and the dashboard. Projects imported earlier don't get the note.
+
+### Fixed
+- **Windows: model dropdown readable in dark mode:** the open list showed light text on a white background.
+
 ## [0.4.1] – 2026-11-24
 
 ### Changed
