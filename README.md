@@ -137,6 +137,14 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.2 – 2026-11-24
+
+#### Added
+- **"Documents" note for imported projects** (part B of #26): when you start from an existing project, Vibewright now writes `<Project> – Documents.md` listing every file it read – path, date, read fully or shortened, and one sentence from Claude about what it contains (from the same first interview round, no extra Claude call). No copies; the files stay in the folder. Linked from the needs analysis, the plan and the dashboard. Projects imported earlier don't get the note.
+
+#### Fixed
+- **Windows: model dropdown readable in dark mode:** the open list showed light text on a white background.
+
 #### 0.4.1 – 2026-11-24
 
 #### Changed
@@ -153,12 +161,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **macOS: ejecting the installer** (#25): Vibewright now uses `diskutil eject` instead of `hdiutil detach`, which macOS 27 marks as deprecated. If ejecting fails, it is written to the log instead of failing silently.
-
-#### 0.3.5 – 2026-11-20
-
-#### Added
-- **Usage statistics like `/stats`** (#19): the usage view now starts with an overview of all Claude Code sessions on this computer – an activity grid for the last 12 months, favorite model, total tokens, sessions, active days, most active day, longest session and streaks – and a models tab with tokens per day per model and each model's share. Switch between all time, last 7 and last 30 days. The numbers come from Claude Code's own statistics file (`~/.claude/stats-cache.json`), as of yesterday; if Claude Code changes its format, Vibewright shows a note instead of wrong numbers.
-- **Ideas list** (#22): **Ideas (n)** in the „I just had another idea“ tile opens all ideas of the project – waiting ones and those already added to the plan, with date and phase. You can correct the text or delete an entry (only after a confirmation). The plan stays untouched: only the list and `… – Ideas.md` change, the steps in the phases remain.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
