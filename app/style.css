@@ -400,6 +400,7 @@ a[data-url]:hover{text-decoration:underline}
 .bausteine .opt.on b::after{content:" ✓";color:var(--ok)}
 /* Verbrauch je Modell */
 .modellwahl select{font:inherit;font-size:12px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:5px;padding:0 4px;margin-left:4px}
+.modellwahl option{background:var(--panel);color:var(--text)} /* Windows zeichnet die offene Liste sonst weiß – im Darkmode helle Schrift auf Weiß */
 table.verbrauch{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 table.verbrauch th,table.verbrauch td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 table.verbrauch th:first-child,table.verbrauch td:first-child{text-align:left}
