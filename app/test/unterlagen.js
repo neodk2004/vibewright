@@ -26,13 +26,33 @@ const core = require('../core');
   const repo = path.join(basis, 'repo');
   fs.mkdirSync(path.join(repo, 'docs'), { recursive: true });
   fs.writeFileSync(path.join(repo, 'README.md'), '# Wetterstation\nkurz\n');
-  fs.writeFileSync(path.join(repo, 'docs', 'CHANGELOG.md'), 'x'.repeat(2000)); // länger als 1500 → gekürzt
+  fs.writeFileSync(path.join(repo, 'docs', 'CHANGELOG.md'), 'x'.repeat(5000)); // länger als 4000 → gekürzt
 
   // repoSteckbrief meldet, was es gelesen hat
   const gelesen = [];
   await core.repoSteckbrief(repo, gelesen);
   assert.deepStrictEqual(gelesen.map((g) => [g.datei, g.ganz]), [['README.md', true], ['docs/CHANGELOG.md', false]]);
   assert.match(gelesen[0].datum, /^\d{4}-\d{2}-\d{2}$/);
+
+  // Teil A: höchstens 20 Doku-Dateien, zusammen höchstens 40.000 Zeichen, Fortschritts-Dateien zuerst
+  const viel = (n, laenge) => {
+    const o = fs.mkdtempSync(path.join(basis, 'viel-'));
+    for (let i = 0; i < n; i++) fs.writeFileSync(path.join(o, `notiz-${String(i).padStart(2, '0')}.md`), 'y'.repeat(laenge));
+    fs.writeFileSync(path.join(o, 'TODO.md'), 'z'.repeat(laenge));
+    return o;
+  };
+  const doku = async (o) => { const g = []; const sb = await core.repoSteckbrief(o, g); return { g, sb }; };
+  let { g } = await doku(viel(25, 100));
+  assert.strictEqual(g.length, 20, '20 kleine Dateien');
+  assert.strictEqual(g[0].datei, 'TODO.md', 'Fortschritts-Datei zuerst');
+  const gross = await doku(viel(25, 3000));
+  g = gross.g;
+  const summe = gross.sb.split('\n').filter((z) => /^[yz]+$/.test(z)).reduce((s, z) => s + z.length, 0);
+  assert.strictEqual(summe, 40000, 'Obergrenze voll ausgeschöpft, nicht überschritten');
+  assert.strictEqual(g.length, 14); // 13 × 3.000 ganz + 1.000 von der 14.
+  assert.ok(g.slice(0, 13).every((x) => x.ganz) && !g[13].ganz, 'die letzte ist gekürzt');
+  ({ g } = await doku(viel(3, 5000)));
+  assert.ok(g.every((x) => !x.ganz), 'über 4.000 Zeichen → gekürzt');
 
   // Übernahme: erste Runde schreibt die Notiz; Sätze von Claude nur für wirklich gelesene Dateien
   const info = core.ablageInfo({ modus: 'obsidian', ablage: fs.mkdtempSync(path.join(basis, 'ablage-')) });
