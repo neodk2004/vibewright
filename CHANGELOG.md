@@ -2,6 +2,14 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] – 2026-11-24
+
+### Changed
+- **Fewer tokens for ideas and the tool check:** the tool check now runs in its own side session, so the plugin catalog no longer travels along with every later „I just had another idea“ call (one idea: ~30,000 → ~11,000 input tokens in our test). The follow-up check for dead download links and ready-made skills runs without a session and only gets the entries it needs (~27,000 → ~2,200 tokens). Measure it yourself: `node test/tokens.js` in `app/`.
+
+### Fixed
+- **Ideas no longer get lost or placed twice** (#27): an idea entered while Claude was placing another one could disappear, or one idea was sent to Claude twice. Vibewright now reloads the project after each Claude answer and runs only one placement per project at a time.
+
 ## [0.4.0] – 2026-11-22
 
 ### Added
