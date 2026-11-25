@@ -231,7 +231,7 @@ a[data-url]:hover{text-decoration:underline}
 /* Knöpfe & Karten reagieren */
 .btn{transition:transform .15s var(--weich),filter .15s,border-color .15s,background .15s}
 .btn:active:not(:disabled){transform:scale(.96)}
-.btn.primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px -8px var(--accent)}
+.btn.primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px -7px var(--accent)} /* bleibt im unteren Karten-Innenabstand, sonst kappt overflow der .karte den Schatten */
 .opt,.phase,#liste button.karte-p,.wz,.zeit button{transition:transform .18s var(--weich),border-color .18s,background .18s,box-shadow .18s}
 .opt:hover,#liste button.karte-p:hover{transform:translateY(-1px)}
 .opt.on{animation:waehle .3s var(--weich)}
