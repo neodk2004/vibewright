@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.3] – 2026-11-25
+
+### Changed
+- **Importing reads more documents** (part A of #26): when you start from an existing project, Vibewright now reads up to 20 doc files with up to 4,000 characters each, 40,000 in total (was 8 × 1,500). Progress files (changelog, todo, plan …) come first, then the newest. A file that no longer fits completely is shortened and marked as such in the "Documents" note. The first import prompt gets larger (up to ~10,000 tokens), so Claude knows the project better and asks fewer questions.
+
 ## [0.4.2] – 2026-11-24
 
 ### Added
