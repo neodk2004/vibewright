@@ -11,7 +11,7 @@ Users: see the [user guide](user-guide.md) / [Anleitung](anleitung.md).
 
 | Part | Choice | Why |
 |---|---|---|
-| App shell | **Electron 33**, plain HTML/CSS/JS – no framework, no bundler | small, readable, nothing to compile |
+| App shell | **Electron 42**, plain HTML/CSS/JS – no framework, no bundler | small, readable, nothing to compile |
 | Planning AI | **Claude Code CLI**, headless (`claude -p`) with JSON schemas | uses the user's own subscription, structured answers |
 | Building AI | **Claude Code**, interactive in an embedded terminal | the real Claude Code with all its features |
 | Terminal | **xterm.js** + **node-pty** (`@lydell/node-pty`, prebuilt N-API binaries) | no build tools needed on Windows |
