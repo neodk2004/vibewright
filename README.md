@@ -137,6 +137,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.3 – 2026-11-25
+
+#### Changed
+- **Importing reads more documents** (part A of #26): when you start from an existing project, Vibewright now reads up to 20 doc files with up to 4,000 characters each, 40,000 in total (was 8 × 1,500). Progress files (changelog, todo, plan …) come first, then the newest. A file that no longer fits completely is shortened and marked as such in the "Documents" note. The first import prompt gets larger (up to ~10,000 tokens), so Claude knows the project better and asks fewer questions.
+
 #### 0.4.2 – 2026-11-24
 
 #### Added
@@ -152,15 +157,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Ideas no longer get lost or placed twice** (#27): an idea entered while Claude was placing another one could disappear, or one idea was sent to Claude twice. Vibewright now reloads the project after each Claude answer and runs only one placement per project at a time.
-
-#### 0.4.0 – 2026-11-22
-
-#### Added
-- **Reorder phases** (#24): in the cockpit, a phase that has not started yet can be moved with ▲ / ▼ – for example to put the versions of a release plan in the right order. Finished and running phases keep their place, so the progress stays correct. The phase notes („Phase N – …“), `… – Plan.md`, the dashboard and the ideas list follow; checkmarks and steps are kept. To add a phase at a certain position, add it via „I just had another idea“ and move it up.
-- **Move a step to the next phase** (#24): hover over an open step and click → to move it to the start of the next phase. A phase always keeps at least one step.
-
-#### Fixed
-- **macOS: ejecting the installer** (#25): Vibewright now uses `diskutil eject` instead of `hdiutil detach`, which macOS 27 marks as deprecated. If ejecting fails, it is written to the log instead of failing silently.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
