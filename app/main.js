@@ -9,8 +9,9 @@ const MAC = process.platform === 'darwin';
 // Einmal beim Start aus der Login-Shell holen – Marker trennen den PATH von eventuellen Begrüßungsausgaben.
 if (!WIN) {
   try {
-    const aus = require('child_process').execFileSync(process.env.SHELL || '/bin/zsh', ['-ilc', 'echo "__PFAD__${PATH}__PFAD__"'], { timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
-    const pfad = aus.match(/__PFAD__(.*)__PFAD__/)?.[1];
+    const aus = require('child_process').execFileSync(process.env.SHELL || '/bin/zsh', ['-ilc', 'printf __PFAD__; printenv PATH; printf __PFAD__'], { timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    // printenv statt echo ${PATH}: gleiche Ausgabe in jeder Shell, auch in fish (dort ist ${PATH} ungültig)
+    const pfad = aus.match(/__PFAD__([^\n]*)\n?__PFAD__/)?.[1];
     if (pfad) process.env.PATH = pfad;
   } catch {}
 }
