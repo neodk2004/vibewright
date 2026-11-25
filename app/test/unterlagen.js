@@ -1,4 +1,4 @@
-// Prüft #26 (Teil B): Beim Übernehmen eines Ordners entsteht die Notiz „<Projekt> – Unterlagen.md“ (Datei, Datum, ganz/gekürzt, 1 Satz),
+// Prüft #26 (Teil A, B und C): Beim Übernehmen eines Ordners entsteht die Notiz „<Projekt> – Unterlagen.md“ (Datei, Datum, ganz/gekürzt, 1 Satz),
 // verlinkt aus Bedarfsanalyse, Plan und Dashboard. Statt Claude antwortet ein Ersatz-Skript (kostet kein Limit). Aufruf: node test/unterlagen.js
 // shortcut: Ersatz wird über PATH gefunden (which -a claude) – unter Windows sucht die App anders, dort wird der Test übersprungen
 if (process.platform === 'win32') { console.log('unterlagen: unter Windows übersprungen'); process.exit(0); }
@@ -10,11 +10,15 @@ const path = require('path');
 const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'unterlagen-'));
 const bin = path.join(basis, 'bin');
 fs.mkdirSync(bin);
+const phase = { titel: 'T', bereich: 'Software', aufwand: 'klein', ziel: 'z', fertig_wenn: 'f', checkliste: ['a', 'b', 'c'] };
+const planAntwort = { einzeiler: 'e', phasen: [phase, phase, phase] };
 const analyse = { ziel: 'z', rahmen: [], muss: [], kann: [], nicht: [], risiken: [], ampel: 'gruen', machbarkeit: 'm' };
 fs.writeFileSync(path.join(bin, 'claude'), `#!${process.execPath}
 let p = ''; process.stdin.on('data', (d) => (p += d)).on('end', () => {
+  if (/Schritt: Plan|Änderungswunsch zum Plan/.test(p)) require('fs').writeFileSync(${JSON.stringify(path.join(basis, 'plan-prompt.txt'))}, p);
   const out = p.includes('Schritt: Interview')
     ? { fertig: true, projekttyp: 'code', fragen: [], unterlagen: [{ datei: 'README.md', kurz: 'Beschreibt die Wetterstation.' }, { datei: 'gibt-es-nicht.md', kurz: 'x' }] }
+    : /Schritt: Plan|Änderungswunsch zum Plan/.test(p) ? ${JSON.stringify(planAntwort)}
     : ${JSON.stringify(analyse)};
   console.log(JSON.stringify({ session_id: 's', is_error: false, structured_output: out }));
 });
@@ -77,6 +81,20 @@ const core = require('../core');
   core.speichern(info, st);
   core.aktualisieren(info, 'Wetter');
   assert.match(fs.readFileSync(path.join(info.ablage, 'Wetter', 'Wetter – Dashboard.md'), 'utf8'), /\[\[Wetter – Unterlagen\|Unterlagen\]\]/);
+
+  // Teil C: der erste Plan bekommt die Kurzfassungen ausdrücklich, ein Änderungswunsch nicht noch einmal
+  const planPrompt = () => fs.readFileSync(path.join(basis, 'plan-prompt.txt'), 'utf8');
+  let st2 = await core.weiter(info, core.neu(info, 'Wetter2', 'Wetterstation fertig bauen', repo));
+  st2 = await core.weiter(info, st2); // Bedarfsanalyse freigeben → Plan
+  assert.strictEqual(st2.offen.schritt, 'plan');
+  assert.match(planPrompt(), /<unterlagen>\n- README\.md \(\d{4}-\d{2}-\d{2}, ganz gelesen\): Beschreibt die Wetterstation\.\n- docs\/CHANGELOG\.md \(\S+, gekürzt gelesen\)\n<\/unterlagen>/);
+  await core.weiter(info, st2, { aktion: 'aendern', text: 'kürzer' });
+  assert.ok(!planPrompt().includes('<unterlagen>'), 'Änderungswunsch ohne Liste');
+  // ohne Unterlagen (leerer Ordner) kein Block
+  const leer = fs.mkdtempSync(path.join(basis, 'leer-'));
+  let st3 = await core.weiter(info, core.neu(info, 'Leer', 'Etwas bauen', leer));
+  st3 = await core.weiter(info, st3);
+  assert.ok(!st3.unterlagen && !planPrompt().includes('<unterlagen>'), 'ohne Unterlagen kein Block');
 
   fs.rmSync(basis, { recursive: true, force: true });
   console.log('unterlagen: alle Prüfungen bestanden');
