@@ -850,7 +850,7 @@ function pflegeKachel(st) {
     : w ? `${w} ${w > 1 ? 'Meldungen warten' : 'Meldung wartet'} auf das Ende des aktuellen Schritts`
     : !st.pflegeRepo ? 'Kein GitHub-Repo verknüpft – Meldungen landen direkt im Plan.'
     : st.letzteIdee ? `✓ ${esc(st.letzteIdee)}` : 'Wird als Issue angelegt und von Claude eingeplant.';
-  return `<div class="karte idee pflege" style="--ak:var(--accent)"><span class="label">Pflege<span>${st.pflegeRepo ? ` · ${esc(st.pflegeRepo)}` : ''}</span></span>
+  return `<div class="karte idee pflege" style="--ak:var(--accent)"><div class="pflege-kopf"><span class="label">Pflege<span>${st.pflegeRepo ? ` · ${esc(st.pflegeRepo)}` : ''}</span></span>${ideenKnopf(st)}</div>
     ${neu.slice(0, 3).map((x) => `<div class="issue"><span title="${esc(`#${x.nr} ${x.titel}${x.text ? `\n\n${x.text.slice(0, 400)}` : ''}`)}">${x.art === 'fehler' ? '🐞' : '✨'} #${x.nr} ${esc(x.titel)}${x.von ? ` <i class="muted">@${esc(x.von)}</i>` : ''}</span>
       <button class="btn" data-ueb="${x.nr}">Übernehmen</button><button class="btn ghost" data-ign="${x.nr}" title="Ignorieren">✕</button></div>`).join('')}
     ${neu.length > 3 ? `<span class="muted klein">+ ${neu.length - 3} weitere neue Issues</span>` : ''}
@@ -860,6 +860,7 @@ function pflegeKachel(st) {
 }
 function pflegeBinden(st) {
   const feld = $('#idee-text');
+  $('#ideen-auf').onclick = () => ideenZeigen(st, cockpit); // Meldungen und übernommene Issues landen als Ideen im Plan
   feld.oninput = () => (ideeEntwurf = feld.value); // Entwurf überlebt das Neuzeichnen
   const los = async (aufruf, warte) => {
     $$('.pflege button').forEach((b) => (b.disabled = true));

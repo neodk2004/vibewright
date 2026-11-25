@@ -79,6 +79,9 @@ const ansichten = {
   cockpit: mit(`{ offen: { dashboard: 'x' } }`, 'cockpit(st);'),
   pflege: mit(`{ offen: { dashboard: 'x' }, projekttyp: 'code', stand: { ...${JSON.stringify(stand)}, aktiv: -1 }, pflegeRepo: ${JSON.stringify('beispiel/' + W)},
     issuesNeu: [{ nr: 1, art: 'fehler', titel: ${JSON.stringify(L)}, von: ${JSON.stringify(W)} }] }`, 'pflegeGeprueft.set(st.name, Date.now()); cockpit(st);'),
+  // Ideen-Liste aus der Pflege-Kachel öffnen (Knopf in der Titelzeile)
+  'pflege-ideen': mit(`{ ...${IDEEN}, offen: { dashboard: 'x' }, projekttyp: 'code', stand: { ...${JSON.stringify(stand)}, aktiv: -1 }, pflegeRepo: ${JSON.stringify('beispiel/' + W)},
+    issuesNeu: [{ nr: 1, art: 'fehler', titel: ${JSON.stringify(L)}, von: ${JSON.stringify(W)} }] }`, 'pflegeGeprueft.set(st.name, Date.now()); cockpit(st); document.getElementById("ideen-auf").click();'),
   arbeit: mit(`{ offen: { dashboard: 'x' } }`, 'arbeit(st);'),
   einstellungen: 'einstellungen()',
   'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
