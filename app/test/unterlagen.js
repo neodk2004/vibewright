@@ -1,4 +1,4 @@
-// Prüft #26 (Teil A, B und C): Beim Übernehmen eines Ordners entsteht die Notiz „<Projekt> – Unterlagen.md“ (Datei, Datum, ganz/gekürzt, 1 Satz),
+// Prüft #26 (Teil A bis D): Beim Übernehmen eines Ordners entsteht die Notiz „<Projekt> – Unterlagen.md“ (Datei, Datum, ganz/gekürzt, 1 Satz),
 // verlinkt aus Bedarfsanalyse, Plan und Dashboard. Statt Claude antwortet ein Ersatz-Skript (kostet kein Limit). Aufruf: node test/unterlagen.js
 // shortcut: Ersatz wird über PATH gefunden (which -a claude) – unter Windows sucht die App anders, dort wird der Test übersprungen
 if (process.platform === 'win32') { console.log('unterlagen: unter Windows übersprungen'); process.exit(0); }
@@ -57,6 +57,21 @@ const core = require('../core');
   assert.ok(g.slice(0, 13).every((x) => x.ganz) && !g[13].ganz, 'die letzte ist gekürzt');
   ({ g } = await doku(viel(3, 5000)));
   assert.ok(g.every((x) => !x.ganz), 'über 4.000 Zeichen → gekürzt');
+
+  // Teil D: Word, RTF und OpenOffice per textutil – nur auf dem Mac, sonst weiter nur .md/.txt
+  const buero = fs.mkdtempSync(path.join(basis, 'buero-')), quelle = path.join(basis, 'quelle.txt');
+  fs.writeFileSync(quelle, 'Bauanleitung Wetterstation\n');
+  for (const e of ['docx', 'doc', 'rtf', 'odt']) {
+    const ziel = path.join(buero, `anleitung.${e}`);
+    if (process.platform === 'darwin') require('child_process').execFileSync('textutil', ['-convert', e, quelle, '-output', ziel]);
+    else fs.writeFileSync(ziel, 'x');
+  }
+  const b = await doku(buero);
+  if (process.platform === 'darwin') {
+    assert.deepStrictEqual(b.g.map((x) => x.datei).sort(), ['anleitung.doc', 'anleitung.docx', 'anleitung.odt', 'anleitung.rtf']);
+    assert.strictEqual(b.sb.split('Bauanleitung Wetterstation').length - 1, 4, 'Text aus allen vier Formaten');
+    assert.ok(!b.sb.includes('\\rtf1') && !b.sb.includes('PK'), 'als Text gelesen, nicht roh');
+  } else assert.deepStrictEqual(b.g, [], 'ohne textutil keine Büro-Dateien');
 
   // Übernahme: erste Runde schreibt die Notiz; Sätze von Claude nur für wirklich gelesene Dateien
   const info = core.ablageInfo({ modus: 'obsidian', ablage: fs.mkdtempSync(path.join(basis, 'ablage-')) });

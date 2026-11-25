@@ -536,7 +536,9 @@ async function ask(st, prompt, schema, neben) {
 async function repoSteckbrief(ordner, gelesen = []) {
   const lese = (f, max) => {
     try {
-      const p = path.join(ordner, f), t = fs.readFileSync(p, 'utf8');
+      const p = path.join(ordner, f);
+      // #26 Teil D: Word/RTF/OpenOffice per mitgeliefertem textutil (nur macOS, s. DOKU_ENDUNG), ohne Shell
+      const t = BUERO.test(f) ? require('child_process').execFileSync('textutil', ['-convert', 'txt', '-stdout', p], { timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).toString() : fs.readFileSync(p, 'utf8');
       if (t.trim()) gelesen.push({ datei: f, datum: new Date(fs.statSync(p).mtimeMs).toISOString().slice(0, 10), ganz: t.length <= max });
       return t.slice(0, max).trim();
     } catch { return ''; }
@@ -565,9 +567,11 @@ async function repoSteckbrief(ordner, gelesen = []) {
   return teile.join('\n\n');
 }
 
-// .md/.txt bis 3 Ebenen tief, ohne Abhängigkeits- und Build-Ordner und ohne Symlinks (ein geklontes Repo könnte sonst auf private Dateien zeigen); sortiert: Stand/Changelog/Todo/Plan zuerst, dann neueste
+// .md/.txt (auf dem Mac auch Word/RTF/ODT) bis 3 Ebenen tief, ohne Abhängigkeits- und Build-Ordner und ohne Symlinks (ein geklontes Repo könnte sonst auf private Dateien zeigen); sortiert: Stand/Changelog/Todo/Plan zuerst, dann neueste
 const DOKU_SKIP = /^(node_modules|vendor|dist|build|out|target|venv|env|__pycache__)$/i;
-const DOKU_WICHTIG = /changelog|roadmap|todo|status|stand|fortschritt|progress|plan|dashboard|notes|notizen/i;
+const BUERO = /\.(docx?|rtf|odt)$/i;
+const DOKU_ENDUNG = MAC ? /\.(md|txt|docx?|rtf|odt)$/i : /\.(md|txt)$/i; // textutil gibt es nur auf dem Mac
+const DOKU_WICHTIG =/changelog|roadmap|todo|status|stand|fortschritt|progress|plan|dashboard|notes|notizen/i;
 function dokuDateien(ordner) {
   const funde = [];
   const gehe = (rel, tiefe) => {
@@ -576,7 +580,7 @@ function dokuDateien(ordner) {
       if (e.name.startsWith('.') || funde.length >= 200) continue;
       const f = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) { if (tiefe < 3 && !DOKU_SKIP.test(e.name)) gehe(f, tiefe + 1); }
-      else if (e.isFile() && /\.(md|txt)$/i.test(e.name) &&!/^(license|licence|third_party|requirements)/i.test(e.name)) funde.push({ f, t: fs.statSync(path.join(ordner, f)).mtimeMs });
+      else if (e.isFile() && DOKU_ENDUNG.test(e.name) && !/^(license|licence|third_party|requirements)/i.test(e.name)) funde.push({ f, t: fs.statSync(path.join(ordner, f)).mtimeMs });
     }
   };
   gehe('', 0);
