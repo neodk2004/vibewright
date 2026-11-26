@@ -137,6 +137,20 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.4 – 2026-11-26
+
+#### Added
+- **Import: Word, RTF and OpenOffice files on macOS** (part D of #26): when you start from an existing project, Vibewright now also reads `.doc`, `.docx`, `.rtf` and `.odt` files, using the `textutil` tool that comes with macOS. On Windows it keeps reading only `.md` and `.txt`.
+- **Ideas list in the maintenance view** (#36): the "Ideas (n)" button now sits in the header of the maintenance tile, so reported issues and adopted ideas are one click away.
+
+#### Changed
+- **Plan uses what Vibewright read** (part C of #26): for an imported project, the plan step gets the one-sentence summaries of the files that were read, with their dates. Newer files count as the current state, so the plan starts where the project really is.
+
+#### Fixed
+- **macOS / Linux: works with the fish shell** (#33): when started from the Finder, Vibewright now reads the PATH with `printenv`, which works in every shell.
+- **Primary button: hover shadow no longer cut off** (#35).
+- **Developer guide:** names Electron 42 instead of 33 (#32).
+
 #### 0.4.3 – 2026-11-25
 
 #### Changed
@@ -149,14 +163,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Windows: model dropdown readable in dark mode:** the open list showed light text on a white background.
-
-#### 0.4.1 – 2026-11-24
-
-#### Changed
-- **Fewer tokens for ideas and the tool check:** the tool check now runs in its own side session, so the plugin catalog no longer travels along with every later „I just had another idea“ call (one idea: ~30,000 → ~11,000 input tokens in our test). The follow-up check for dead download links and ready-made skills runs without a session and only gets the entries it needs (~27,000 → ~2,200 tokens). Measure it yourself: `node test/tokens.js` in `app/`.
-
-#### Fixed
-- **Ideas no longer get lost or placed twice** (#27): an idea entered while Claude was placing another one could disappear, or one idea was sent to Claude twice. Vibewright now reloads the project after each Claude answer and runs only one placement per project at a time.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
