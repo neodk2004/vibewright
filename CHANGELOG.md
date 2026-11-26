@@ -2,6 +2,20 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.4] – 2026-11-26
+
+### Added
+- **Import: Word, RTF and OpenOffice files on macOS** (part D of #26): when you start from an existing project, Vibewright now also reads `.doc`, `.docx`, `.rtf` and `.odt` files, using the `textutil` tool that comes with macOS. On Windows it keeps reading only `.md` and `.txt`.
+- **Ideas list in the maintenance view** (#36): the "Ideas (n)" button now sits in the header of the maintenance tile, so reported issues and adopted ideas are one click away.
+
+### Changed
+- **Plan uses what Vibewright read** (part C of #26): for an imported project, the plan step gets the one-sentence summaries of the files that were read, with their dates. Newer files count as the current state, so the plan starts where the project really is.
+
+### Fixed
+- **macOS / Linux: works with the fish shell** (#33): when started from the Finder, Vibewright now reads the PATH with `printenv`, which works in every shell.
+- **Primary button: hover shadow no longer cut off** (#35).
+- **Developer guide:** names Electron 42 instead of 33 (#32).
+
 ## [0.4.3] – 2026-11-25
 
 ### Changed
