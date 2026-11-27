@@ -257,11 +257,23 @@ async function forgeRepos(konto, token) {
 // Pflege-Modus: Issues des Projekt-Repos lesen und anlegen. ziel = { owner, repo } aus der origin-Adresse des Code-Ordners.
 // Gibt null zurück, wenn origin nicht auf dem eingetragenen Server liegt – der Token geht nie an fremde Server.
 function forgeZiel(konto, origin) {
-  const m = /^(?:https:\/\/(?:[^@/]+@)?([^/]+)\/|git@([^:]+):)([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(String(origin).trim());
+  const m = /^(?:(https?):\/\/(?:[^@/]+@)?([^/]+)\/|git@([^:]+):)([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(String(origin).trim());
   if (!m) return null;
-  let host;
-  try { host = konto.typ === 'github' ? 'github.com' : new URL(konto.server).host; } catch { return null; }
-  return (m[1] || m[2]).toLowerCase() === host.toLowerCase() ? { owner: m[3], repo: m[4] } : null;
+  let host, httpOk = false;
+  try {
+    const u = konto.typ === 'github' ? null : new URL(konto.server);
+    host = u ? u.host : 'github.com';
+    httpOk = u?.protocol === 'http:'; // http nur, wenn das Gitea-Konto selbst per http eingetragen ist – der Token geht dann ohnehin dorthin (#37)
+  } catch { return null; }
+  if (m[1] === 'http' && !httpOk) return null;
+  return (m[2] || m[3]).toLowerCase() === host.toLowerCase() ? { owner: m[4], repo: m[5] } : null;
+}
+// Ausgabe von `git remote -v`: origin zuerst, dann die übrigen – das erste Remote auf dem eingetragenen Server zählt (#37)
+function remoteZiel(konto, remotes) {
+  const z = String(remotes).split('\n').map((l) => l.trim().split(/\s+/)).filter((t) => t.length >= 2 && t[2] !== '(push)');
+  z.sort((a, b) => (b[0] === 'origin') - (a[0] === 'origin'));
+  for (const [, url] of z) { const r = forgeZiel(konto, url); if (r) return r; }
+  return null;
 }
 function issuesUrl(konto, ziel) {
   const r = `${encodeURIComponent(ziel.owner)}/${encodeURIComponent(ziel.repo)}`;
@@ -1319,4 +1331,4 @@ function vibewrightDmgs(hdiutilText) {
 
 module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
   aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
-  forgeZiel, forgeIssues, forgeIssueAnlegen };
+  forgeZiel, remoteZiel, forgeIssues, forgeIssueAnlegen };

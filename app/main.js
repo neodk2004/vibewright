@@ -220,8 +220,8 @@ handle('idee-aendern', (name, wartend, i, alt, text) => core.ideeAendern(info(),
 // ---------- Pflege-Modus: alle Phasen erledigt → Fehler und Wünsche laufen über die Issues des Projekt-Repos ----------
 async function pflegeZiel(st) {
   if (!st.repo || !fs.existsSync(path.join(st.repo, '.git'))) return null;
-  const r = await core.run('git', ['remote', 'get-url', 'origin'], { cwd: st.repo });
-  return r.code === 0 ? core.forgeZiel(forgeKonto(), r.out) : null;
+  const r = await core.run('git', ['remote', '-v'], { cwd: st.repo });
+  return r.code === 0 ? core.remoteZiel(forgeKonto(), r.out) : null;
 }
 const ART = { fehler: 'Fehler', wunsch: 'Feature-Wunsch' };
 const issueIdee = (nr, art, titel, text) => `GitHub-Issue #${nr} (${ART[art]}): ${titel}${text && text !== titel ? `\n${text}` : ''}\nNenne „GitHub-Issue #${nr}“ in jedem Schritt.`;

@@ -848,7 +848,7 @@ function pflegeKachel(st) {
   const info = st.pflegeFehler ? `<span class="fehltext">${esc(st.pflegeFehler)}</span>`
     : st.ideeFehler ? `<span class="fehltext">Konnte nicht eingeordnet werden: ${esc(st.ideeFehler)}</span>`
     : w ? `${w} ${w > 1 ? 'Meldungen warten' : 'Meldung wartet'} auf das Ende des aktuellen Schritts`
-    : !st.pflegeRepo ? 'Kein GitHub-Repo verknüpft – Meldungen landen direkt im Plan.'
+    : !st.pflegeRepo ? 'Kein Repo zum Git-Konto (Einstellungen → Git) gefunden – Meldungen landen direkt im Plan.'
     : st.letzteIdee ? `✓ ${esc(st.letzteIdee)}` : 'Wird als Issue angelegt und von Claude eingeplant.';
   return `<div class="karte idee pflege" style="--ak:var(--accent)"><div class="pflege-kopf"><span class="label">Pflege<span>${st.pflegeRepo ? ` · ${esc(st.pflegeRepo)}` : ''}</span></span>${ideenKnopf(st)}</div>
     ${neu.slice(0, 3).map((x) => `<div class="issue"><span title="${esc(`#${x.nr} ${x.titel}${x.text ? `\n\n${x.text.slice(0, 400)}` : ''}`)}">${x.art === 'fehler' ? '🐞' : '✨'} #${x.nr} ${esc(x.titel)}${x.von ? ` <i class="muted">@${esc(x.von)}</i>` : ''}</span>

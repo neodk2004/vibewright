@@ -36,6 +36,17 @@ assert.throws(() => core.forgeUrl({ typ: 'gitea', server: 'git.example.de' }), /
   assert.strictEqual(core.forgeZiel(gt, 'https://github.com/neo/app.git'), null);
   assert.strictEqual(core.forgeZiel(gh, 'http://github.com/neo/app.git'), null, 'kein Klartext-http');
   assert.strictEqual(core.forgeZiel(gh, 'C:/code/app'), null);
+  // #37: http nur für ein per http eingetragenes Gitea-Konto, gleicher Host und Port
+  const gtHttp = { typ: 'gitea', server: 'http://nas.local:3000' };
+  assert.deepStrictEqual(core.forgeZiel(gtHttp, 'http://nas.local:3000/neo/app.git'), { owner: 'neo', repo: 'app' });
+  assert.strictEqual(core.forgeZiel(gtHttp, 'http://nas.local:3001/neo/app.git'), null, 'anderer Port');
+  assert.strictEqual(core.forgeZiel(gt, 'http://git.example.de/neo/app.git'), null, 'https-Konto: kein http-Remote');
+  // #37: alle Remotes, origin zuerst
+  const remotes = (...z) => z.map(([n, u]) => `${n}\t${u} (fetch)\n${n}\t${u} (push)`).join('\n');
+  assert.deepStrictEqual(core.remoteZiel(gtHttp, remotes(['origin', 'https://github.com/neo/app.git'], ['myserver', 'http://nas.local:3000/neo/app.git'])), { owner: 'neo', repo: 'app' });
+  assert.deepStrictEqual(core.remoteZiel(gh, remotes(['fork', 'https://github.com/neo/fork.git'], ['origin', 'https://github.com/neo/app.git'])), { owner: 'neo', repo: 'app' }, 'origin zuerst');
+  assert.deepStrictEqual(core.remoteZiel(gh, remotes(['upstream', 'git@github.com:neo/app.git'])), { owner: 'neo', repo: 'app' });
+  assert.strictEqual(core.remoteZiel(gh, ''), null);
   // Issues lesen: Pull Requests raus, Art aus den Labels; anlegen nur mit Token, GitHub mit Label
   global.fetch = async (url, o) => { gesehen = { url, o }; return { ok: true, json: async () => (o.method === 'POST' ? { number: 7, html_url: 'https://github.com/neo/app/issues/7' } : [
     { number: 1, title: 'Absturz', body: 'x', labels: [{ name: 'bug' }], user: { login: 'a' }, html_url: 'https://github.com/neo/app/issues/1' },
