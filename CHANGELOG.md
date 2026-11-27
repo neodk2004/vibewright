@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.5] – 2026-11-27
+
+### Security
+- **Importing a project no longer follows symlinks out of the folder** ([GHSA-pr7r-642c-886q](https://github.com/neodk2004/vibewright/security/advisories/GHSA-pr7r-642c-886q), reported by @revil-O): a crafted folder or repository could link `README.md`, `CLAUDE.md` or a manifest such as `package.json` to a private file (e.g. an SSH key), whose content then went into the first prompt to Claude. Writing `CLAUDE.md` and `.gitignore` into the code folder followed such links too. Vibewright now reads only files that stay inside the project folder after resolving links, refuses to write `CLAUDE.md` through a link pointing outside, and never overwrites an existing `.gitignore`. Links inside the folder (e.g. `CLAUDE.md` → `AGENTS.md`) keep working.
+
 ## [0.4.4] – 2026-11-26
 
 ### Added
