@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/dmg.js && node test/forge.js && node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/layout.js && node test/update.js && node test/verbrauch.js && node test/stats.js && node test/ideen.js && node test/ideen-wettlauf.js && node test/unterlagen.js && node test/umbau.js && node test/e2e.js",
+    "test": "node test/dmg.js && node test/forge.js && node test/claude-finden.js && node test/ablage.js && node test/archiv.js && node test/layout.js && node test/update.js && node test/verbrauch.js && node test/stats.js && node test/ideen.js && node test/ideen-wettlauf.js && node test/unterlagen.js && node test/symlink.js && node test/umbau.js && node test/e2e.js",
     "exe": "electron-builder --win nsis",
     "notices": "node build/hinweise-bauen.js",
     "exe:mac": "electron-builder --mac dmg zip --arm64 --publish never"

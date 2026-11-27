@@ -101,7 +101,7 @@ async function gitAnlegen(ordner) {
   if ((await core.run('git', ['--version'])).code !== 0) return;
   fs.mkdirSync(ordner, { recursive: true });
   await core.run('git', ['init'], { cwd: ordner });
-  if (!fs.existsSync(path.join(ordner, '.gitignore'))) fs.writeFileSync(path.join(ordner, '.gitignore'), 'node_modules/\n__pycache__/\n.venv/\n*.log\n.env\n', 'utf8');
+  try { fs.writeFileSync(path.join(ordner, '.gitignore'), 'node_modules/\n__pycache__/\n.venv/\n*.log\n.env\n', { encoding: 'utf8', flag: 'wx' }); } catch {} // wx: nie über eine vorhandene Datei oder einen Link schreiben
   await core.run('git', ['add', '-A'], { cwd: ordner });
   await core.run('git', ['commit', '-m', 'Start mit Vibewright'], { cwd: ordner }); // klappt nur mit Name/E-Mail; sonst bleibt es beim init
 }

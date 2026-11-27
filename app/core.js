@@ -531,12 +531,18 @@ async function ask(st, prompt, schema, neben) {
   return r.data;
 }
 
+// Liegt p nach Auflösen aller Symlinks noch im Ordner? Ein fremdes Repo könnte sonst per Link private Dateien lesen oder überschreiben lassen (GHSA-pr7r-642c-886q)
+function imOrdner(ordner, p) {
+  try { const o = fs.realpathSync.native(ordner), r = fs.realpathSync.native(p); return r === o || r.startsWith(o.endsWith(path.sep) ? o : o + path.sep); } catch { return false; }
+}
+
 // Was ein bestehender Code-Ordner schon über das Projekt verrät – kurz gehalten, damit der Prompt klein bleibt
 // gelesen: bekommt je gelesene Datei { datei, datum, ganz } – für die Notiz „Unterlagen“ (#26)
 async function repoSteckbrief(ordner, gelesen = []) {
   const lese = (f, max) => {
     try {
       const p = path.join(ordner, f);
+      if (!imOrdner(ordner, p)) return ''; // Link nach außerhalb (z. B. README.md -> ~/.ssh/id_rsa) wird nicht gelesen
       // #26 Teil D: Word/RTF/OpenOffice per mitgeliefertem textutil (nur macOS, s. DOKU_ENDUNG), ohne Shell
       const t = BUERO.test(f) ? require('child_process').execFileSync('textutil', ['-convert', 'txt', '-stdout', p], { timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).toString() : fs.readFileSync(p, 'utf8');
       if (t.trim()) gelesen.push({ datei: f, datum: new Date(fs.statSync(p).mtimeMs).toISOString().slice(0, 10), ganz: t.length <= max });
@@ -1226,7 +1232,9 @@ function claudeVorbereiten(info, name) {
   fs.mkdirSync(ordner, { recursive: true });
   // CLAUDE.md: nur unseren Abschnitt ersetzen, eigene Inhalte des Nutzers bleiben stehen
   const f = path.join(ordner, 'CLAUDE.md');
-  const alt = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
+  let da = true; try { fs.lstatSync(f); } catch { da = false; } // lstat: auch ein Link ohne Ziel zählt als vorhanden
+  if (da && !imOrdner(ordner, f)) throw new Error('CLAUDE.md im Code-Ordner ist ein Link auf eine Datei außerhalb des Ordners. Bitte durch eine normale Datei ersetzen.');
+  const alt = da ? fs.readFileSync(f, 'utf8') : '';
   const block = st.sprache === 'en'
     ? enText(claudeMd(info, st)).replace('<!-- projekthelper:ende -->', '- The user speaks English: always talk to them in English.\n<!-- projekthelper:ende -->')
     : claudeMd(info, st);
@@ -1309,6 +1317,6 @@ function vibewrightDmgs(hdiutilText) {
   })).filter((d) => d.datei && /^Vibewright[^/]*\.dmg$/i.test(path.basename(d.datei)));
 }
 
-module.exports = { planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
+module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
   aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, forgeIssues, forgeIssueAnlegen };
