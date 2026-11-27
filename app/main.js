@@ -210,10 +210,11 @@ function sitzungBeenden(name) {
 ipcMain.on('pty-eingabe', (_e, name, d) => sitzungen.get(name)?.pty.write(d));
 ipcMain.on('pty-groesse', (_e, name, cols, rows) => { try { sitzungen.get(name)?.pty.resize(Math.max(cols, 20), Math.max(rows, 5)); } catch {} });
 handle('sitzung', () => [...sitzungen.keys()]);
-// Idee merken; ohne laufende Claude-Sitzung sofort einarbeiten, sonst nach dem nächsten erledigten Schritt
+// Idee merken; ohne laufende Claude-Sitzung sofort einarbeiten, sonst nach dem nächsten erledigten Schritt –
+// außer in der Pflege (alles erledigt): dort wird kein Schritt mehr abgehakt, die Idee würde ewig warten (#38)
 const ideeAufnehmen = (name, text) => {
   const st = core.ideeMerken(info(), name, text);
-  return sitzungen.has(name) ? st : core.ideenVerarbeiten(info(), name);
+  return sitzungen.has(name) && !(st.stand?.aktiv < 0) ? st : core.ideenVerarbeiten(info(), name);
 };
 handle('idee', ideeAufnehmen);
 handle('idee-aendern', (name, wartend, i, alt, text) => core.ideeAendern(info(), name, wartend, i, alt, text));
@@ -315,6 +316,8 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
     if (s && s.pty !== pty) return; // alte Sitzung nach Neustart: die neue läuft weiter
     if (s) { watcher.close(); sitzungen.delete(name); }
     senden('pty-ende', name);
+    // Was während der Sitzung gewartet hat, jetzt einordnen – sonst bleibt es bis zur nächsten neuen Idee liegen (#38)
+    try { if (core.laden(info(), name).ideenWarten?.length) core.ideenVerarbeiten(info(), name).then(() => senden('punkte-geaendert', name)); } catch {}
   });
   return bereit;
 });
