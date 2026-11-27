@@ -137,6 +137,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.7 – 2026-11-27
+
+#### Fixed
+- **Maintenance view: reports no longer wait forever** (#38, PR #39 by @revil-O): with a terminal session open, a bug or wish for a finished project was only queued and waited for the next ticked step, which never comes in maintenance. Vibewright now places it right away, and anything still waiting is placed when the session ends.
+
 #### 0.4.6 – 2026-11-27
 
 #### Fixed
@@ -146,20 +151,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Security
 - **Importing a project no longer follows symlinks out of the folder** ([GHSA-pr7r-642c-886q](https://github.com/neodk2004/vibewright/security/advisories/GHSA-pr7r-642c-886q), reported by @revil-O): a crafted folder or repository could link `README.md`, `CLAUDE.md` or a manifest such as `package.json` to a private file (e.g. an SSH key), whose content then went into the first prompt to Claude. Writing `CLAUDE.md` and `.gitignore` into the code folder followed such links too. Vibewright now reads only files that stay inside the project folder after resolving links, refuses to write `CLAUDE.md` through a link pointing outside, and never overwrites an existing `.gitignore`. Links inside the folder (e.g. `CLAUDE.md` → `AGENTS.md`) keep working.
-
-#### 0.4.4 – 2026-11-26
-
-#### Added
-- **Import: Word, RTF and OpenOffice files on macOS** (part D of #26): when you start from an existing project, Vibewright now also reads `.doc`, `.docx`, `.rtf` and `.odt` files, using the `textutil` tool that comes with macOS. On Windows it keeps reading only `.md` and `.txt`.
-- **Ideas list in the maintenance view** (#36): the "Ideas (n)" button now sits in the header of the maintenance tile, so reported issues and adopted ideas are one click away.
-
-#### Changed
-- **Plan uses what Vibewright read** (part C of #26): for an imported project, the plan step gets the one-sentence summaries of the files that were read, with their dates. Newer files count as the current state, so the plan starts where the project really is.
-
-#### Fixed
-- **macOS / Linux: works with the fish shell** (#33): when started from the Finder, Vibewright now reads the PATH with `printenv`, which works in every shell.
-- **Primary button: hover shadow no longer cut off** (#35).
-- **Developer guide:** names Electron 42 instead of 33 (#32).
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
