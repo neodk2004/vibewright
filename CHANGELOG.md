@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.7] – 2026-11-27
+
+### Fixed
+- **Maintenance view: reports no longer wait forever** (#38, PR #39 by @revil-O): with a terminal session open, a bug or wish for a finished project was only queued and waited for the next ticked step, which never comes in maintenance. Vibewright now places it right away, and anything still waiting is placed when the session ends.
+
 ## [0.4.6] – 2026-11-27
 
 ### Fixed
