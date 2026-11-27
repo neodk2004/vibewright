@@ -137,6 +137,11 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.4.6 – 2026-11-27
+
+#### Fixed
+- **Maintenance view finds the repo more reliably** (#37): Vibewright now checks all Git remotes of the code folder (`origin` first) instead of only `origin`, and accepts an `http://` remote if your Gitea account itself is set up with `http://` on the same host and port. GitHub and `https` accounts still never match `http`. The hint no longer says "GitHub" for Gitea accounts: "No repo found for the Git account (Settings → Git) – reports go straight into the plan."
+
 #### 0.4.5 – 2026-11-27
 
 #### Security
@@ -155,11 +160,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 - **macOS / Linux: works with the fish shell** (#33): when started from the Finder, Vibewright now reads the PATH with `printenv`, which works in every shell.
 - **Primary button: hover shadow no longer cut off** (#35).
 - **Developer guide:** names Electron 42 instead of 33 (#32).
-
-#### 0.4.3 – 2026-11-25
-
-#### Changed
-- **Importing reads more documents** (part A of #26): when you start from an existing project, Vibewright now reads up to 20 doc files with up to 4,000 characters each, 40,000 in total (was 8 × 1,500). Progress files (changelog, todo, plan …) come first, then the newest. A file that no longer fits completely is shortened and marked as such in the "Documents" note. The first import prompt gets larger (up to ~10,000 tokens), so Claude knows the project better and asks fewer questions.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
