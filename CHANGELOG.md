@@ -2,6 +2,11 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.6] – 2026-11-27
+
+### Fixed
+- **Maintenance view finds the repo more reliably** (#37): Vibewright now checks all Git remotes of the code folder (`origin` first) instead of only `origin`, and accepts an `http://` remote if your Gitea account itself is set up with `http://` on the same host and port. GitHub and `https` accounts still never match `http`. The hint no longer says "GitHub" for Gitea accounts: "No repo found for the Git account (Settings → Git) – reports go straight into the plan."
+
 ## [0.4.5] – 2026-11-27
 
 ### Security
