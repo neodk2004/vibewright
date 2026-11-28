@@ -54,6 +54,16 @@ const UI_EN = {
   'Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.': 'No global rules yet. Click building blocks on the right or write your own.',
   'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.': 'Before saving, the old file is backed up as CLAUDE.md.bak.',
   '✓ Gespeichert': '✓ Saved', 'Schwachstellen': 'Vulnerabilities', 'Geheimnisse': 'Secrets',
+  // Projekt-Regeln & Prompt-Tipps
+  'Regeln': 'Rules', 'Alle Projekte': 'All projects', 'Nur dieses Projekt': 'Only this project',
+  'Claude Code befolgt sie nur in diesem Projekt': 'Claude Code follows them only in this project',
+  'Noch keine eigenen Regeln für dieses Projekt. Klicke rechts auf Bausteine oder schreib eigene.': 'No own rules for this project yet. Click building blocks on the right or write your own.',
+  'Gilt ab der nächsten Claude-Sitzung. Den Vibewright-Abschnitt der Datei pflegt die App selbst.': 'Applies from the next Claude session. The app maintains the Vibewright section of the file itself.',
+  'Erst einen Code-Ordner wählen („Mit Claude umsetzen“).': 'Choose a code folder first ("Build with Claude").',
+  'Prompt-Tipps': 'Prompt tips', 'Checkliste': 'Checklist', 'Klick fügt den Satz ins Terminal ein – ergänzen, dann Enter.': 'A click puts the sentence into the terminal – add to it, then press Enter.',
+  'Tipp: Screenshots einfach ins Terminal ziehen.': 'Tip: just drag screenshots into the terminal.',
+  'Erst den Plan zeigen': 'Show the plan first', 'Einfach erklären': 'Explain simply', 'Selbst ausprobieren': 'Try it yourself', 'Fehler beschreiben': 'Describe a problem',
+  'Nur ein Schritt': 'One step only', 'Beweis zeigen': 'Show proof', 'Rückgängig machen': 'Undo',
   // Laden
   'Prüfe Claude Code …': 'Checking Claude Code …', 'Claude stellt die ersten Fragen zusammen …': 'Claude is preparing the first questions …',
   'Claude prüft, ob noch etwas fehlt …': 'Claude checks whether anything is missing …', 'Claude schreibt die Bedarfsanalyse …': 'Claude is writing the needs analysis …',

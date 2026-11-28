@@ -461,7 +461,7 @@ async function einstellungen() {
   $('#ablage').onclick = () => ablageWaehlen(e.vaults);
   $('#obs-inst')?.addEventListener('click', obsidianInstallieren);
   $('#ordner').onclick = () => api.ordner(a.ablage);
-  $('#regeln').onclick = regelnSeite;
+  $('#regeln').onclick = () => regelnSeite();
   $('#g-forge').onclick = () => forgeEinstellungen(einstellungen);
   $('#g-auto').onchange = (ev) => api.einstellung('gitAuto', ev.target.checked);
   $('#g-speichern')?.addEventListener('click', async () => {
@@ -567,17 +567,23 @@ const BAUSTEINE = [
   ['Geheimnisse', 'Nie Passwörter, Tokens oder API-Keys in Dateien schreiben oder committen.', 'Never write or commit passwords, tokens or API keys.'],
   ['Tests', 'Nach jeder Änderung die Tests laufen lassen; schlagen sie fehl, das ehrlich sagen.', 'Run the tests after every change; if they fail, say so honestly.'],
 ];
-async function regelnSeite() {
-  aktuell = null;
-  const r = await api.regeln();
-  if (r.fehler) return ansicht(null, `<div class="mitte"><div class="box"><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: einstellungen }]);
+// projekt: aus dem Cockpit geöffnet → Reiter „Alle Projekte“ (globale CLAUDE.md) und „Nur dieses Projekt“ (CLAUDE.md im Arbeitsordner)
+async function regelnSeite(projekt = null, nurProjekt = !!projekt) {
+  aktuell = projekt;
+  const zurueck = projekt ? () => cockpit(projekt) : einstellungen;
+  const r = nurProjekt ? await api['projekt-regeln'](projekt.name) : await api.regeln();
+  if (r.fehler) return ansicht(projekt, `<div class="mitte"><div class="box"><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: zurueck }]);
   const en = uiSprache === 'en';
   const titel = en ? '## Recurring steps' : '## Wiederkehrende Schritte';
-  ansicht(null, `<div class="einst-kopf"><h2>Globale Regeln</h2><span class="muted">Claude Code befolgt sie in jedem Projekt</span></div>
-    <div class="regeln"><textarea id="r-text" spellcheck="false" placeholder="Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.">${esc(r.text)}</textarea>
+  const kopf = projekt
+    ? `<h2>Regeln</h2><div class="tabs"><button data-nur="0" class="${nurProjekt ? '' : 'on'}">Alle Projekte</button><button data-nur="1" class="${nurProjekt ? 'on' : ''}">Nur dieses Projekt</button></div>`
+    : '<h2>Globale Regeln</h2>';
+  ansicht(projekt, `<div class="einst-kopf">${kopf}<span class="muted">${nurProjekt ? 'Claude Code befolgt sie nur in diesem Projekt' : 'Claude Code befolgt sie in jedem Projekt'}</span></div>
+    <div class="regeln"><textarea id="r-text" spellcheck="false" placeholder="${nurProjekt ? 'Noch keine eigenen Regeln für dieses Projekt. Klicke rechts auf Bausteine oder schreib eigene.' : 'Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.'}">${esc(r.text)}</textarea>
       <div class="spalte"><span class="label">Bausteine</span><div class="bausteine">${BAUSTEINE.map(([n, de, e], i) => `<button class="opt" data-i="${i}" title="${esc(en ? e : de)}"><span class="imp"><b>${esc(n)}</b><span class="muted klein">${esc(en ? e : de)}</span></span></button>`).join('')}</div>
       <span class="muted klein pfad">${esc(r.pfad)}</span></div></div>`,
-  [{ text: 'Zurück', ghost: true, klick: einstellungen }, { info: 'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.' }, 'sp', { text: 'Speichern', primary: true, id: 'r-speichern', klick: speichern }]);
+  [{ text: 'Zurück', ghost: true, klick: zurueck }, { info: nurProjekt ? 'Gilt ab der nächsten Claude-Sitzung. Den Vibewright-Abschnitt der Datei pflegt die App selbst.' : 'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.' }, 'sp', { text: 'Speichern', primary: true, id: 'r-speichern', klick: speichern }]);
+  $$('.einst-kopf .tabs button').forEach((b) => (b.onclick = () => regelnSeite(projekt, b.dataset.nur === '1')));
   const feld = $('#r-text');
   // Bausteine, die schon in der Datei stehen, sind markiert
   const markieren = () => $$('.bausteine .opt').forEach((b) => { const [, de, e] = BAUSTEINE[b.dataset.i]; b.classList.toggle('on', feld.value.includes(de) || feld.value.includes(e)); });
@@ -594,7 +600,7 @@ async function regelnSeite() {
   }));
   markieren();
   async function speichern() {
-    const s = await api['regeln-speichern'](feld.value);
+    const s = nurProjekt ? await api['projekt-regeln-speichern'](projekt.name, feld.value) : await api['regeln-speichern'](feld.value);
     $('#r-speichern').textContent = s?.fehler ? s.fehler : '✓ Gespeichert';
     setTimeout(() => $('#r-speichern') && ($('#r-speichern').textContent = 'Speichern'), 1800);
   }
@@ -817,6 +823,7 @@ function cockpit(st) {
         ${pflege ? pflegeKachel(st) : ideeKachel(st)}</div>
     </div>`,
   [{ text: 'Dashboard öffnen', klick: () => api.oeffnen(st.offen.dashboard) }, { text: 'Ordner', ghost: true, klick: () => api.ordner(st.offen.dashboard.replace(/[\\/][^\\/]+$/, '')) },
+    { text: 'Regeln', ghost: true, klick: () => regelnSeite(st) },
     'sp', laeuft.has(st.name)
       ? { text: 'Zur laufenden Claude-Sitzung', primary: true, klick: () => arbeit(st) }
       : { text: st.projekttyp === 'code' && !st.repo ? 'Code-Ordner wählen & mit Claude umsetzen' : 'Mit Claude umsetzen', primary: true, klick: () => claudeStarten(st) }]);
@@ -997,7 +1004,7 @@ api.on('pty-daten', (name, d) => { terminalFuer(name).term.write(d); letzteAusga
 api.on('pty-ende', (name) => {
   if (!laeuft.delete(name)) return;
   terms.get(name)?.term.write('\r\n\x1b[90m— Sitzung beendet —\x1b[0m\r\n');
-  if (aktuell?.name === name && $('#arbeit-seite')) setAktionen(arbeitAktionen(aktuell));
+  if (aktuell?.name === name && $('#arbeit-seite')) { tippsOffen = false; setAktionen(arbeitAktionen(aktuell)); arbeitSeite(aktuell); }
   if (aktuell?.name === name) setKopf(aktuell); // Orb verschwindet mit der Sitzung
   seitenleiste();
   limitsZeigen();
@@ -1023,8 +1030,20 @@ async function claudeStarten(st) {
   arbeit(r);
 }
 
+// Prompt-Tipps neben dem Terminal: ein Klick fügt den Satz ins Terminal ein (ohne Enter – ergänzen und selbst abschicken)
+const TIPPS = [
+  ['Erst den Plan zeigen', 'Bevor du loslegst: Zeig mir kurz deinen Plan für den nächsten Schritt und warte auf mein OK.', 'Before you start: briefly show me your plan for the next step and wait for my OK.'],
+  ['Einfach erklären', 'Erklär mir in zwei, drei einfachen Sätzen, was du gerade gemacht hast und warum.', 'Explain in two or three simple sentences what you just did and why.'],
+  ['Selbst ausprobieren', 'Starte das Programm, damit ich das Ergebnis selbst ausprobieren kann, und sag mir, was ich anklicken soll.', 'Start the program so I can try the result myself, and tell me what to click.'],
+  ['Fehler beschreiben', 'Es klappt nicht. Das habe ich gemacht: … Das ist passiert: … Erwartet hatte ich: …', 'It does not work. What I did: … What happened: … What I expected: …'],
+  ['Nur ein Schritt', 'Mach nur diesen einen Schritt fertig und prüfe ihn, bevor du weitermachst.', 'Finish only this one step and check it before you go on.'],
+  ['Beweis zeigen', 'Prüf noch einmal, ob alles funktioniert (Tests oder Programm starten), und zeig mir den Beweis.', 'Check again that everything works (run the tests or the program) and show me the proof.'],
+  ['Rückgängig machen', 'Mach die letzte Änderung rückgängig – sie war nicht, was ich wollte.', 'Undo the last change – it was not what I wanted.'],
+];
+let tippsOffen = false;
 const arbeitAktionen = (st) => [
   { text: 'Zum Cockpit', ghost: true, klick: () => cockpit(aktuell) },
+  ...(laeuft.has(st.name) ? [{ text: tippsOffen ? 'Checkliste' : 'Prompt-Tipps', ghost: true, klick: () => { tippsOffen = !tippsOffen; setAktionen(arbeitAktionen(aktuell)); arbeitSeite(aktuell); } }] : []),
   { info: laeuft.has(st.name) ? 'Claude arbeitet im Terminal – du entscheidest dort per Tastatur, Häkchen erscheinen rechts automatisch.' : 'Die Sitzung ist beendet.' },
   'sp',
   laeuft.has(st.name)
@@ -1042,6 +1061,7 @@ function arbeit(st) {
 
 // Rechte Spalte neben dem Terminal: nächster Schritt + Checkliste der aktuellen Phase (wird live aktualisiert)
 function arbeitSeite(st) {
+  if (tippsOffen && laeuft.has(st.name)) return tippsSeite(st);
   const s = st.stand || { aktiv: 0, fortschritt: 0, naechster: '' };
   const i = Math.max(s.aktiv, 0);
   const p = st.plan.phasen[i];
@@ -1061,6 +1081,18 @@ function arbeitSeite(st) {
     if (!r.fehler) { aktuell = r; arbeitSeite(r); seitenleiste(); }
   }));
   ideeBinden(st, (r) => { arbeitSeite(r); seitenleiste(); }, arbeit);
+}
+function tippsSeite(st) {
+  const en = st.sprache === 'en'; // eingefügt wird in der Sprache, in der Claude mit dir spricht
+  $('#arbeit-seite').innerHTML = `<div class="karte voll tipps" style="--ak:var(--accent)"><span class="label">Prompt-Tipps</span>
+    <span class="muted klein">Klick fügt den Satz ins Terminal ein – ergänzen, dann Enter.</span>
+    <div class="bausteine">${TIPPS.map(([n, de, e], i) => `<button class="opt" data-t="${i}" title="${esc(en ? e : de)}"><span class="imp"><b>${esc(n)}</b><span class="muted klein">${esc(en ? e : de)}</span></span></button>`).join('')}</div>
+    <span class="muted klein">Tipp: Screenshots einfach ins Terminal ziehen.</span></div>`;
+  $$('#arbeit-seite [data-t]').forEach((b) => (b.onclick = () => {
+    const { term } = terminalFuer(st.name);
+    term.paste(TIPPS[b.dataset.t][en ? 2 : 1]);
+    term.focus();
+  }));
 }
 
 (async () => { (await api.sitzung()).forEach((n) => laeuft.add(n)); start(); })();

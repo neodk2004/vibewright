@@ -397,6 +397,8 @@ a[data-url]:hover{text-decoration:underline}
 .regeln textarea{height:100%;resize:none;font:12.5px/1.55 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
 .bausteine{display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;flex:1;padding-right:4px}
 .bausteine .opt{min-height:0;flex:none;padding:8px 12px}
+.tipps{gap:8px;min-height:0}
+.einst-kopf .tabs{border-bottom:0}
 .bausteine .opt.on{cursor:default}
 .bausteine .opt.on b::after{content:" ✓";color:var(--ok)}
 /* Verbrauch je Modell */

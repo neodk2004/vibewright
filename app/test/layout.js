@@ -83,6 +83,8 @@ const ansichten = {
   'pflege-ideen': mit(`{ ...${IDEEN}, offen: { dashboard: 'x' }, projekttyp: 'code', stand: { ...${JSON.stringify(stand)}, aktiv: -1 }, pflegeRepo: ${JSON.stringify('beispiel/' + W)},
     issuesNeu: [{ nr: 1, art: 'fehler', titel: ${JSON.stringify(L)}, von: ${JSON.stringify(W)} }] }`, 'pflegeGeprueft.set(st.name, Date.now()); cockpit(st); document.getElementById("ideen-auf").click();'),
   arbeit: mit(`{ offen: { dashboard: 'x' } }`, 'arbeit(st);'),
+  'arbeit-tipps': mit(`{ offen: { dashboard: 'x' } }`, 'laeuft.add(st.name); tippsOffen = true; arbeit(st);'),
+  'regeln-projekt': mit(`{ offen: { dashboard: 'x' } }`, 'await regelnSeite(st);'),
   einstellungen: 'einstellungen()',
   'einstellungen-ablage': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=ablage]').click(); })()",
   'einstellungen-git': "(async () => { await einstellungen(); document.querySelector('.einst-nav [data-teil=git]').click(); })()",
