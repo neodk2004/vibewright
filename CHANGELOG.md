@@ -2,11 +2,14 @@
 
 All notable changes to Vibewright are listed here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.5.0] – 2026-11-28
 
 ### Added
 - **Rules for a single project** (idea by @revil-O): the cockpit has a new *Rules* button. Besides the global rules (*All projects*) you can now edit the rules in the project's own `CLAUDE.md` (*Only this project*), with the same building blocks. Vibewright keeps its own section of the file untouched; your rules apply from the next Claude session.
 - **Prompt tips next to the terminal** (idea by @revil-O): while Claude is working, *Prompt tips* shows ready-made sentences such as "Show me your plan first" or "Describe a problem". A click puts the sentence into the terminal, in the project's language, so you can add to it and press Enter.
+
+### Changed
+- **Buttons look like buttons:** the secondary buttons in the bottom bar (e.g. *Open dashboard*, *Folder*, *To the cockpit*), *Archive* at the top and the *Ideas* button now have a visible frame, so they no longer look like plain text. *Delete* is red.
 
 ### Fixed
 - Placing waiting ideas at the end of a session no longer leaves an unhandled error if saving fails (follow-up to #39).
