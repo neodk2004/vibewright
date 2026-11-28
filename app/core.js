@@ -1287,7 +1287,7 @@ function agentSkalar(w) {
 }
 function agentLesen(text) {
   const nl = /\r\n/.test(text) ? '\r\n' : '\n';
-  const z = String(text).split(/\r?\n/);
+  const z = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
   const a = { name: '', description: '', model: null, tools: null, anweisungen: '', rest: [], nl, fehler: null };
   const ende = z[0] === '---' ? z.indexOf('---', 1) : -1;
   if (ende < 0) { a.fehler = AGENT_VON_HAND; return a; }
@@ -1300,7 +1300,15 @@ function agentLesen(text) {
     if (gesehen.has(k)) { a.fehler = `Schlüssel ${k} doppelt – bitte von Hand bearbeiten.`; return a; }
     gesehen.add(k);
     const folge = [];
-    while (i + 1 < ende && /^[ \t]+\S/.test(z[i + 1])) folge.push(z[++i].trim());
+    const listeOk = k === 'tools' && m[2].trim() === ''; // YAML erlaubt "- X" auch ohne Einrückung
+    for (;;) {
+      let j = i + 1;
+      while (j < ende && z[j].trim() === '') j++; // Leerzeilen im Blockwert überspringen
+      if (j >= ende || !(/^[ \t]+\S/.test(z[j]) || (listeOk && /^-(\s|$)/.test(z[j])))) break;
+      folge.push(z[j].trim());
+      i = j;
+    }
+    if (i + 1 < ende && /^([ \t]+\S|-(\s|$))/.test(z[i + 1])) { a.fehler = AGENT_VON_HAND; return a; } // sonst würde es still in rest landen
     let w = m[2].trim();
     let wert;
     if (/^[>|][-+]?$/.test(w)) wert = folge.join(' ');
@@ -1325,7 +1333,7 @@ function agentText(a) {
   const beschr = '"' + String(a.description).replace(/\r?\n/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
   const z = ['---', `name: ${a.name}`, `description: ${beschr}`];
   if (a.model) z.push(`model: ${a.model}`);
-  if (a.tools) z.push(`tools: ${a.tools.join(', ')}`);
+  if (a.tools && a.tools.length) z.push(`tools: ${a.tools.join(', ')}`);
   z.push(...(a.rest || []), '---', '', a.anweisungen);
   return z.join(nl) + nl;
 }

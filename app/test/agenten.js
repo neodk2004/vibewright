@@ -24,4 +24,25 @@ assert.match(core.agentLesen('---\nname: x\ndescription: d\n').fehler, /von Hand
 assert.strictEqual(core.agentLesen('---\r\nname: x\r\ndescription: d\r\n---\r\n').nl, '\r\n');
 assert.ok(core.agentText({ name: 'x', description: 'd', model: null, tools: null, anweisungen: 'A', rest: [] }).indexOf('tools') < 0);
 
+// BOM wird toleriert und nicht wieder geschrieben
+const bom = core.agentLesen('\uFEFF---\nname: x\ndescription: d\n---\n');
+assert.strictEqual(bom.fehler, null);
+assert.ok(!core.agentText(bom).startsWith('\uFEFF'));
+// Liste ohne Einrückung
+const ul = core.agentLesen('---\nname: x\ndescription: d\ntools:\n- Read\n- Bash\n---\n');
+assert.deepStrictEqual([ul.tools, ul.rest, ul.fehler], [['Read', 'Bash'], [], null]);
+assert.ok(core.agentText(ul).includes('tools: Read, Bash\n'));
+// Leerzeile im Blockwert
+const lz = core.agentLesen('---\nname: x\ndescription: >\n  eins\n\n  zwei\n---\n');
+assert.deepStrictEqual([lz.description, lz.rest, lz.fehler], ['eins zwei', [], null]);
+// Eingerückte Zeile hinter einfachem Wert wird nicht still behalten
+assert.ok(core.agentLesen('---\nname: x\ndescription: d\nmodel: sonnet\n- y\n---\n').fehler);
+// Leere Tool-Liste = Feld weglassen
+assert.ok(core.agentText({ name: 'x', description: 'd', tools: [], anweisungen: 'A', rest: [] }).indexOf('tools') < 0);
+// Eingerücktes name: in unbekanntem Block ist nicht der Agentenname
+const ein = core.agentLesen('---\nname: x\ndescription: d\nhooks:\n  name: y\n---\n');
+assert.deepStrictEqual([ein.name, ein.rest, ein.fehler], ['x', ['hooks:', '  name: y'], null]);
+// Mehrzeiliger Text in Anführungszeichen: nicht sicher lesbar
+assert.ok(core.agentLesen('---\nname: x\ndescription: "eins\n  zwei"\n---\n').fehler);
+
 console.log('agenten: alle Prüfungen bestanden');
