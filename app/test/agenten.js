@@ -95,4 +95,38 @@ assert.ok(fs.existsSync(path.join(repo, '.claude', 'agents', 'doku-schreiber.md'
 fs.writeFileSync(ag('kaputt.md'), '---\nname: k\nname: k2\ndescription: d\n---\n');
 assert.throws(() => core.agentSpeichern(info, null, 'kaputt.md', leer('k')), /von Hand/);
 
+// Fehler vor name: bleibt in der Liste sichtbar
+fs.writeFileSync(ag('vorn.md'), '---\ndescription: d\ndescription: e\nname: x\n---\n');
+const vorn = core.agentenListe(info).agenten.find((x) => x.datei === 'vorn.md');
+assert.ok(vorn && vorn.fehler && vorn.name === 'vorn');
+fs.unlinkSync(ag('vorn.md'));
+// Name: Länge, Zeilenumbruch
+assert.throws(() => core.agentSpeichern(info, null, null, leer('a'.repeat(65))), /Name/);
+assert.throws(() => core.agentSpeichern(info, null, null, leer('ok\n')), /Name/);
+core.agentSpeichern(info, null, null, leer('a'.repeat(64)));
+// Einschleusen über model/tools
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj1'), model: 'opus\nhooks:\n  Stop: [x]' }), /Modell/);
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj2'), tools: ['Read\nhooks: x'] }), /Werkzeug/);
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj3'), tools: ['Read, Bash'] }), /Werkzeug/);
+assert.ok(!fs.existsSync(ag('inj1.md')) && !fs.existsSync(ag('inj2.md')) && !fs.existsSync(ag('inj3.md')));
+core.agentSpeichern(info, null, null, { ...leer('ok-tools'), model: 'claude-opus-4.1', tools: ['Read', 'Bash(git:*)'] });
+
+// .claude oder .claude/agents im Code-Ordner als Link nach außen
+if (links) {
+  for (const stufe of ['claude', 'agents']) {
+    const r = path.join(basis, 'repo-' + stufe), aussen = path.join(basis, 'aussen-' + stufe);
+    fs.mkdirSync(r); fs.mkdirSync(path.join(aussen, 'agents'), { recursive: true });
+    fs.writeFileSync(path.join(aussen, 'agents', 'x.md'), '---\nname: x\ndescription: d\n---\n');
+    if (stufe === 'claude') fs.symlinkSync(aussen, path.join(r, '.claude'));
+    else { fs.mkdirSync(path.join(r, '.claude')); fs.symlinkSync(path.join(aussen, 'agents'), path.join(r, '.claude', 'agents')); }
+    const pn = 'Link-' + stufe;
+    core.neu(info, pn, 'Test');
+    core.speichern(info, Object.assign(core.laden(info, pn), { projekttyp: 'code', repo: r }));
+    assert.throws(() => core.agentenListe(info, pn), /Link/);
+    assert.throws(() => core.agentSpeichern(info, pn, null, leer('neu')), /Link/);
+    assert.throws(() => core.agentLoeschen(info, pn, 'x.md'), /Link/);
+    assert.deepStrictEqual(fs.readdirSync(path.join(aussen, 'agents')), ['x.md'], 'außerhalb unverändert');
+  }
+}
+
 console.log('agenten: alle Prüfungen bestanden');

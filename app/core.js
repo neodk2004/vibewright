@@ -1343,6 +1343,10 @@ function agentenOrdner(info, name) {
   if (!name) return path.join(CLAUDE_DIR, 'agents');
   const ordner = arbeitsordner(info, laden(info, name));
   if (!ordner) throw new Error('Erst einen Code-Ordner wählen („Mit Claude umsetzen“).');
+  // .claude oder .claude/agents als Link nach außen würde Schreiben/Löschen/Lesen aus dem Code-Ordner hinauslenken
+  for (const t of [path.join(ordner, '.claude'), path.join(ordner, '.claude', 'agents')]) {
+    if (lstatOder(t) && !imOrdner(ordner, t)) throw new Error('.claude/agents im Code-Ordner ist ein Link auf einen Ordner außerhalb. Bitte durch einen normalen Ordner ersetzen.');
+  }
   return path.join(ordner, '.claude', 'agents');
 }
 const lstatOder = (p) => { try { return fs.lstatSync(p); } catch { return null; } }; // lstat: auch ein Link ohne Ziel zählt als vorhanden
@@ -1360,8 +1364,9 @@ function agentenListe(info, name) {
   for (const datei of dateien) {
     const p = path.join(ordner, datei);
     if (!lstatOder(p).isFile() || !imOrdner(ordner, p)) continue;
-    const a = agentLesen(fs.readFileSync(p, 'utf8'));
-    if (a.name) agenten.push({ datei, ...a });
+    const text = fs.readFileSync(p, 'utf8');
+    const a = agentLesen(text);
+    if (a.name || (a.fehler && /^\uFEFF?---/.test(text))) agenten.push({ datei, ...a, name: a.name || datei.replace(/\.md$/, '') }); // kaputte Dateien bleiben sichtbar (nur lesbar); ohne Kopfteil (README.md) kein Agent
   }
   return { ordner, agenten: agenten.sort((x, y) => x.name.localeCompare(y.name)) };
 }
@@ -1374,7 +1379,10 @@ function agentSpeichern(info, name, datei, agent) {
     if (alt.fehler) throw new Error(`${datei}: ${alt.fehler}`);
   }
   const neuerName = !alt || agent.name !== alt.name;
-  if (neuerName && !/^[a-z0-9][a-z0-9-]*$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang.');
+  if (neuerName && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang, höchstens 64 Zeichen.');
+  // model/tools gehen ungeprüft in den Kopfteil: ein Zeilenumbruch könnte sonst z. B. einen hooks-Schlüssel (führt Shell-Befehle aus) einschleusen
+  if (agent.model != null && !/^[a-z0-9.-]+$/i.test(agent.model)) throw new Error('Ungültiges Modell.');
+  if (agent.tools != null && !(Array.isArray(agent.tools) && agent.tools.every((t) => typeof t === 'string' && /^[A-Za-z0-9_*()\/:. -]+$/.test(t)))) throw new Error('Ungültige Werkzeugliste.');
   if (!String(agent.description).trim()) throw new Error('Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.');
   const ziel = alt && !neuerName ? datei : `${agent.name}.md`;
   const zp = agentDatei(ordner, ziel);
