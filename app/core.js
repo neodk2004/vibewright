@@ -1256,6 +1256,26 @@ function claudeVorbereiten(info, name) {
   return { st, ordner: path.resolve(ordner) };
 }
 
+// Eigene Projekt-Regeln: alles in der CLAUDE.md des Arbeitsordners außer dem Vibewright-Abschnitt (den schreibt die App selbst)
+function projektRegeln(info, name) {
+  const ordner = arbeitsordner(info, laden(info, name));
+  if (!ordner) throw new Error('Erst einen Code-Ordner wählen („Mit Claude umsetzen“).');
+  const f = path.join(ordner, 'CLAUDE.md');
+  let da = true; try { fs.lstatSync(f); } catch { da = false; }
+  if (da && !imOrdner(ordner, f)) throw new Error('CLAUDE.md im Code-Ordner ist ein Link auf eine Datei außerhalb des Ordners. Bitte durch eine normale Datei ersetzen.');
+  const alt = da ? fs.readFileSync(f, 'utf8') : '';
+  const a = alt.indexOf(MARKE_A), e = alt.indexOf(MARKE_E);
+  const mitBlock = a >= 0 && e > a;
+  return { pfad: f, block: mitBlock ? alt.slice(a, e + MARKE_E.length) : '', text: (mitBlock ? alt.slice(0, a) + alt.slice(e + MARKE_E.length) : alt).trim() };
+}
+function projektRegelnSpeichern(info, name, text) {
+  const { pfad, block } = projektRegeln(info, name);
+  const eigen = String(text).trim();
+  fs.mkdirSync(path.dirname(pfad), { recursive: true });
+  fs.writeFileSync(pfad, [block, eigen].filter(Boolean).join('\n\n') + '\n', 'utf8');
+  return { pfad };
+}
+
 // node-pty braucht den vollen Pfad zur claude.exe
 // ---------- Claude Code finden: nativer Installer (claude.exe) oder npm (claude.cmd) ----------
 // Ohne Shell startet Windows nur .exe-Dateien. Bei npm steckt hinter claude.cmd ein node-Skript oder eine .exe – das lesen wir aus.
@@ -1330,5 +1350,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, remoteZiel, forgeIssues, forgeIssueAnlegen };

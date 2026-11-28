@@ -177,6 +177,9 @@ handle('forge-klonen', async (repo) => {
 // ---------- Globale Regeln: die zentrale CLAUDE.md, die Claude Code in jedem Projekt liest ----------
 const REGELN = path.join(core.CLAUDE_DIR, 'CLAUDE.md');
 handle('regeln', () => ({ pfad: REGELN, text: fs.existsSync(REGELN) ? fs.readFileSync(REGELN, 'utf8') : '' }));
+// Projekt-Regeln: eigener Teil der CLAUDE.md im Arbeitsordner (der Vibewright-Abschnitt bleibt unangetastet)
+handle('projekt-regeln', (name) => core.projektRegeln(info(), name));
+handle('projekt-regeln-speichern', (name, text) => core.projektRegelnSpeichern(info(), name, text));
 handle('regeln-speichern', (text) => {
   fs.mkdirSync(path.dirname(REGELN), { recursive: true });
   if (fs.existsSync(REGELN)) fs.copyFileSync(REGELN, `${REGELN}.bak`); // letzter Stand bleibt als Sicherung
