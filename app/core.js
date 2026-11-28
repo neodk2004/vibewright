@@ -1276,6 +1276,131 @@ function projektRegelnSpeichern(info, name, text) {
   return { pfad };
 }
 
+// ---------- Agenten (Claude-Code-Subagenten): Kopfteil lesen/schreiben ----------
+// Bekannte Felder (name, description, model, tools) werden gelesen, alles andere bleibt Zeile für Zeile in `rest`.
+const AGENT_VON_HAND = 'Diese Form kann Vibewright nicht sicher lesen – bitte von Hand bearbeiten.';
+function agentSkalar(w) {
+  if (/^[&*{!]/.test(w)) return null;
+  // JSON-Strings sind gültiges YAML in "…"; YAML-only-Escapes (\x, \0, \e, \_ …) und rohe Tabs lehnt JSON.parse ab → von Hand
+  if (w[0] === '"') { try { return JSON.parse(w); } catch { return null; } }
+  if (w[0] === "'") { const m = /^'((?:[^']|'')*)'$/.exec(w); return m ? m[1].replace(/''/g, "'") : null; }
+  return w.replace(/\s+#.*$/, '');
+}
+function agentLesen(text) {
+  const nl = /\r\n/.test(text) ? '\r\n' : '\n';
+  const z = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
+  const a = { name: '', description: '', model: null, tools: null, anweisungen: '', rest: [], nl, fehler: null };
+  const ende = z[0] === '---' ? z.indexOf('---', 1) : -1;
+  if (ende < 0 || z.slice(0, ende + 1).some((l) => l.includes('\r'))) { a.fehler = AGENT_VON_HAND; return a; } // ein einzelnes \r bräche die Schlüsselerkennung
+  a.anweisungen = z.slice(ende + 1).join(nl).replace(/^(\s*\r?\n)+/, '').trimEnd();
+  const gesehen = new Set();
+  for (let i = 1; i < ende; i++) {
+    const m = /^(name|description|model|tools):[ \t]*(.*)$/.exec(z[i]);
+    if (!m) { a.rest.push(z[i]); continue; }
+    const k = m[1];
+    if (gesehen.has(k)) { a.fehler = `Schlüssel ${k} doppelt – bitte von Hand bearbeiten.`; return a; }
+    gesehen.add(k);
+    const folge = [];
+    const listeOk = k === 'tools' && m[2].trim() === ''; // YAML erlaubt "- X" auch ohne Einrückung
+    for (;;) {
+      let j = i + 1;
+      while (j < ende && z[j].trim() === '') j++; // Leerzeilen im Blockwert überspringen
+      if (j >= ende || !(/^[ \t]+\S/.test(z[j]) || (listeOk && /^-(\s|$)/.test(z[j])))) break;
+      folge.push(z[j].trim());
+      i = j;
+    }
+    if (i + 1 < ende && /^([ \t]+\S|-(\s|$))/.test(z[i + 1])) { a.fehler = AGENT_VON_HAND; return a; } // sonst würde es still in rest landen
+    let w = m[2].trim();
+    let wert;
+    if (/^[>|][-+]?$/.test(w)) wert = folge.join(w[0] === '|' ? '\n' : ' ');
+    else if (k === 'tools' && (w === '' || w[0] === '[')) {
+      const roh = w === '' ? folge.map((s) => s.replace(/^-\s*/, '')) : w.replace(/^\[|\]$/g, '').split(',');
+      const liste = roh.map((s) => agentSkalar(s.trim())).filter((s) => s !== '');
+      if (liste.includes(null) || (w[0] === '[' && !w.endsWith(']'))) { a.fehler = AGENT_VON_HAND; return a; }
+      a.tools = liste;
+      continue;
+    } else {
+      wert = agentSkalar(w);
+      if (wert !== null && folge.length) wert = w[0] === '"' || w[0] === "'" ? null : [wert, ...folge].join(' ');
+    }
+    if (wert === null) { a.fehler = AGENT_VON_HAND; return a; }
+    if (k === 'tools') a.tools = wert.split(',').map((s) => s.trim()).filter(Boolean);
+    else a[k] = k === 'model' && wert === '' ? null : wert;
+  }
+  return a;
+}
+function agentText(a) {
+  const nl = a.nl || '\n';
+  const name = /^[A-Za-z0-9_-]+$/.test(a.name) ? a.name : JSON.stringify(a.name); // gelesene Namen können gequotet gewesen sein
+  const z = ['---', `name: ${name}`, `description: ${JSON.stringify(String(a.description))}`];
+  if (a.model) z.push(`model: ${a.model}`);
+  if (a.tools && a.tools.length) z.push(`tools: ${a.tools.join(', ')}`);
+  z.push(...(a.rest || []), '---', '', a.anweisungen);
+  return z.join(nl) + nl;
+}
+
+// Agenten-Dateien: global in <CLAUDE_DIR>/agents, pro Projekt in <Code-Ordner>/.claude/agents
+function agentenOrdner(info, name) {
+  if (!name) return path.join(CLAUDE_DIR, 'agents');
+  const ordner = arbeitsordner(info, laden(info, name));
+  if (!ordner) throw new Error('Erst einen Code-Ordner wählen („Mit Claude umsetzen“).');
+  // .claude oder .claude/agents als Link nach außen würde Schreiben/Löschen/Lesen aus dem Code-Ordner hinauslenken
+  for (const t of [path.join(ordner, '.claude'), path.join(ordner, '.claude', 'agents')]) {
+    if (lstatOder(t) && !imOrdner(ordner, t)) throw new Error('.claude/agents im Code-Ordner ist ein Link auf einen Ordner außerhalb. Bitte durch einen normalen Ordner ersetzen.');
+  }
+  return path.join(ordner, '.claude', 'agents');
+}
+const lstatOder = (p) => { try { return fs.lstatSync(p); } catch { return null; } }; // lstat: auch ein Link ohne Ziel zählt als vorhanden
+function agentDatei(ordner, datei) {
+  if (typeof datei !== 'string' || path.basename(datei) !== datei || !datei.endsWith('.md')) throw new Error('Ungültiger Dateiname.');
+  const p = path.join(ordner, datei);
+  if (lstatOder(p) && !imOrdner(ordner, p)) throw new Error(`${datei} ist ein Link auf eine Datei außerhalb des Ordners. Bitte durch eine normale Datei ersetzen.`);
+  return p;
+}
+function agentenListe(info, name) {
+  const ordner = agentenOrdner(info, name);
+  let dateien = [];
+  try { dateien = fs.readdirSync(ordner).filter((f) => f.endsWith('.md')); } catch (e) { if (e.code !== 'ENOENT') throw new Error('Der Agenten-Ordner ist nicht lesbar.'); /* ENOENT: Ordner fehlt noch */ }
+  const agenten = [];
+  for (const datei of dateien) {
+    const p = path.join(ordner, datei);
+    if (!lstatOder(p)?.isFile() || !imOrdner(ordner, p)) continue;
+    let text;
+    try { text = fs.readFileSync(p, 'utf8'); } catch { continue; } // verschwunden oder nicht lesbar: nur diese Datei überspringen
+    const a = agentLesen(text);
+    if (a.name || (a.fehler && /^\uFEFF?---/.test(text))) agenten.push({ datei, ...a, name: a.name || datei.replace(/\.md$/, '') }); // kaputte Dateien bleiben sichtbar (nur lesbar); ohne Kopfteil (README.md) kein Agent
+  }
+  return { ordner, agenten: agenten.sort((x, y) => x.name.localeCompare(y.name)) };
+}
+function agentSpeichern(info, name, datei, agent) {
+  const ordner = agentenOrdner(info, name);
+  let alt = null;
+  if (datei) {
+    const p = agentDatei(ordner, datei);
+    alt = agentLesen(fs.readFileSync(p, 'utf8'));
+    if (alt.fehler) throw new Error(`${datei}: ${alt.fehler}`);
+  }
+  const neuerName = !alt || agent.name !== alt.name;
+  if (neuerName && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang, höchstens 64 Zeichen.');
+  if (neuerName && /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(agent.name)) throw new Error('Dieser Name ist unter Windows reserviert.');
+  // model/tools gehen ungeprüft in den Kopfteil: ein Zeilenumbruch könnte sonst z. B. einen hooks-Schlüssel (führt Shell-Befehle aus) einschleusen
+  if (agent.model != null && !/^[a-z0-9.-]+$/i.test(agent.model)) throw new Error('Ungültiges Modell.');
+  // leere Liste würde ohne tools-Feld geschrieben – und damit alle Werkzeuge erlauben (auch Bash)
+  if (Array.isArray(agent.tools) && !agent.tools.length) throw new Error('Mindestens ein Werkzeug wählen – oder „Alles“.');
+  if (agent.tools != null && !(Array.isArray(agent.tools) && agent.tools.every((t) => typeof t === 'string' && /^[A-Za-z0-9_*()\/:. -]+$/.test(t) && !t.includes(': ') && !/^[*-]/.test(t)))) throw new Error('Ungültige Werkzeugliste.');
+  if (!String(agent.description).trim()) throw new Error('Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.');
+  const ziel = alt && !neuerName ? datei : `${agent.name}.md`;
+  const zp = agentDatei(ordner, ziel);
+  if (ziel !== datei && lstatOder(zp)) throw new Error(`Es gibt schon eine Agenten-Datei ${ziel}.`);
+  fs.mkdirSync(ordner, { recursive: true });
+  fs.writeFileSync(zp, agentText({ ...agent, rest: alt ? alt.rest : [], nl: alt ? alt.nl : '\n' }), 'utf8');
+  if (datei && ziel !== datei) fs.unlinkSync(path.join(ordner, datei));
+  return { datei: ziel };
+}
+function agentLoeschen(info, name, datei) {
+  fs.unlinkSync(agentDatei(agentenOrdner(info, name), datei));
+}
+
 // node-pty braucht den vollen Pfad zur claude.exe
 // ---------- Claude Code finden: nativer Installer (claude.exe) oder npm (claude.cmd) ----------
 // Ohne Shell startet Windows nur .exe-Dateien. Bei npm steckt hinter claude.cmd ein node-Skript oder eine .exe – das lesen wir aus.
@@ -1350,5 +1475,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, agentLesen, agentText, agentenOrdner, agentenListe, agentSpeichern, agentLoeschen, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, remoteZiel, forgeIssues, forgeIssueAnlegen };
