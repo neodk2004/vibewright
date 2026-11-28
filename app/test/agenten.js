@@ -132,4 +132,45 @@ if (links) {
   }
 }
 
+// ---------- Abschluss-Review ----------
+// 1. Escapes in "…" bleiben erhalten; | behält Zeilenumbrüche; YAML-only-Escapes → von Hand
+{
+  const e = core.agentLesen('---\nname: x\ndescription: "zeile\\nzwei \\u00e4 \\"q\\""\n---\n');
+  assert.strictEqual(e.description, 'zeile\nzwei ä "q"');
+  const e2 = core.agentLesen(core.agentText(e));
+  assert.strictEqual(e2.description, 'zeile\nzwei ä "q"', 'Runde ohne Verlust');
+  assert.ok(core.agentText(e).includes('description: "zeile\\nzwei'));
+  const blk = core.agentLesen('---\nname: x\ndescription: |\n  eins\n  zwei\n---\n');
+  assert.strictEqual(blk.description, 'eins\nzwei');
+  assert.strictEqual(core.agentLesen(core.agentText(blk)).description, 'eins\nzwei');
+  for (const roh of ['"a\\x41"', '"a\\0"', '"a\\e"', '"a\\_b"', '"a\\ b"', '"a\tb"']) assert.match(core.agentLesen(`---\nname: x\ndescription: ${roh}\n---\n`).fehler || '', /von Hand/, roh);
+}
+// 2. Name mit Sonderzeichen bleibt gequotet
+{
+  const q = core.agentLesen('---\nname: "a #b"\ndescription: d\n---\n');
+  assert.strictEqual(q.name, 'a #b');
+  assert.strictEqual(core.agentLesen(core.agentText(q)).name, 'a #b');
+  assert.strictEqual(core.agentLesen(core.agentText({ ...q, name: 'x: y' })).name, 'x: y');
+  assert.ok(core.agentText({ ...q, name: 'ok-name' }).includes('name: ok-name\n'));
+}
+// 3. Werkzeug-Muster
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('t1'), tools: ['Bash(a: b)'] }), /Werkzeug/);
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('t2'), tools: ['*x'] }), /Werkzeug/);
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('t3'), tools: ['-x'] }), /Werkzeug/);
+// 4. einzelnes \r im Kopfteil
+assert.match(core.agentLesen('---\nname: x\rdescription: d\n---\n').fehler || '', /von Hand/);
+// 5. reservierte Windows-Namen
+for (const n of ['con', 'nul', 'com1', 'lpt9']) assert.throws(() => core.agentSpeichern(info, null, null, leer(n)), /unter Windows reserviert/);
+// 6. Liste: unlesbare Datei überspringen, Rest behalten; Ordner-Fehler ≠ ENOENT nicht verschlucken
+if (process.platform !== 'win32' && process.getuid && process.getuid() !== 0) {
+  fs.writeFileSync(ag('gesperrt.md'), '---\nname: gesperrt\ndescription: d\n---\n');
+  fs.chmodSync(ag('gesperrt.md'), 0);
+  const l = core.agentenListe(info).agenten;
+  assert.ok(!l.some((x) => x.datei === 'gesperrt.md') && l.length > 0, 'unlesbare Datei übersprungen');
+  fs.chmodSync(ag('gesperrt.md'), 0o644); fs.unlinkSync(ag('gesperrt.md'));
+  const gd = core.agentenOrdner(info);
+  fs.chmodSync(gd, 0);
+  try { assert.throws(() => core.agentenListe(info), /Agenten-Ordner/); } finally { fs.chmodSync(gd, 0o755); }
+}
+
 console.log('agenten: alle Prüfungen bestanden');

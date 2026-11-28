@@ -74,7 +74,7 @@ const UI_EN = {
   'Die Datei wird endgültig gelöscht. Claude Code kann den Agenten danach nicht mehr nutzen.': 'The file is deleted for good. Claude Code can no longer use the agent afterwards.',
   'Diese Form kann Vibewright nicht sicher lesen – bitte von Hand bearbeiten.': 'Vibewright cannot read this form safely – please edit it by hand.',
   'Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang, höchstens 64 Zeichen.': 'Name: only lowercase letters, digits and hyphens, not starting with a hyphen, at most 64 characters.',
-  'Mindestens ein Werkzeug wählen – oder „Alles“.': 'Choose at least one tool – or "Everything".', 'Ungültiges Modell.': 'Invalid model.', 'Ungültige Werkzeugliste.': 'Invalid tool list.', 'Ungültiger Dateiname.': 'Invalid file name.',
+  'Mindestens ein Werkzeug wählen – oder „Alles“.': 'Choose at least one tool – or "Everything".', 'Ungültiges Modell.': 'Invalid model.', 'Dieser Name ist unter Windows reserviert.': 'This name is reserved on Windows.', 'Der Agenten-Ordner ist nicht lesbar.': 'The agents folder cannot be read.', 'Ungültige Werkzeugliste.': 'Invalid tool list.', 'Ungültiger Dateiname.': 'Invalid file name.',
   'Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.': 'The description ("When should Claude use it?") must not be empty.',
   '.claude/agents im Code-Ordner ist ein Link auf einen Ordner außerhalb. Bitte durch einen normalen Ordner ersetzen.': '.claude/agents in the code folder is a link to a folder outside. Please replace it with a normal folder.',
   'Prompt-Tipps': 'Prompt tips', 'Checkliste': 'Checklist', 'Klick fügt den Satz ins Terminal ein – ergänzen, dann Enter.': 'A click puts the sentence into the terminal – add to it, then press Enter.',

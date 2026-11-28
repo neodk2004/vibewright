@@ -684,7 +684,8 @@ async function agentenSeite(projekt = null, nurProjekt = !!projekt, auswahl = nu
         <label for="a-text">Anweisungen</label><textarea id="a-text" spellcheck="false" placeholder="Was soll der Agent tun? Schreib es so, wie du es einem Kollegen erklären würdest.">${esc(a.anweisungen)}</textarea>
       </fieldset>
       <span class="muted klein pfad" id="a-pfad"></span>`;
-    const pfad = () => ($('#a-pfad').textContent = `${r.ordner}/${a.datei || `${$('#a-name').value.trim() || '…'}.md`}`);
+    const sep = r.ordner.includes('\\') && !r.ordner.includes('/') ? '\\' : '/';
+    const pfad = () => ($('#a-pfad').textContent = `${r.ordner}${sep}${a.datei || `${$('#a-name').value.trim() || '…'}.md`}`);
     if (!a.datei) $('#a-name').oninput = pfad;
     pfad();
     const haken = $$('.a-haken input'), radios = $$('[name=a-stufe]');
@@ -708,7 +709,7 @@ async function agentenSeite(projekt = null, nurProjekt = !!projekt, auswahl = nu
   }
   // Rückfrage in der App wie bei den Ideen, kein Systemdialog
   function loeschenFragen(a) {
-    ansicht(projekt, `<div class="mitte"><div class="box"><h2>Agent „${esc(a.name)}“ löschen?</h2><p class="muted klein pfad">${esc(`${r.ordner}/${a.datei}`)}</p>
+    ansicht(projekt, `<div class="mitte"><div class="box"><h2>Agent „${esc(a.name)}“ löschen?</h2><p class="muted klein pfad">${esc(`${r.ordner}${r.ordner.includes('\\') && !r.ordner.includes('/') ? '\\' : '/'}${a.datei}`)}</p>
       <p class="muted">Die Datei wird endgültig gelöscht. Claude Code kann den Agenten danach nicht mehr nutzen.</p></div></div>`,
     [{ text: 'Abbrechen', ghost: true, klick: () => agentenSeite(projekt, nurProjekt, a.datei) }, 'sp', { text: 'Agent löschen', gefahr: true, klick: async () => {
       const x = await api['agent-loeschen'](wo, a.datei);

@@ -1281,7 +1281,8 @@ function projektRegelnSpeichern(info, name, text) {
 const AGENT_VON_HAND = 'Diese Form kann Vibewright nicht sicher lesen – bitte von Hand bearbeiten.';
 function agentSkalar(w) {
   if (/^[&*{!]/.test(w)) return null;
-  if (w[0] === '"') { const m = /^"((?:[^"\\]|\\.)*)"$/.exec(w); return m ? m[1].replace(/\\(["\\])/g, '$1') : null; }
+  // JSON-Strings sind gültiges YAML in "…"; YAML-only-Escapes (\x, \0, \e, \_ …) und rohe Tabs lehnt JSON.parse ab → von Hand
+  if (w[0] === '"') { try { return JSON.parse(w); } catch { return null; } }
   if (w[0] === "'") { const m = /^'((?:[^']|'')*)'$/.exec(w); return m ? m[1].replace(/''/g, "'") : null; }
   return w.replace(/\s+#.*$/, '');
 }
@@ -1290,7 +1291,7 @@ function agentLesen(text) {
   const z = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
   const a = { name: '', description: '', model: null, tools: null, anweisungen: '', rest: [], nl, fehler: null };
   const ende = z[0] === '---' ? z.indexOf('---', 1) : -1;
-  if (ende < 0) { a.fehler = AGENT_VON_HAND; return a; }
+  if (ende < 0 || z.slice(0, ende + 1).some((l) => l.includes('\r'))) { a.fehler = AGENT_VON_HAND; return a; } // ein einzelnes \r bräche die Schlüsselerkennung
   a.anweisungen = z.slice(ende + 1).join(nl).replace(/^(\s*\r?\n)+/, '').trimEnd();
   const gesehen = new Set();
   for (let i = 1; i < ende; i++) {
@@ -1311,7 +1312,7 @@ function agentLesen(text) {
     if (i + 1 < ende && /^([ \t]+\S|-(\s|$))/.test(z[i + 1])) { a.fehler = AGENT_VON_HAND; return a; } // sonst würde es still in rest landen
     let w = m[2].trim();
     let wert;
-    if (/^[>|][-+]?$/.test(w)) wert = folge.join(' ');
+    if (/^[>|][-+]?$/.test(w)) wert = folge.join(w[0] === '|' ? '\n' : ' ');
     else if (k === 'tools' && (w === '' || w[0] === '[')) {
       const roh = w === '' ? folge.map((s) => s.replace(/^-\s*/, '')) : w.replace(/^\[|\]$/g, '').split(',');
       const liste = roh.map((s) => agentSkalar(s.trim())).filter((s) => s !== '');
@@ -1330,8 +1331,8 @@ function agentLesen(text) {
 }
 function agentText(a) {
   const nl = a.nl || '\n';
-  const beschr = '"' + String(a.description).replace(/\r?\n/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-  const z = ['---', `name: ${a.name}`, `description: ${beschr}`];
+  const name = /^[A-Za-z0-9_-]+$/.test(a.name) ? a.name : JSON.stringify(a.name); // gelesene Namen können gequotet gewesen sein
+  const z = ['---', `name: ${name}`, `description: ${JSON.stringify(String(a.description))}`];
   if (a.model) z.push(`model: ${a.model}`);
   if (a.tools && a.tools.length) z.push(`tools: ${a.tools.join(', ')}`);
   z.push(...(a.rest || []), '---', '', a.anweisungen);
@@ -1359,12 +1360,13 @@ function agentDatei(ordner, datei) {
 function agentenListe(info, name) {
   const ordner = agentenOrdner(info, name);
   let dateien = [];
-  try { dateien = fs.readdirSync(ordner).filter((f) => f.endsWith('.md')); } catch { /* Ordner fehlt noch */ }
+  try { dateien = fs.readdirSync(ordner).filter((f) => f.endsWith('.md')); } catch (e) { if (e.code !== 'ENOENT') throw new Error('Der Agenten-Ordner ist nicht lesbar.'); /* ENOENT: Ordner fehlt noch */ }
   const agenten = [];
   for (const datei of dateien) {
     const p = path.join(ordner, datei);
-    if (!lstatOder(p).isFile() || !imOrdner(ordner, p)) continue;
-    const text = fs.readFileSync(p, 'utf8');
+    if (!lstatOder(p)?.isFile() || !imOrdner(ordner, p)) continue;
+    let text;
+    try { text = fs.readFileSync(p, 'utf8'); } catch { continue; } // verschwunden oder nicht lesbar: nur diese Datei überspringen
     const a = agentLesen(text);
     if (a.name || (a.fehler && /^\uFEFF?---/.test(text))) agenten.push({ datei, ...a, name: a.name || datei.replace(/\.md$/, '') }); // kaputte Dateien bleiben sichtbar (nur lesbar); ohne Kopfteil (README.md) kein Agent
   }
@@ -1380,11 +1382,12 @@ function agentSpeichern(info, name, datei, agent) {
   }
   const neuerName = !alt || agent.name !== alt.name;
   if (neuerName && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang, höchstens 64 Zeichen.');
+  if (neuerName && /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(agent.name)) throw new Error('Dieser Name ist unter Windows reserviert.');
   // model/tools gehen ungeprüft in den Kopfteil: ein Zeilenumbruch könnte sonst z. B. einen hooks-Schlüssel (führt Shell-Befehle aus) einschleusen
   if (agent.model != null && !/^[a-z0-9.-]+$/i.test(agent.model)) throw new Error('Ungültiges Modell.');
   // leere Liste würde ohne tools-Feld geschrieben – und damit alle Werkzeuge erlauben (auch Bash)
   if (Array.isArray(agent.tools) && !agent.tools.length) throw new Error('Mindestens ein Werkzeug wählen – oder „Alles“.');
-  if (agent.tools != null && !(Array.isArray(agent.tools) && agent.tools.every((t) => typeof t === 'string' && /^[A-Za-z0-9_*()\/:. -]+$/.test(t)))) throw new Error('Ungültige Werkzeugliste.');
+  if (agent.tools != null && !(Array.isArray(agent.tools) && agent.tools.every((t) => typeof t === 'string' && /^[A-Za-z0-9_*()\/:. -]+$/.test(t) && !t.includes(': ') && !/^[*-]/.test(t)))) throw new Error('Ungültige Werkzeugliste.');
   if (!String(agent.description).trim()) throw new Error('Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.');
   const ziel = alt && !neuerName ? datei : `${agent.name}.md`;
   const zp = agentDatei(ordner, ziel);
