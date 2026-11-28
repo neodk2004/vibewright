@@ -52,6 +52,9 @@ button,input,textarea{font:inherit;color:inherit}
 #aktionen:empty{display:none}
 #aktionen .sp{flex:1}
 #aktionen .btn{white-space:nowrap;flex-shrink:0} /* Knöpfe bleiben einzeilig, der Infotext gibt nach (#5) */
+/* Nebenknöpfe in der Leiste klar als Knopf erkennbar – sonst sehen sie aus wie der Infotext daneben */
+:is(#aktionen,.box-akt) .btn:not(.primary):not(.gefahr){border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-soft);color:var(--text)}
+:is(#aktionen,.box-akt) .btn:not(.primary):not(.gefahr):hover:not(:disabled){border-color:var(--accent)}
 #aktionen input{flex:1;max-width:420px}
 
 /* Schritte */
