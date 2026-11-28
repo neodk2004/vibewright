@@ -1382,6 +1382,8 @@ function agentSpeichern(info, name, datei, agent) {
   if (neuerName && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang, höchstens 64 Zeichen.');
   // model/tools gehen ungeprüft in den Kopfteil: ein Zeilenumbruch könnte sonst z. B. einen hooks-Schlüssel (führt Shell-Befehle aus) einschleusen
   if (agent.model != null && !/^[a-z0-9.-]+$/i.test(agent.model)) throw new Error('Ungültiges Modell.');
+  // leere Liste würde ohne tools-Feld geschrieben – und damit alle Werkzeuge erlauben (auch Bash)
+  if (Array.isArray(agent.tools) && !agent.tools.length) throw new Error('Mindestens ein Werkzeug wählen – oder „Alles“.');
   if (agent.tools != null && !(Array.isArray(agent.tools) && agent.tools.every((t) => typeof t === 'string' && /^[A-Za-z0-9_*()\/:. -]+$/.test(t)))) throw new Error('Ungültige Werkzeugliste.');
   if (!String(agent.description).trim()) throw new Error('Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.');
   const ziel = alt && !neuerName ? datei : `${agent.name}.md`;

@@ -110,6 +110,19 @@ core.neu(core.ablageInfo({ modus: 'lokal', ablage }), 'Layout-Test', 'Ein Projek
 const claudeDir = path.join(basis, 'claude');
 fs.mkdirSync(path.join(claudeDir, 'agents'), { recursive: true });
 fs.writeFileSync(path.join(claudeDir, 'agents', 'code-pruefer.md'), '---\nname: code-pruefer\ndescription: Prüft Änderungen\nmodel: claude-sonnet-4-5\ntools: Read, Bash, mcp__beispiel__werkzeug\n---\n\nKurze Anweisung.\n');
+// Verbrauch/Statistik brauchen gefüllte Tabellen: stats-cache.json (letzte 10 Tage) und eine Terminal-Sitzung des Testprojekts, mit langen Modellnamen
+const MODELLE = ['claude-opus-5-5', 'us.anthropic.claude-sonnet-4-5-20250929-v1:0', 'claude-haiku-4-5-20251001'];
+const tagVor = (n) => new Date(Date.now() - n * 864e5).toLocaleDateString('sv');
+const statTage = Array.from({ length: 10 }, (_, i) => tagVor(9 - i));
+fs.writeFileSync(path.join(claudeDir, 'stats-cache.json'), JSON.stringify({ version: 5, lastComputedDate: tagVor(0), firstSessionDate: `${tagVor(9)}T08:00:00.000Z`,
+  dailyActivity: statTage.map((date, i) => ({ date, messageCount: 10, sessionCount: i % 3 + 1, toolCallCount: 2 })),
+  dailyModelTokens: statTage.map((date, i) => ({ date, tokensByModel: Object.fromEntries(MODELLE.map((m, k) => [m, (i + 1) * (k + 1) * 123457])) })),
+  modelUsage: Object.fromEntries(MODELLE.map((m) => [m, { inputTokens: 1234567, outputTokens: 234567, cacheReadInputTokens: 98765432, cacheCreationInputTokens: 3456789 }])),
+  longestSession: { duration: 95 * 60 * 1000 } }));
+const info = core.ablageInfo({ modus: 'lokal', ablage });
+const sitzung = path.join(claudeDir, 'projects', path.resolve(core.arbeitsordner(info, core.laden(info, 'Layout-Test'))).replace(/[^a-zA-Z0-9]/g, '-')); // wie core.sitzungsOrdner
+fs.mkdirSync(sitzung, { recursive: true });
+fs.writeFileSync(path.join(sitzung, 'x.jsonl'), MODELLE.map((model, i) => JSON.stringify({ type: 'assistant', message: { id: `m${i}`, model, usage: { input_tokens: 12345, output_tokens: 6789, cache_read_input_tokens: 9876543, cache_creation_input_tokens: 45678 } } })).join('\n'));
 fs.writeFileSync(path.join(claudeDir, 'agents', `${LANG_AGENT}.md`), `---\nname: ${LANG_AGENT}\ndescription: "${L}. ${L}."\ntools: Glob, Grep, Read\n---\n\n${lang(12, 'Anweisung').join('\n')}\n`);
 const electron = require('electron'); // liefert im Node-Prozess den Pfad zur Electron-Programmdatei
 const fehler = [];

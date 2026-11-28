@@ -108,6 +108,9 @@ core.agentSpeichern(info, null, null, leer('a'.repeat(64)));
 assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj1'), model: 'opus\nhooks:\n  Stop: [x]' }), /Modell/);
 assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj2'), tools: ['Read\nhooks: x'] }), /Werkzeug/);
 assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('inj3'), tools: ['Read, Bash'] }), /Werkzeug/);
+// Leere Werkzeugliste hieße „kein tools-Feld“ = alle Werkzeuge → abgelehnt, nichts geschrieben
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('leer-tools'), tools: [] }), /Mindestens ein Werkzeug/);
+assert.ok(!fs.existsSync(path.join(core.agentenOrdner(info), 'leer-tools.md')));
 assert.ok(!fs.existsSync(ag('inj1.md')) && !fs.existsSync(ag('inj2.md')) && !fs.existsSync(ag('inj3.md')));
 core.agentSpeichern(info, null, null, { ...leer('ok-tools'), model: 'claude-opus-4.1', tools: ['Read', 'Bash(git:*)'] });
 
