@@ -137,6 +137,18 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 <!-- changelog:start -->
 <!-- Generated from CHANGELOG.md – do not edit here. -->
+#### 0.5.0 – 2026-11-28
+
+#### Added
+- **Rules for a single project** (idea by @revil-O): the cockpit has a new *Rules* button. Besides the global rules (*All projects*) you can now edit the rules in the project's own `CLAUDE.md` (*Only this project*), with the same building blocks. Vibewright keeps its own section of the file untouched; your rules apply from the next Claude session.
+- **Prompt tips next to the terminal** (idea by @revil-O): while Claude is working, *Prompt tips* shows ready-made sentences such as "Show me your plan first" or "Describe a problem". A click puts the sentence into the terminal, in the project's language, so you can add to it and press Enter.
+
+#### Changed
+- **Buttons look like buttons:** the secondary buttons in the bottom bar (e.g. *Open dashboard*, *Folder*, *To the cockpit*), *Archive* at the top and the *Ideas* button now have a visible frame, so they no longer look like plain text. *Delete* is red.
+
+#### Fixed
+- Placing waiting ideas at the end of a session no longer leaves an unhandled error if saving fails (follow-up to #39).
+
 #### 0.4.7 – 2026-11-27
 
 #### Fixed
@@ -146,11 +158,6 @@ npm run exe:mac      # builds the Mac app (on a Mac) into app/dist/
 
 #### Fixed
 - **Maintenance view finds the repo more reliably** (#37): Vibewright now checks all Git remotes of the code folder (`origin` first) instead of only `origin`, and accepts an `http://` remote if your Gitea account itself is set up with `http://` on the same host and port. GitHub and `https` accounts still never match `http`. The hint no longer says "GitHub" for Gitea accounts: "No repo found for the Git account (Settings → Git) – reports go straight into the plan."
-
-#### 0.4.5 – 2026-11-27
-
-#### Security
-- **Importing a project no longer follows symlinks out of the folder** ([GHSA-pr7r-642c-886q](https://github.com/neodk2004/vibewright/security/advisories/GHSA-pr7r-642c-886q), reported by @revil-O): a crafted folder or repository could link `README.md`, `CLAUDE.md` or a manifest such as `package.json` to a private file (e.g. an SSH key), whose content then went into the first prompt to Claude. Writing `CLAUDE.md` and `.gitignore` into the code folder followed such links too. Vibewright now reads only files that stay inside the project folder after resolving links, refuses to write `CLAUDE.md` through a link pointing outside, and never overwrites an existing `.gitignore`. Links inside the folder (e.g. `CLAUDE.md` → `AGENTS.md`) keep working.
 
 [Full changelog](CHANGELOG.md)
 <!-- changelog:end -->
