@@ -930,7 +930,7 @@ function ideeBinden(st, neuZeichnen, zurueck) {
 }
 
 // ---------- Ideen-Lane (#22): alle Einfälle sehen, Text korrigieren, löschen – der Plan bleibt unberührt ----------
-const ideenKnopf = (st) => `<button class="btn ghost" id="ideen-auf" title="Alle Ideen ansehen, korrigieren oder löschen">Ideen (${(st.ideen?.length || 0) + (st.ideenWarten?.length || 0)})</button>`;
+const ideenKnopf = (st) => `<button class="btn" id="ideen-auf" title="Alle Ideen ansehen, korrigieren oder löschen">Ideen (${(st.ideen?.length || 0) + (st.ideenWarten?.length || 0)})</button>`;
 function ideenZeigen(st, zurueck) {
   const warten = st.ideenWarten || [], fertig = st.ideen || [];
   const text = (z) => (z.dataset.w ? warten[z.dataset.i] : fertig[z.dataset.i].text);
