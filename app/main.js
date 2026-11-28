@@ -320,7 +320,7 @@ handle('claude-starten', async (name, cols = 100, rows = 30) => {
     if (s) { watcher.close(); sitzungen.delete(name); }
     senden('pty-ende', name);
     // Was während der Sitzung gewartet hat, jetzt einordnen – sonst bleibt es bis zur nächsten neuen Idee liegen (#38)
-    try { if (core.laden(info(), name).ideenWarten?.length) core.ideenVerarbeiten(info(), name).then(() => senden('punkte-geaendert', name)); } catch {}
+    try { if (core.laden(info(), name).ideenWarten?.length) core.ideenVerarbeiten(info(), name).then(() => senden('punkte-geaendert', name)).catch(() => {}); } catch {}
   });
   return bereit;
 });
