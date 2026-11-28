@@ -567,6 +567,13 @@ const BAUSTEINE = [
   ['Geheimnisse', 'Nie Passwörter, Tokens oder API-Keys in Dateien schreiben oder committen.', 'Never write or commit passwords, tokens or API keys.'],
   ['Tests', 'Nach jeder Änderung die Tests laufen lassen; schlagen sie fehl, das ehrlich sagen.', 'Run the tests after every change; if they fail, say so honestly.'],
 ];
+// Kopf der Regeln- und Agenten-Seite: Reiter Regeln | Agenten, aus dem Cockpit zusätzlich Alle Projekte | Nur dieses Projekt
+const regelnKopf = (projekt, nurProjekt, agenten) => `<div class="tabs"><button data-art="regeln" class="${agenten ? '' : 'on'}">Regeln</button><button data-art="agenten" class="${agenten ? 'on' : ''}">Agenten</button></div>
+  ${projekt ? `<div class="tabs"><button data-nur="0" class="${nurProjekt ? '' : 'on'}">Alle Projekte</button><button data-nur="1" class="${nurProjekt ? 'on' : ''}">Nur dieses Projekt</button></div>` : ''}`;
+function regelnReiter(projekt, nurProjekt, seite) {
+  $$('.einst-kopf [data-art]').forEach((b) => (b.onclick = () => (b.dataset.art === 'agenten' ? agentenSeite : regelnSeite)(projekt, nurProjekt)));
+  $$('.einst-kopf [data-nur]').forEach((b) => (b.onclick = () => seite(projekt, b.dataset.nur === '1')));
+}
 // projekt: aus dem Cockpit geöffnet → Reiter „Alle Projekte“ (globale CLAUDE.md) und „Nur dieses Projekt“ (CLAUDE.md im Arbeitsordner)
 async function regelnSeite(projekt = null, nurProjekt = !!projekt) {
   aktuell = projekt;
@@ -575,15 +582,12 @@ async function regelnSeite(projekt = null, nurProjekt = !!projekt) {
   if (r.fehler) return ansicht(projekt, `<div class="mitte"><div class="box"><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: zurueck }]);
   const en = uiSprache === 'en';
   const titel = en ? '## Recurring steps' : '## Wiederkehrende Schritte';
-  const kopf = projekt
-    ? `<h2>Regeln</h2><div class="tabs"><button data-nur="0" class="${nurProjekt ? '' : 'on'}">Alle Projekte</button><button data-nur="1" class="${nurProjekt ? 'on' : ''}">Nur dieses Projekt</button></div>`
-    : '<h2>Globale Regeln</h2>';
-  ansicht(projekt, `<div class="einst-kopf">${kopf}<span class="muted">${nurProjekt ? 'Claude Code befolgt sie nur in diesem Projekt' : 'Claude Code befolgt sie in jedem Projekt'}</span></div>
+  ansicht(projekt, `<div class="einst-kopf">${regelnKopf(projekt, nurProjekt, false)}<span class="muted">${nurProjekt ? 'Claude Code befolgt sie nur in diesem Projekt' : 'Claude Code befolgt sie in jedem Projekt'}</span></div>
     <div class="regeln"><textarea id="r-text" spellcheck="false" placeholder="${nurProjekt ? 'Noch keine eigenen Regeln für dieses Projekt. Klicke rechts auf Bausteine oder schreib eigene.' : 'Noch keine globalen Regeln. Klicke rechts auf Bausteine oder schreib eigene.'}">${esc(r.text)}</textarea>
       <div class="spalte"><span class="label">Bausteine</span><div class="bausteine">${BAUSTEINE.map(([n, de, e], i) => `<button class="opt" data-i="${i}" title="${esc(en ? e : de)}"><span class="imp"><b>${esc(n)}</b><span class="muted klein">${esc(en ? e : de)}</span></span></button>`).join('')}</div>
       <span class="muted klein pfad">${esc(r.pfad)}</span></div></div>`,
   [{ text: 'Zurück', ghost: true, klick: zurueck }, { info: nurProjekt ? 'Gilt ab der nächsten Claude-Sitzung. Den Vibewright-Abschnitt der Datei pflegt die App selbst.' : 'Vor dem Speichern wird die alte Datei als CLAUDE.md.bak gesichert.' }, 'sp', { text: 'Speichern', primary: true, id: 'r-speichern', klick: speichern }]);
-  $$('.einst-kopf .tabs button').forEach((b) => (b.onclick = () => regelnSeite(projekt, b.dataset.nur === '1')));
+  regelnReiter(projekt, nurProjekt, regelnSeite);
   const feld = $('#r-text');
   // Bausteine, die schon in der Datei stehen, sind markiert
   const markieren = () => $$('.bausteine .opt').forEach((b) => { const [, de, e] = BAUSTEINE[b.dataset.i]; b.classList.toggle('on', feld.value.includes(de) || feld.value.includes(e)); });
@@ -603,6 +607,115 @@ async function regelnSeite(projekt = null, nurProjekt = !!projekt) {
     const s = nurProjekt ? await api['projekt-regeln-speichern'](projekt.name, feld.value) : await api['regeln-speichern'](feld.value);
     $('#r-speichern').textContent = s?.fehler ? s.fehler : '✓ Gespeichert';
     setTimeout(() => $('#r-speichern') && ($('#r-speichern').textContent = 'Speichern'), 1800);
+  }
+}
+
+// ---------- Agenten (Claude-Code-Subagenten, #40): Liste links, Formular rechts ----------
+const WERKZEUGE = ['Read', 'Grep', 'Glob', 'Edit', 'Write', 'Bash', 'WebFetch', 'WebSearch', 'NotebookEdit'];
+const WERKZEUG_STUFEN = [['lesen', 'Nur lesen', ['Read', 'Grep', 'Glob']], ['schreiben', 'Lesen und schreiben', ['Read', 'Grep', 'Glob', 'Edit', 'Write']], ['alles', 'Alles', null]];
+const AGENT_MODELLE = [['', 'Wie Hauptsitzung'], ['sonnet', 'Sonnet'], ['opus', 'Opus'], ['haiku', 'Haiku'], ['fable', 'Fable']];
+// [Knopf, Name DE, Name EN, Werkzeuge (null = alle), Wann DE, Wann EN, Anweisungen DE, Anweisungen EN]
+const AGENT_VORLAGEN = [
+  ['Tester', 'tester', 'tester', null,
+    'Nach Code-Änderungen nutzen: lässt die Tests laufen, ergänzt fehlende Tests und meldet das Ergebnis ehrlich.',
+    'Use after code changes: runs the tests, adds missing tests and reports the result honestly.',
+    'Du bist der Tester für dieses Projekt.\n\n- Finde heraus, wie die Tests gestartet werden (z. B. in package.json oder der README), und lass sie laufen.\n- Fehlen Tests für den geänderten Code, ergänze kleine, verständliche Tests.\n- Melde das Ergebnis ehrlich: Was rot ist, bleibt rot. Schwäche nie einen Test ab, damit er grün wird.\n- Fasse am Ende kurz zusammen, welche Tests liefen, was fehlschlug und warum.',
+    'You are the tester for this project.\n\n- Find out how the tests are started (e.g. in package.json or the README) and run them.\n- If the changed code has no tests, add small, easy-to-read tests.\n- Report the result honestly: what is red stays red. Never weaken a test just to make it pass.\n- Finish with a short summary of which tests ran, what failed and why.'],
+  ['Code-Reviewer', 'code-reviewer', 'code-reviewer', ['Read', 'Grep', 'Glob'],
+    'Nach Änderungen nutzen: prüft den Code auf Fehler, Lesbarkeit und unnötigen Code, ändert aber nichts.',
+    'Use after changes: checks the code for bugs, readability and unneeded code, but changes nothing.',
+    'Du prüfst Code-Änderungen, ohne selbst etwas zu ändern.\n\n- Lies die geänderten Dateien und den Code drumherum.\n- Suche nach Fehlern, schwer lesbaren Stellen und Code, der nicht gebraucht wird.\n- Nenne zu jedem Fund Datei und Zeile, erkläre ihn in einfachen Worten und schlag eine Lösung vor.\n- Ändere keine Dateien.',
+    'You review code changes without changing anything yourself.\n\n- Read the changed files and the code around them.\n- Look for bugs, hard-to-read parts and code that is not needed.\n- For each finding, name the file and line, explain it in simple words and suggest a fix.\n- Do not change any files.'],
+  ['Doku-Schreiber', 'doku-schreiber', 'doc-writer', ['Read', 'Grep', 'Glob', 'Edit', 'Write'],
+    'Nach Änderungen nutzen: hält README und CHANGELOG auf dem aktuellen Stand.',
+    'Use after changes: keeps the README and CHANGELOG up to date.',
+    'Du hältst die Dokumentation aktuell.\n\n- Lies, was sich geändert hat, und passe README und CHANGELOG daran an.\n- Schreib kurz und verständlich, auch für Einsteiger.\n- Ändere nur Dokumentation, keinen Programmcode.\n- Erfinde nichts: Beschreib nur, was der Code wirklich tut.',
+    'You keep the documentation up to date.\n\n- Read what has changed and update the README and CHANGELOG to match.\n- Write short and clear, also for beginners.\n- Only change documentation, never program code.\n- Do not make things up: describe only what the code really does.'],
+  ['Sicherheitsprüfer', 'sicherheitspruefer', 'security-checker', ['Read', 'Grep', 'Glob', 'Bash'],
+    'Vor einem Push oder Release nutzen: sucht nach Geheimnissen im Code, unsicheren Eingaben und bekannten Schwachstellen in Paketen.',
+    'Use before a push or release: looks for secrets in the code, unsafe input handling and known vulnerabilities in packages.',
+    'Du prüfst das Projekt auf Sicherheitsprobleme, ohne etwas zu ändern.\n\n- Suche nach Passwörtern, Tokens und API-Keys im Code.\n- Suche nach Stellen, an denen Eingaben ungeprüft verwendet werden (z. B. in Befehlen, Dateipfaden oder Datenbankabfragen).\n- Prüfe die Pakete auf bekannte Schwachstellen, z. B. mit npm audit oder pip-audit.\n- Führe nur lesende Befehle aus. Installiere, lösche und ändere nichts.\n- Melde jeden Fund mit Datei, Risiko und einem Vorschlag zur Behebung.',
+    'You check the project for security problems without changing anything.\n\n- Look for passwords, tokens and API keys in the code.\n- Look for places where input is used without checks (e.g. in commands, file paths or database queries).\n- Check the packages for known vulnerabilities, e.g. with npm audit or pip-audit.\n- Only run commands that read. Do not install, delete or change anything.\n- Report each finding with the file, the risk and a suggested fix.'],
+];
+// Stufe an der Werkzeug-Menge erkennen, nicht an der Reihenfolge; null = keine Stufe passt (Einzeln)
+const werkzeugStufe = (tools) => !tools ? 'alles' : WERKZEUG_STUFEN.find(([, , w]) => w && w.length === new Set(tools).size && w.every((t) => tools.includes(t)))?.[0] || null;
+
+// auswahl: Dateiname des angezeigten Agenten; ohne Auswahl der erste der Liste
+async function agentenSeite(projekt = null, nurProjekt = !!projekt, auswahl = null) {
+  aktuell = projekt;
+  const zurueck = projekt ? () => cockpit(projekt) : einstellungen;
+  const wo = nurProjekt ? projekt.name : null;
+  const r = await api.agenten(wo);
+  if (r.fehler) return ansicht(projekt, `<div class="mitte"><div class="box"><div class="fehler">${esc(r.fehler)}</div></div></div>`, [{ text: 'Zurück', klick: zurueck }]);
+  const globalNamen = new Set(nurProjekt ? ((await api.agenten(null)).agenten || []).map((a) => a.name) : []);
+  const en = uiSprache === 'en';
+  const namen = new Set(r.agenten.map((a) => a.name));
+  ansicht(projekt, `<div class="einst-kopf">${regelnKopf(projekt, nurProjekt, true)}<span class="muted">${nurProjekt ? 'Claude Code nutzt sie nur in diesem Projekt' : 'Claude Code kann sie in jedem Projekt nutzen'}</span></div>
+    <div class="agenten"><div class="spalte"><span class="label">Agenten</span>
+      <div class="a-liste">${r.agenten.map((a) => `<button class="opt" data-d="${esc(a.datei)}"><span class="imp"><b>${esc(a.name)}</b><span class="muted klein">${esc(a.description)}</span></span></button>`).join('') || '<span class="muted klein">Noch keine Agenten.</span>'}</div>
+      <button class="btn" id="a-neu">+ Neu</button>
+      <span class="label">Vorlagen</span>
+      <div class="a-vorlagen">${AGENT_VORLAGEN.map(([k, de, e, , wde, wen], i) => { const da = namen.has(de) || namen.has(e); return `<button class="btn ${da ? 'on' : ''}" data-v="${i}" ${da ? 'disabled' : ''} title="${esc(en ? wen : wde)}">${k}</button>`; }).join('')}</div></div>
+    <div class="a-form" id="a-form"></div></div>`, []);
+  regelnReiter(projekt, nurProjekt, agentenSeite);
+  $$('.a-liste .opt').forEach((b) => (b.onclick = () => formular(r.agenten.find((a) => a.datei === b.dataset.d))));
+  $('#a-neu').onclick = () => formular(null);
+  $$('.a-vorlagen .btn').forEach((b) => (b.onclick = () => {
+    const [, de, e, tools, wde, wen, tde, ten] = AGENT_VORLAGEN[b.dataset.v];
+    formular({ name: en ? e : de, description: en ? wen : wde, model: null, tools, anweisungen: en ? ten : tde });
+  }));
+  formular(r.agenten.find((a) => a.datei === auswahl) || r.agenten[0] || null);
+
+  function formular(a) {
+    a ||= { name: '', description: '', model: null, tools: null, anweisungen: '' };
+    $$('.a-liste .opt').forEach((b) => b.classList.toggle('on', b.dataset.d === a.datei));
+    const stufe = werkzeugStufe(a.tools);
+    const extra = (a.tools || []).filter((t) => !WERKZEUGE.includes(t)); // unbekannte Werkzeuge bleiben erhalten
+    const modelle = a.model && !AGENT_MODELLE.some(([m]) => m === a.model) ? [...AGENT_MODELLE, [a.model, a.model]] : AGENT_MODELLE;
+    $('#a-form').innerHTML = `${a.fehler ? `<div class="hinweis">${esc(a.fehler)}</div>` : ''}
+      ${nurProjekt && a.datei && globalNamen.has(a.name) ? '<div class="hinweis">Überdeckt den globalen Agenten mit gleichem Namen.</div>' : ''}
+      <fieldset ${a.fehler ? 'disabled' : ''}>
+        <label for="a-name">Name</label><input type="text" id="a-name" spellcheck="false" placeholder="z. B. code-reviewer" value="${esc(a.name)}">
+        <label for="a-wann">Wann soll Claude ihn nutzen?</label><textarea id="a-wann" rows="2" placeholder="z. B. Nach Änderungen nutzen: prüft den Code auf Fehler.">${esc(a.description)}</textarea>
+        <label for="a-modell">Modell</label><select id="a-modell">${modelle.map(([m, n]) => `<option value="${esc(m)}" ${(a.model || '') === m ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+        <span class="a-lbl">Werkzeuge</span><div class="a-werkzeuge">
+          <div class="a-stufen">${WERKZEUG_STUFEN.map(([s, n]) => `<label><input type="radio" name="a-stufe" value="${s}" ${stufe === s ? 'checked' : ''}> ${n}</label>`).join('')}</div>
+          <details ${stufe ? '' : 'open'}><summary id="a-einzeln">Einzeln auswählen</summary><div class="a-haken">${[...WERKZEUGE, ...extra].map((t) => `<label><input type="checkbox" value="${esc(t)}" ${!a.tools || a.tools.includes(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div></details></div>
+        <label for="a-text">Anweisungen</label><textarea id="a-text" spellcheck="false" placeholder="Was soll der Agent tun? Schreib es so, wie du es einem Kollegen erklären würdest.">${esc(a.anweisungen)}</textarea>
+      </fieldset>
+      <span class="muted klein pfad" id="a-pfad"></span>`;
+    const pfad = () => ($('#a-pfad').textContent = `${r.ordner}/${a.datei || `${$('#a-name').value.trim() || '…'}.md`}`);
+    if (!a.datei) $('#a-name').oninput = pfad;
+    pfad();
+    const haken = $$('.a-haken input'), radios = $$('[name=a-stufe]');
+    radios.forEach((x) => (x.onchange = () => { const w = WERKZEUG_STUFEN.find(([s]) => s === x.value)[2]; haken.forEach((h) => (h.checked = w ? w.includes(h.value) : WERKZEUGE.includes(h.value))); }));
+    // Häkchen geändert: passende Stufe markieren; „Alles“ nie, denn eine volle Liste sperrt z. B. MCP-Werkzeuge aus
+    haken.forEach((h) => (h.onchange = () => { const s = werkzeugStufe(haken.filter((x) => x.checked).map((x) => x.value)); radios.forEach((x) => (x.checked = x.value === s)); }));
+    setAktionen([{ text: 'Zurück', ghost: true, klick: zurueck }, { info: 'Claude Code übernimmt Änderungen nach wenigen Sekunden.' }, 'sp',
+      ...(a.datei ? [{ text: 'Löschen', ghost: true, id: 'a-loeschen', klick: () => loeschenFragen(a) }] : []),
+      { text: 'Speichern', primary: true, id: 'a-speichern', klick: () => speichern(a) }]);
+    $('#a-speichern').disabled = !!a.fehler;
+  }
+  async function speichern(a) {
+    const s = $$('[name=a-stufe]').find((x) => x.checked)?.value;
+    const tools = s ? WERKZEUG_STUFEN.find(([x]) => x === s)[2] : $$('.a-haken input').filter((x) => x.checked).map((x) => x.value);
+    const z = await api['agent-speichern'](wo, a.datei || null, { name: $('#a-name').value.trim(), description: $('#a-wann').value, model: $('#a-modell').value || null, tools, anweisungen: $('#a-text').value });
+    $('#a-form .fehler')?.remove();
+    if (z?.fehler) return ($('#a-form').insertAdjacentHTML('afterbegin', `<div class="fehler">${esc(z.fehler)}</div>`), ($('#a-form').scrollTop = 0));
+    await agentenSeite(projekt, nurProjekt, z.datei);
+    $('#a-speichern').textContent = '✓ Gespeichert';
+    setTimeout(() => $('#a-speichern') && ($('#a-speichern').textContent = 'Speichern'), 1800);
+  }
+  // Rückfrage in der App wie bei den Ideen, kein Systemdialog
+  function loeschenFragen(a) {
+    ansicht(projekt, `<div class="mitte"><div class="box"><h2>Agent „${esc(a.name)}“ löschen?</h2><p class="muted klein pfad">${esc(`${r.ordner}/${a.datei}`)}</p>
+      <p class="muted">Die Datei wird endgültig gelöscht. Claude Code kann den Agenten danach nicht mehr nutzen.</p></div></div>`,
+    [{ text: 'Abbrechen', ghost: true, klick: () => agentenSeite(projekt, nurProjekt, a.datei) }, 'sp', { text: 'Agent löschen', gefahr: true, klick: async () => {
+      const x = await api['agent-loeschen'](wo, a.datei);
+      if (x?.fehler) return ($('.box .fehler')?.remove(), $('.box').insertAdjacentHTML('beforeend', `<div class="fehler">${esc(x.fehler)}</div>`));
+      agentenSeite(projekt, nurProjekt);
+    } }]);
+    $('.kopf-akt')?.remove();
   }
 }
 

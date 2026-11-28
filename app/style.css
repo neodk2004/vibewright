@@ -404,6 +404,30 @@ a[data-url]:hover{text-decoration:underline}
 .einst-kopf .tabs{border-bottom:0}
 .bausteine .opt.on{cursor:default}
 .bausteine .opt.on b::after{content:" ✓";color:var(--ok)}
+/* Agenten (#40): Liste und Vorlagen links, Formular rechts – Liste und Formular scrollen in sich, die Seite nicht */
+.agenten{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;flex:1 !important;min-height:0}
+.agenten>.spalte{gap:8px}
+.a-liste{display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;flex:1;padding-right:4px}
+.a-liste .opt{min-height:0;flex:none;padding:8px 12px}
+.a-liste b{overflow-wrap:anywhere}
+.a-vorlagen{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.a-vorlagen .btn{padding:6px 8px;font-size:12.5px}
+.a-vorlagen .btn.on::after{content:" ✓";color:var(--ok)}
+.a-form{display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0;padding-right:4px}
+.a-form>*{flex:none}
+.a-form .hinweis{margin:0}
+.a-form fieldset{border:0;margin:0;padding:0;min-width:0;display:grid;grid-template-columns:fit-content(30%) minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(120px,1fr);gap:8px 14px;align-items:start;flex:1 0 auto}
+.a-form fieldset>label,.a-lbl{font-size:13px;color:var(--muted);padding-top:8px}
+.a-form textarea{resize:none}
+#a-text{min-height:120px;align-self:stretch;font:12.5px/1.55 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
+.a-form select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;justify-self:start;max-width:100%}
+.a-form option{background:var(--panel);color:var(--text)}
+.a-werkzeuge{display:flex;flex-direction:column;gap:6px;padding-top:6px;font-size:13px}
+.a-stufen,.a-haken{display:flex;flex-wrap:wrap;gap:4px 16px}
+.a-haken{padding:6px 0 0 14px}
+.a-werkzeuge label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;overflow-wrap:anywhere}
+.a-werkzeuge summary{cursor:pointer;color:var(--muted)}
+fieldset:disabled label,fieldset:disabled summary{cursor:default}
 /* Verbrauch je Modell */
 .modellwahl select{font:inherit;font-size:12px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:5px;padding:0 4px;margin-left:4px}
 .modellwahl option{background:var(--panel);color:var(--text)} /* Windows zeichnet die offene Liste sonst weiß – im Darkmode helle Schrift auf Weiß */

@@ -69,6 +69,7 @@ const wz = (i, art) => ({ art, phase: 1, bedarf: i === 1 ? W : `Bedarf ${i + 1}`
 const mit = (extra, dann) => `(async () => { const st = { ...(await api.laden('Layout-Test')), plan: ${JSON.stringify(plan)}, stand: ${JSON.stringify(stand)}, letzteIdee: ${JSON.stringify(L)}, ...${extra} }; ${dann} })()`;
 const IDEEN = `{ offen: { dashboard: 'x' }, ideenWarten: [${JSON.stringify(L)}, ${JSON.stringify(W)}],
   ideen: ${JSON.stringify([L, U, 'Kurz', W].map((text, i) => ({ text, datum: '2026-11-19', phase: i + 1, schritte: ['Schritt'], kurz: 'Kurz' })))} }`;
+const LANG_AGENT = 'sehr-langer-agentenname-fuer-den-layout-test-mit-vielen-teilen-a'; // 64 Zeichen, die Höchstlänge
 const ansichten = {
   fragen: mit(`{ runden: [{}], offen: { typ: 'fragen', fragen: [{ frage: ${JSON.stringify(L)}, mehrfach: true, optionen: [${JSON.stringify(W)}, ${JSON.stringify(U)}, 'Kurz'] }] } }`, 'zeige(st);'),
   analyse: mit(`{ offen: { typ: 'gate', schritt: 'analyse', analyse: ${JSON.stringify(analyse)} } }`, 'zeige(st);'),
@@ -94,12 +95,22 @@ const ansichten = {
   ideen: mit(IDEEN, 'ideenZeigen(st, cockpit);'),
   'ideen-bearbeiten': mit(IDEEN, "ideenZeigen(st, cockpit); document.querySelector('.idee-zeile [data-akt=aendern]').click();"),
   'ideen-loeschen': mit(IDEEN, "ideenZeigen(st, cockpit); document.querySelectorAll('.idee-zeile [data-akt=loeschen]')[2].click();"),
+  // Agenten (#40): Liste + Formular (erster Agent mit eigener Werkzeugliste), leeres Formular, aufgeklappte Häkchenliste, Rückfrage vor dem Löschen
+  agenten: '(async () => { await agentenSeite(); })()',
+  'agenten-neu': "(async () => { await agentenSeite(); document.getElementById('a-neu').click(); })()",
+  'agenten-einzeln': `(async () => { await agentenSeite(null, false, ${JSON.stringify(LANG_AGENT + '.md')}); document.getElementById('a-einzeln').click(); })()`,
+  'agenten-loeschen': `(async () => { await agentenSeite(null, false, ${JSON.stringify(LANG_AGENT + '.md')}); document.getElementById('a-loeschen').click(); })()`,
 };
 
 const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'kph-layout-'));
 const ablage = path.join(basis, 'ablage');
 fs.mkdirSync(ablage);
 core.neu(core.ablageInfo({ modus: 'lokal', ablage }), 'Layout-Test', 'Ein Projekt nur für den Layout-Test');
+// Globale Agenten in einem Wegwerf-Ordner statt ~/.claude/agents
+const claudeDir = path.join(basis, 'claude');
+fs.mkdirSync(path.join(claudeDir, 'agents'), { recursive: true });
+fs.writeFileSync(path.join(claudeDir, 'agents', 'code-pruefer.md'), '---\nname: code-pruefer\ndescription: Prüft Änderungen\nmodel: claude-sonnet-4-5\ntools: Read, Bash, mcp__beispiel__werkzeug\n---\n\nKurze Anweisung.\n');
+fs.writeFileSync(path.join(claudeDir, 'agents', `${LANG_AGENT}.md`), `---\nname: ${LANG_AGENT}\ndescription: "${L}. ${L}."\ntools: Glob, Grep, Read\n---\n\n${lang(12, 'Anweisung').join('\n')}\n`);
 const electron = require('electron'); // liefert im Node-Prozess den Pfad zur Electron-Programmdatei
 const fehler = [];
 // Je Sprache nur ein App-Start, der alle Ansichten nacheinander misst (statt eines Starts pro Ansicht)
@@ -110,7 +121,7 @@ for (const sprache of ['de', 'en']) {
   fs.writeFileSync(path.join(daten, 'einstellungen.json'), JSON.stringify({ modus: 'lokal', ablage, sprache }));
   // EN lädt beim ersten Start einmal neu (Sprache steht in localStorage): erst messen, wenn die Seite in der richtigen Sprache ist;
   // __lauf sorgt dafür, dass der doppelt ausgelöste Aufruf denselben Lauf abwartet statt einen zweiten zu starten
-  const env = { ...process.env, KPH_USERDATA: daten, KPH_GROESSE: '960x580', SCREENSHOT: path.join(basis, `${sprache}.png`), SCREENSHOT_DELAY: '1500',
+  const env = { ...process.env, KPH_USERDATA: daten, CLAUDE_CONFIG_DIR: claudeDir, KPH_GROESSE: '960x580', SCREENSHOT: path.join(basis, `${sprache}.png`), SCREENSHOT_DELAY: '1500',
     SCREENSHOT_JS: `${MESSEN}; window.__lauf ??= (async () => {
       while (document.documentElement.lang !== '${sprache}') await new Promise((r) => setTimeout(r, 200));
       for (const [ansicht, zeigen] of [${schritte}]) { await zeigen(); await new Promise((r) => setTimeout(r, 1500)); await __messen(ansicht); }

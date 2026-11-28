@@ -180,6 +180,9 @@ handle('regeln', () => ({ pfad: REGELN, text: fs.existsSync(REGELN) ? fs.readFil
 // Projekt-Regeln: eigener Teil der CLAUDE.md im Arbeitsordner (der Vibewright-Abschnitt bleibt unangetastet)
 handle('projekt-regeln', (name) => core.projektRegeln(info(), name));
 handle('projekt-regeln-speichern', (name, text) => core.projektRegelnSpeichern(info(), name, text));
+handle('agenten', (name) => core.agentenListe(info(), name || undefined));
+handle('agent-speichern', (name, datei, a) => core.agentSpeichern(info(), name || undefined, datei, a));
+handle('agent-loeschen', (name, datei) => core.agentLoeschen(info(), name || undefined, datei));
 handle('regeln-speichern', (text) => {
   fs.mkdirSync(path.dirname(REGELN), { recursive: true });
   if (fs.existsSync(REGELN)) fs.copyFileSync(REGELN, `${REGELN}.bak`); // letzter Stand bleibt als Sicherung
