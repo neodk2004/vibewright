@@ -45,4 +45,54 @@ assert.deepStrictEqual([ein.name, ein.rest, ein.fehler], ['x', ['hooks:', '  nam
 // Mehrzeiliger Text in Anführungszeichen: nicht sicher lesbar
 assert.ok(core.agentLesen('---\nname: x\ndescription: "eins\n  zwei"\n---\n').fehler);
 
+// ---------- Dateien ----------
+const cfg = process.env.CLAUDE_CONFIG_DIR;
+const basis = fs.mkdtempSync(path.join(os.tmpdir(), 'agenten-proj-'));
+const info = core.ablageInfo({ modus: 'lokal', ablage: basis });
+const repo = path.join(basis, 'repo');
+fs.mkdirSync(repo);
+core.neu(info, 'MitOrdner', 'Test');
+core.speichern(info, Object.assign(core.laden(info, 'MitOrdner'), { projekttyp: 'code', repo }));
+core.neu(info, 'OhneOrdner', 'Test');
+core.speichern(info, Object.assign(core.laden(info, 'OhneOrdner'), { projekttyp: 'code' }));
+const geheim = path.join(basis, 'geheim.md');
+const leer = (name) => ({ name, description: 'd', model: null, tools: null, anweisungen: '' });
+const ag = (...t) => path.join(cfg, 'agents', ...t);
+
+assert.deepStrictEqual(core.agentenListe(info).agenten, []);
+core.agentSpeichern(info, null, null, { name: 'tester', description: 'Testet', model: null, tools: null, anweisungen: 'Tests laufen lassen.' });
+assert.ok(fs.existsSync(ag('tester.md')));
+assert.throws(() => core.agentSpeichern(info, null, null, leer('Böse:Name')), /Name/);
+assert.throws(() => core.agentSpeichern(info, null, null, leer('tester')), /Es gibt schon eine Agenten-Datei tester\.md\./);
+assert.throws(() => core.agentSpeichern(info, null, null, { ...leer('x'), description: ' ' }), /description|Beschreibung/);
+// fremder Name bleibt, Dateiname bleibt, hooks bleiben
+fs.writeFileSync(ag('alt.md'), '---\nname: Code_Reviewer\ndescription: x\nhooks:\n  Stop: []\n---\nA\n');
+core.agentSpeichern(info, null, 'alt.md', { name: 'Code_Reviewer', description: 'neu', model: 'opus', tools: ['Read'], anweisungen: 'B' });
+assert.match(fs.readFileSync(ag('alt.md'), 'utf8'), /hooks:\n  Stop: \[\]/);
+// umbenennen
+core.agentSpeichern(info, null, 'alt.md', { name: 'reviewer', description: 'neu', model: null, tools: null, anweisungen: 'B' });
+assert.ok(!fs.existsSync(ag('alt.md')) && fs.existsSync(ag('reviewer.md')));
+// ignoriert: Unterordner, .txt, ohne name, Symlink nach außen
+fs.mkdirSync(ag('unter')); fs.writeFileSync(ag('notiz.txt'), 'x'); fs.writeFileSync(ag('README.md'), '# Doku');
+let links = true;
+fs.writeFileSync(geheim, '---\nname: geheim\ndescription: x\n---\n');
+try { fs.symlinkSync(geheim, ag('link.md')); } catch (e) { if (e.code !== 'EPERM') throw e; links = false; }
+assert.deepStrictEqual(core.agentenListe(info).agenten.map((x) => x.name), ['reviewer', 'tester']);
+if (links) {
+  assert.throws(() => core.agentSpeichern(info, null, 'link.md', leer('link')));
+  assert.throws(() => core.agentSpeichern(info, null, null, leer('link')));
+  assert.throws(() => core.agentLoeschen(info, null, 'link.md'));
+  assert.strictEqual(fs.readFileSync(geheim, 'utf8').includes('name: geheim'), true, 'Ziel außerhalb unverändert');
+} else console.log('agenten: Symlinks nicht erlaubt (Windows ohne Entwicklermodus) – Link-Prüfungen übersprungen');
+assert.throws(() => core.agentLoeschen(info, null, '../x.md'));
+assert.throws(() => core.agentLoeschen(info, null, 'tester.txt'));
+core.agentLoeschen(info, null, 'tester.md'); assert.ok(!fs.existsSync(ag('tester.md')));
+// Projekt
+assert.throws(() => core.agentenListe(info, 'OhneOrdner'), /Code-Ordner/);
+core.agentSpeichern(info, 'MitOrdner', null, { name: 'doku-schreiber', description: 'd', model: null, tools: ['Read', 'Grep', 'Glob', 'Edit', 'Write'], anweisungen: '' });
+assert.ok(fs.existsSync(path.join(repo, '.claude', 'agents', 'doku-schreiber.md')));
+// doppelter Schlüssel → nicht speicherbar
+fs.writeFileSync(ag('kaputt.md'), '---\nname: k\nname: k2\ndescription: d\n---\n');
+assert.throws(() => core.agentSpeichern(info, null, 'kaputt.md', leer('k')), /von Hand/);
+
 console.log('agenten: alle Prüfungen bestanden');

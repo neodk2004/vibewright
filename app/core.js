@@ -1338,6 +1338,56 @@ function agentText(a) {
   return z.join(nl) + nl;
 }
 
+// Agenten-Dateien: global in <CLAUDE_DIR>/agents, pro Projekt in <Code-Ordner>/.claude/agents
+function agentenOrdner(info, name) {
+  if (!name) return path.join(CLAUDE_DIR, 'agents');
+  const ordner = arbeitsordner(info, laden(info, name));
+  if (!ordner) throw new Error('Erst einen Code-Ordner wählen („Mit Claude umsetzen“).');
+  return path.join(ordner, '.claude', 'agents');
+}
+const lstatOder = (p) => { try { return fs.lstatSync(p); } catch { return null; } }; // lstat: auch ein Link ohne Ziel zählt als vorhanden
+function agentDatei(ordner, datei) {
+  if (typeof datei !== 'string' || path.basename(datei) !== datei || !datei.endsWith('.md')) throw new Error('Ungültiger Dateiname.');
+  const p = path.join(ordner, datei);
+  if (lstatOder(p) && !imOrdner(ordner, p)) throw new Error(`${datei} ist ein Link auf eine Datei außerhalb des Ordners. Bitte durch eine normale Datei ersetzen.`);
+  return p;
+}
+function agentenListe(info, name) {
+  const ordner = agentenOrdner(info, name);
+  let dateien = [];
+  try { dateien = fs.readdirSync(ordner).filter((f) => f.endsWith('.md')); } catch { /* Ordner fehlt noch */ }
+  const agenten = [];
+  for (const datei of dateien) {
+    const p = path.join(ordner, datei);
+    if (!lstatOder(p).isFile() || !imOrdner(ordner, p)) continue;
+    const a = agentLesen(fs.readFileSync(p, 'utf8'));
+    if (a.name) agenten.push({ datei, ...a });
+  }
+  return { ordner, agenten: agenten.sort((x, y) => x.name.localeCompare(y.name)) };
+}
+function agentSpeichern(info, name, datei, agent) {
+  const ordner = agentenOrdner(info, name);
+  let alt = null;
+  if (datei) {
+    const p = agentDatei(ordner, datei);
+    alt = agentLesen(fs.readFileSync(p, 'utf8'));
+    if (alt.fehler) throw new Error(`${datei}: ${alt.fehler}`);
+  }
+  const neuerName = !alt || agent.name !== alt.name;
+  if (neuerName && !/^[a-z0-9][a-z0-9-]*$/.test(agent.name)) throw new Error('Name: nur Kleinbuchstaben, Ziffern und Bindestrich, nicht mit Bindestrich am Anfang.');
+  if (!String(agent.description).trim()) throw new Error('Die Beschreibung („Wann soll Claude ihn nutzen?“) darf nicht leer sein.');
+  const ziel = alt && !neuerName ? datei : `${agent.name}.md`;
+  const zp = agentDatei(ordner, ziel);
+  if (ziel !== datei && lstatOder(zp)) throw new Error(`Es gibt schon eine Agenten-Datei ${ziel}.`);
+  fs.mkdirSync(ordner, { recursive: true });
+  fs.writeFileSync(zp, agentText({ ...agent, rest: alt ? alt.rest : [], nl: alt ? alt.nl : '\n' }), 'utf8');
+  if (datei && ziel !== datei) fs.unlinkSync(path.join(ordner, datei));
+  return { datei: ziel };
+}
+function agentLoeschen(info, name, datei) {
+  fs.unlinkSync(agentDatei(agentenOrdner(info, name), datei));
+}
+
 // node-pty braucht den vollen Pfad zur claude.exe
 // ---------- Claude Code finden: nativer Installer (claude.exe) oder npm (claude.cmd) ----------
 // Ohne Shell startet Windows nur .exe-Dateien. Bei npm steckt hinter claude.cmd ein node-Skript oder eine .exe – das lesen wir aus.
@@ -1412,5 +1462,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, agentLesen, agentText, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, agentLesen, agentText, agentenOrdner, agentenListe, agentSpeichern, agentLoeschen, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, remoteZiel, forgeIssues, forgeIssueAnlegen };
