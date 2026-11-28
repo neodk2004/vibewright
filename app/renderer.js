@@ -30,7 +30,7 @@ function setKopf(st) {
   if (!st) return (kopf.innerHTML = '');
   const n = schrittNr(st);
   kopf.innerHTML = `<div class="kopf-zeile"><h1>${esc(st.name)}</h1><span class="kopf-akt">
-    <button class="btn ghost" id="k-archiv" title="Alles als ZIP-Datei aufheben">Archivieren</button><button class="btn ghost" id="k-loeschen">Löschen</button></span></div><div class="idee">${esc(st.plan?.einzeiler || st.idee)}</div>
+    <button class="btn" id="k-archiv" title="Alles als ZIP-Datei aufheben">Archivieren</button><button class="btn gefahr" id="k-loeschen">Löschen</button></span></div><div class="idee">${esc(st.plan?.einzeiler || st.idee)}</div>
     <div class="steps">${SCHRITTE.map((s, i) => `${i ? '<span class="ln"></span>' : ''}<span class="st ${i < n ? 'done' : i === n ? 'now' : ''}"><i>${i < n ? '✓' : i + 1}</i>${s}</span>`).join('')}
     ${n === 4 && laeuft.has(st.name) ? '<span class="kopf-orb" id="kopf-orb"><span class="mini-orb"><i></i><i></i><i></i></span><span class="was"></span></span>' : ''}</div>`;
   $('#k-archiv').onclick = () => archivieren(st);

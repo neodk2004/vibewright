@@ -43,7 +43,7 @@ button,input,textarea{font:inherit;color:inherit}
 #kopf h1{font:600 20px/1.3 "Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;margin:0}
 #kopf .idee{color:var(--muted);margin:2px 0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kopf-zeile{display:flex;align-items:center;gap:12px;min-height:30px}
-.kopf-akt{margin-left:auto;display:flex;gap:2px}
+.kopf-akt{margin-left:auto;display:flex;gap:6px}
 .kopf-akt .btn{padding:4px 10px;font-size:12.5px}
 #k-loeschen:hover{color:var(--bad)}
 #inhalt{padding:20px 32px;min-height:0;overflow:hidden;display:flex;flex-direction:column}
@@ -53,8 +53,8 @@ button,input,textarea{font:inherit;color:inherit}
 #aktionen .sp{flex:1}
 #aktionen .btn{white-space:nowrap;flex-shrink:0} /* Knöpfe bleiben einzeilig, der Infotext gibt nach (#5) */
 /* Nebenknöpfe in der Leiste klar als Knopf erkennbar – sonst sehen sie aus wie der Infotext daneben */
-:is(#aktionen,.box-akt) .btn:not(.primary):not(.gefahr){border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-soft);color:var(--text)}
-:is(#aktionen,.box-akt) .btn:not(.primary):not(.gefahr):hover:not(:disabled){border-color:var(--accent)}
+:is(#aktionen,.box-akt,.kopf-akt) .btn:not(.primary):not(.gefahr){border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-soft);color:var(--text)}
+:is(#aktionen,.box-akt,.kopf-akt) .btn:not(.primary):not(.gefahr):hover:not(:disabled){border-color:var(--accent)}
 #aktionen input{flex:1;max-width:420px}
 
 /* Schritte */
