@@ -1276,6 +1276,60 @@ function projektRegelnSpeichern(info, name, text) {
   return { pfad };
 }
 
+// ---------- Agenten (Claude-Code-Subagenten): Kopfteil lesen/schreiben ----------
+// Bekannte Felder (name, description, model, tools) werden gelesen, alles andere bleibt Zeile für Zeile in `rest`.
+const AGENT_VON_HAND = 'Diese Form kann Vibewright nicht sicher lesen – bitte von Hand bearbeiten.';
+function agentSkalar(w) {
+  if (/^[&*{!]/.test(w)) return null;
+  if (w[0] === '"') { const m = /^"((?:[^"\\]|\\.)*)"$/.exec(w); return m ? m[1].replace(/\\(["\\])/g, '$1') : null; }
+  if (w[0] === "'") { const m = /^'((?:[^']|'')*)'$/.exec(w); return m ? m[1].replace(/''/g, "'") : null; }
+  return w.replace(/\s+#.*$/, '');
+}
+function agentLesen(text) {
+  const nl = /\r\n/.test(text) ? '\r\n' : '\n';
+  const z = String(text).split(/\r?\n/);
+  const a = { name: '', description: '', model: null, tools: null, anweisungen: '', rest: [], nl, fehler: null };
+  const ende = z[0] === '---' ? z.indexOf('---', 1) : -1;
+  if (ende < 0) { a.fehler = AGENT_VON_HAND; return a; }
+  a.anweisungen = z.slice(ende + 1).join(nl).replace(/^(\s*\r?\n)+/, '').trimEnd();
+  const gesehen = new Set();
+  for (let i = 1; i < ende; i++) {
+    const m = /^(name|description|model|tools):[ \t]*(.*)$/.exec(z[i]);
+    if (!m) { a.rest.push(z[i]); continue; }
+    const k = m[1];
+    if (gesehen.has(k)) { a.fehler = `Schlüssel ${k} doppelt – bitte von Hand bearbeiten.`; return a; }
+    gesehen.add(k);
+    const folge = [];
+    while (i + 1 < ende && /^[ \t]+\S/.test(z[i + 1])) folge.push(z[++i].trim());
+    let w = m[2].trim();
+    let wert;
+    if (/^[>|][-+]?$/.test(w)) wert = folge.join(' ');
+    else if (k === 'tools' && (w === '' || w[0] === '[')) {
+      const roh = w === '' ? folge.map((s) => s.replace(/^-\s*/, '')) : w.replace(/^\[|\]$/g, '').split(',');
+      const liste = roh.map((s) => agentSkalar(s.trim())).filter((s) => s !== '');
+      if (liste.includes(null) || (w[0] === '[' && !w.endsWith(']'))) { a.fehler = AGENT_VON_HAND; return a; }
+      a.tools = liste;
+      continue;
+    } else {
+      wert = agentSkalar(w);
+      if (wert !== null && folge.length) wert = w[0] === '"' || w[0] === "'" ? null : [wert, ...folge].join(' ');
+    }
+    if (wert === null) { a.fehler = AGENT_VON_HAND; return a; }
+    if (k === 'tools') a.tools = wert.split(',').map((s) => s.trim()).filter(Boolean);
+    else a[k] = k === 'model' && wert === '' ? null : wert;
+  }
+  return a;
+}
+function agentText(a) {
+  const nl = a.nl || '\n';
+  const beschr = '"' + String(a.description).replace(/\r?\n/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  const z = ['---', `name: ${a.name}`, `description: ${beschr}`];
+  if (a.model) z.push(`model: ${a.model}`);
+  if (a.tools) z.push(`tools: ${a.tools.join(', ')}`);
+  z.push(...(a.rest || []), '---', '', a.anweisungen);
+  return z.join(nl) + nl;
+}
+
 // node-pty braucht den vollen Pfad zur claude.exe
 // ---------- Claude Code finden: nativer Installer (claude.exe) oder npm (claude.cmd) ----------
 // Ohne Shell startet Windows nur .exe-Dateien. Bei npm steckt hinter claude.cmd ein node-Skript oder eine .exe – das lesen wir aus.
@@ -1350,5 +1404,5 @@ function vibewrightDmgs(hdiutilText) {
 }
 
 module.exports = { imOrdner, planArgs, vibewrightDmgs, repoSteckbrief, checks, claudeLimits, claudeSitzungen, obsidianVaults, ablageInfo, projekte, laden, neu, weiter, run, sauber, interviewMd, planMd, analyseMd, spiegel,
-  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
+  aktualisieren, abhaken, phaseVerschieben, schrittWeiter, ideeMerken, ideeAendern, ideenVerarbeiten, setModell, modell, verbrauch, claudeStats, statsAuswerten, sitzungsVerbrauch, sitzungsOrdner, setSprache, updateMerker, punkteOrdner, enText, claudeVorbereiten, projektRegeln, projektRegelnSpeichern, agentLesen, agentText, claudeBefehl, arbeitsordner, speichern, loeschen, archivieren, imProgrammordner, istNeuer, skillsmpSuche, linkKaputt, inventar, githubTeile, FREMDER_ORDNER, forgeUrl, forgeRepos, CLAUDE_DIR,
   forgeZiel, remoteZiel, forgeIssues, forgeIssueAnlegen };
